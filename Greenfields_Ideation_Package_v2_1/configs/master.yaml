@@ -1,0 +1,512 @@
+# LactaTwin Master Configuration
+# Single Source of Truth for plant configuration and simulation/optimization parameters
+# Label: DATA SINTETIS
+# Partner: [Nama Pabrik]
+
+metadata:
+  plant_name: "[Nama Pabrik]"
+  data_classification: "DATA SINTETIS"
+  version: "1.0.0"
+  description: "Master parameter registry for raw milk receiving, processing, and filling scheduling."
+
+plant_global:
+  milk_density_kg_per_l: 1.0
+  business_day_start: "06:00"
+  business_day_end: "06:00" # Next day
+  horizon_minutes: 1440
+  carryover_minutes: 360 # 6 hours lookahead
+  volume_unit_l: 100 # Discretization unit for CP-SAT volume balance
+
+receiving:
+  n_bays: 4 # UB-01, UB-02, UB-03, UB-04
+  bays: ["UB-01", "UB-02", "UB-03", "UB-04"]
+  tankers_active_per_bay: 1
+  bay_flow_lph:
+    value: 25000.0
+    placeholder: true
+    unit: "L/hour"
+    description: "Nominal unloading flow rate per receiving bay pump"
+  bay_cip_min:
+    value: 45
+    placeholder: true
+    unit: "minutes"
+    description: "CIP duration required for bay header and unloading manifold"
+  slot_tolerance_min:
+    value: 30
+    placeholder: true
+    unit: "minutes"
+    description: "Allowable early/late deviation window from scheduled receiving slot"
+  tanker_volume_distribution:
+    distribution: "normal"
+    min_l: 8000
+    max_l: 12000
+    mean_l: 10000
+    std_l: 800
+    placeholder: true
+    description: "Tanker arrival volume distribution"
+
+lab:
+  n_channels: 2
+  channels: ["LAB-CH-01", "LAB-CH-02"]
+  placeholder: true
+  default_duration_min:
+    value: 20
+    placeholder: true
+    unit: "minutes"
+    description: "Standard rapid testing duration (antibiotics, fat, protein, organoleptic)"
+  qc_pass_rate_default:
+    value: 0.96
+    placeholder: true
+    description: "Nominal QC release probability across candidate farms (95-98% range)"
+
+degassing:
+  units: ["DG-01", "DG-02"]
+  is_bottleneck: false
+  process_speed_lph:
+    value: 35000.0
+    placeholder: true
+
+raw_milk_buffer_tanks:
+  units: ["RMT-01", "RMT-02", "RMT-03"]
+  capacity_l:
+    value: 50000.0
+    placeholder: true
+  input_flow_lph:
+    value: 30000.0
+    placeholder: true
+  output_flow_lph:
+    value: 30000.0
+    placeholder: true
+  holding_max_h:
+    value: 24.0
+    placeholder: true
+  cip_min:
+    value: 60
+    placeholder: true
+
+thermizer:
+  units: ["TH-01", "TH-02"]
+  speed_lph:
+    value: 25000.0
+    placeholder: true
+    unit: "L/hour"
+  cip_min:
+    value: 90
+    placeholder: true
+    unit: "minutes"
+
+storage_tanks:
+  # 15 SFP storage tanks (ST-01..ST-15 / SFP-01..SFP-15)
+  count: 15
+  units:
+    - id: "SFP-01"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-02"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-03"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-04"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-05"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-06"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-07"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-08"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-09"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-10"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-11"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-12"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-13"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-14"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+    - id: "SFP-15"
+      capacity_l: 60000.0
+      input_lph: 25000.0
+      output_lph: 25000.0
+      holding_max_h: 48.0
+      cip_min: 75
+      placeholder: true
+
+sterilizer:
+  units:
+    - id: "ST-01"
+      speed_lph: 15000.0
+      cip_min: 120
+      placeholder: true
+    - id: "ST-02"
+      speed_lph: 15000.0
+      cip_min: 120
+      placeholder: true
+    - id: "ST-03"
+      speed_lph: 15000.0
+      cip_min: 120
+      placeholder: true
+    - id: "ST-04"
+      speed_lph: 15000.0
+      cip_min: 120
+      placeholder: true
+    - id: "ST-05"
+      speed_lph: 15000.0
+      cip_min: 120
+      placeholder: true
+
+aseptic_tanks:
+  units:
+    - id: "AT-01"
+      capacity_l: 30000.0
+      input_lph: 15000.0
+      output_lph: 18000.0
+      min_level_l: 3000.0
+      holding_max_h: 24.0
+      cip_min: 90
+      placeholder: true
+    - id: "AT-02"
+      capacity_l: 30000.0
+      input_lph: 15000.0
+      output_lph: 18000.0
+      min_level_l: 3000.0
+      holding_max_h: 24.0
+      cip_min: 90
+      placeholder: true
+    - id: "AT-03"
+      capacity_l: 30000.0
+      input_lph: 15000.0
+      output_lph: 18000.0
+      min_level_l: 3000.0
+      holding_max_h: 24.0
+      cip_min: 90
+      placeholder: true
+    - id: "AT-04"
+      capacity_l: 30000.0
+      input_lph: 15000.0
+      output_lph: 18000.0
+      min_level_l: 3000.0
+      holding_max_h: 24.0
+      cip_min: 90
+      placeholder: true
+    - id: "AT-05"
+      capacity_l: 30000.0
+      input_lph: 15000.0
+      output_lph: 18000.0
+      min_level_l: 3000.0
+      holding_max_h: 24.0
+      cip_min: 90
+      placeholder: true
+
+filling_lines:
+  units:
+    - id: "FL-01"
+      source_aseptic_tank: "AT-01"
+      speed_pack_per_h: 8000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A", "ESL_320"]
+      allowed_skus: ["ESL-FC", "ESL-CH", "ESL-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-02"
+      source_aseptic_tank: "AT-01"
+      speed_pack_per_h: 8000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A"]
+      allowed_skus: ["ESL-FC", "ESL-CH", "ESL-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-03"
+      source_aseptic_tank: "AT-02"
+      speed_pack_per_h: 8000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A"]
+      allowed_skus: ["ESL-FC", "ESL-CH", "ESL-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-04"
+      source_aseptic_tank: "AT-02"
+      speed_pack_per_h: 8000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A"]
+      allowed_skus: ["ESL-FC", "ESL-CH", "ESL-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-05"
+      source_aseptic_tank: "AT-03"
+      speed_pack_per_h: 9000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A"]
+      allowed_skus: ["UHT-FC", "UHT-CH", "UHT-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-06"
+      source_aseptic_tank: "AT-03"
+      speed_pack_per_h: 9000
+      allowed_pack_sizes: ["LARGE_B", "LARGE_A"]
+      allowed_skus: ["UHT-FC", "UHT-CH", "UHT-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-07"
+      source_aseptic_tank: "AT-04"
+      speed_pack_per_h: 7000
+      allowed_pack_sizes: ["LARGE_A"]
+      allowed_skus: ["UHT-WC", "UHT-SK"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-08"
+      source_aseptic_tank: "AT-04"
+      speed_pack_per_h: 12000
+      allowed_pack_sizes: ["SMALL_A", "SMALL_B"]
+      allowed_skus: ["UHT-FC", "UHT-CH", "UHT-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-09"
+      source_aseptic_tank: "AT-05"
+      speed_pack_per_h: 12000
+      allowed_pack_sizes: ["SMALL_A", "SMALL_B"]
+      allowed_skus: ["UHT-FC", "UHT-CH", "UHT-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+    - id: "FL-10"
+      source_aseptic_tank: "AT-05"
+      speed_pack_per_h: 12000
+      allowed_pack_sizes: ["SMALL_A", "SMALL_B"]
+      allowed_skus: ["UHT-FC", "UHT-CH", "UHT-ST"]
+      size_change_min: 60
+      paper_change_min: 20
+      variant_change_min: 90
+      cip_min: 60
+      placeholder: true
+
+dedicated_pipes:
+  units: ["PIPE-01", "PIPE-02", "PIPE-03", "PIPE-04", "PIPE-05", "PIPE-06", "PIPE-07", "PIPE-08", "PIPE-09", "PIPE-10"]
+
+plant_derating:
+  utilisation_pct: 0.95
+  placeholder: true
+  description: "Nominal operational availability derating factor across lines"
+
+maintenance_windows:
+  windows:
+    - id: "MAINT-FL01-WEEKLY"
+      asset_id: "FL-01"
+      start_minute: 720 # 18:00
+      duration_min: 180
+      day_of_week: 3
+      placeholder: true
+    - id: "MAINT-TH01-BIWEEKLY"
+      asset_id: "TH-01"
+      start_minute: 360 # 12:00
+      duration_min: 240
+      day_of_week: 5
+      placeholder: true
+
+sku_master:
+  skus:
+    - id: "ESL-FC"
+      name: "ESL Full Cream"
+      family: "ESL"
+      flavour: "Full Cream"
+      milk_usage_factor: 1.0
+      allowed_sizes: ["LARGE_B", "LARGE_A", "ESL_320"]
+    - id: "ESL-CH"
+      name: "ESL Chocolate"
+      family: "ESL"
+      flavour: "Chocolate"
+      milk_usage_factor: 0.9
+      allowed_sizes: ["LARGE_B", "LARGE_A", "ESL_320"]
+    - id: "ESL-ST"
+      name: "ESL Strawberry"
+      family: "ESL"
+      flavour: "Strawberry"
+      milk_usage_factor: 0.9
+      allowed_sizes: ["LARGE_B", "LARGE_A"]
+    - id: "UHT-FC"
+      name: "UHT Full Cream"
+      family: "UHT"
+      flavour: "Full Cream"
+      milk_usage_factor: 1.0
+      allowed_sizes: ["LARGE_B", "LARGE_A", "SMALL_A", "SMALL_B"]
+    - id: "UHT-CH"
+      name: "UHT Chocolate"
+      family: "UHT"
+      flavour: "Chocolate"
+      milk_usage_factor: 0.9
+      allowed_sizes: ["LARGE_B", "LARGE_A", "SMALL_A", "SMALL_B"]
+    - id: "UHT-ST"
+      name: "UHT Strawberry"
+      family: "UHT"
+      flavour: "Strawberry"
+      milk_usage_factor: 0.9
+      allowed_sizes: ["LARGE_B", "LARGE_A", "SMALL_A", "SMALL_B"]
+    - id: "UHT-WC"
+      name: "UHT Whipping Cream"
+      family: "UHT"
+      flavour: "WC"
+      milk_usage_factor: 0.9
+      allowed_sizes: ["LARGE_A"]
+    - id: "UHT-SK"
+      name: "UHT Skim"
+      family: "UHT Skim"
+      flavour: "Skim"
+      milk_usage_factor: 1.0
+      allowed_sizes: ["LARGE_A"]
+
+pack_sizes:
+  LARGE_A: 1000
+  LARGE_B: 950
+  ESL_320: 320
+  SMALL_A: 250
+  SMALL_B: 200
+
+changeover_rules:
+  hierarchy: ["VARIANT", "SIZE", "PAPER", "NONE"]
+  precedence_rules:
+    VARIANT:
+      condition: "Flavour_variant_changes"
+      duration_minutes: 90
+      placeholder: true
+      overrides: ["SIZE", "PAPER"]
+      cip_independent: true
+    SIZE:
+      condition: "Same_flavour_different_size_any_market"
+      duration_minutes: 60
+      placeholder: true
+      overrides: ["PAPER"]
+      cip_independent: true
+    PAPER:
+      condition: "Different_market_variant_same_size_same_flavour"
+      duration_minutes: 20
+      placeholder: true
+      overrides: []
+      cip_independent: true
+    NONE:
+      condition: "Same_market_variant_same_size_same_flavour"
+      duration_minutes: 0
+      placeholder: false
+
+cip_triggers:
+  flavour_change:
+    condition: "Chocolate_or_Strawberry_to_Full_Cream"
+    duration_min: 60
+    placeholder: true
+  flavour_cross:
+    condition: "Chocolate_to_Strawberry_or_reverse"
+    duration_min: 60
+    placeholder: true
+  end_production:
+    condition: "End_Production_Campaign"
+    duration_min: 90
+    placeholder: true
+  end_storage_volume:
+    condition: "Empty_Tank_Before_Refill"
+    duration_min: 75
+    placeholder: true
+
+optimizer:
+  max_time_in_seconds: 10
+  random_seed: 42
+  num_workers: 1
+  weights:
+    w_waiting_p80: 10.0
+    w_cip_count: 50.0
+    w_schedule_deviation: 5.0
+    w_unfulfilled_order: 1000.0
+    w_order_lateness: 20.0
+    w_changeover_count: 15.0

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lactatwin"
+version = "0.1.0"
+description = "LactaTwin Decision Core: Predictive Models & CP-SAT Optimization for Milk Plant Operations"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "lightgbm>=4.0.0",
+    "ortools>=9.8.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "simpy>=4.0.0"
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+pythonpath = ["."]
+testpaths = ["tests"]

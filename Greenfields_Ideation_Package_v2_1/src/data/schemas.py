@@ -235,3 +235,39 @@ class ScheduleResult(BaseModel):
     violations: List[str] = Field(default_factory=list)
     infeasibility_reasons: List[str] = Field(default_factory=list)
     label: str = "DATA SINTETIS"
+
+
+class OrderFeasibilityVerdict(BaseModel):
+    """Feasibility outcome and schedule parameters for a production order."""
+    model_config = ConfigDict(extra="ignore")
+
+    order_id: str
+    sku_id: str
+    target_volume_l: float
+    due_time_minute: int
+    dapat_dipenuhi: bool
+    assigned_line: Optional[str] = None
+    scheduled_start_minute: Optional[int] = None
+    scheduled_end_minute: Optional[int] = None
+    lateness_minutes: int = 0
+    changeover_from_previous_min: int = 0
+    limiting_cause: Optional[str] = None # INSUFFICIENT_RAW_MATERIAL, INSUFFICIENT_FILLER_CAPACITY, INELIGIBLE_LINE_SKU, MAINTENANCE_BLOCK, EXCESSIVE_CHANGEOVER
+    details: Dict[str, Any] = Field(default_factory=dict)
+    label: str = "DATA SINTETIS"
+
+
+class ProductionScheduleResult(BaseModel):
+    """Comprehensive production schedule result containing order verdicts and KPIs."""
+    model_config = ConfigDict(extra="ignore")
+
+    schedule_id: str
+    status: str
+    wall_time_seconds: float
+    total_orders: int
+    fulfilled_orders: int
+    unfulfilled_orders: int
+    total_volume_requested_l: float
+    total_volume_fulfilled_l: float
+    order_verdicts: List[OrderFeasibilityVerdict]
+    objective_value: Optional[float] = None
+    label: str = "DATA SINTETIS"

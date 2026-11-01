@@ -19,6 +19,8 @@ from src.data.schemas import (
     ProductionOrder,
     FillingOutput,
     QCStatus,
+    OrderFeasibilityVerdict,
+    ProductionScheduleResult,
 )
 from src.data.config_loader import MasterConfig
 
@@ -261,3 +263,149 @@ class ScheduleValidator:
             volume_balance_verified=is_balanced,
             volume_balance_residual_l=residual
         )
+
+    def validate_production_schedule(
+        self,
+        schedule_result: ProductionScheduleResult,
+        orders: List[ProductionOrder],
+        available_raw_milk_l: float
+    ) -> List[ValidationViolation]:
+        """
+        Validate production packaging schedule against physical and SOP constraints:
+        1. LINE_ELIGIBILITY: SKU & pack size supported by assigned line.
+        2. LINE_NO_OVERLAP: Consecutive orders on same line have adequate changeover + CIP gap.
+        3. SHARED_AT_PRODUCT_CONSISTENCY: Lines sharing an AT running concurrently must produce the same SKU.
+        4. RAW_MATERIAL_LIMIT: Sum of milk usage <= available raw milk.
+        5. LATENESS_INCONSISTENCY: If order is marked dapat_dipenuhi, lateness must be 0.
+        """
+        violations: List[ValidationViolation] = []
+        orders_map = {o.order_id: o for o in orders}
+        lines_map = {l.id: l for l in self.config.filling_lines.units}
+        skus_map = {s.id: s for s in self.config.sku_master.skus}
+
+        # Check Total Raw Material usage
+        total_milk_drawn = 0.0
+        for verdict in schedule_result.order_verdicts:
+            if verdict.scheduled_start_minute is not None and verdict.dapat_dipenuhi:
+                ord_item = orders_map.get(verdict.order_id)
+                if ord_item:
+                    sku_cfg = skus_map.get(ord_item.sku_id)
+                    milk_factor = sku_cfg.milk_usage_factor if sku_cfg else 1.0
+                    total_milk_drawn += ord_item.target_volume_l * milk_factor
+
+        if total_milk_drawn > available_raw_milk_l + 1e-3:
+            violations.append(ValidationViolation(
+                rule_id="RAW_MATERIAL_OVERDRAW",
+                entity_id="RAW_MILK_INVENTORY",
+                message=f"Total raw milk drawn ({total_milk_drawn:.1f}L) exceeds available inventory ({available_raw_milk_l:.1f}L)",
+                details={"drawn_l": total_milk_drawn, "available_l": available_raw_milk_l}
+            ))
+
+        # Check line assignments and overlaps
+        line_schedule: Dict[str, List[Tuple[int, int, OrderFeasibilityVerdict, ProductionOrder]]] = {
+            l.id: [] for l in self.config.filling_lines.units
+        }
+
+        for verdict in schedule_result.order_verdicts:
+            ord_item = orders_map.get(verdict.order_id)
+            if not ord_item:
+                continue
+
+            if verdict.scheduled_start_minute is not None and verdict.assigned_line:
+                line_id = verdict.assigned_line
+                line_cfg = lines_map.get(line_id)
+                if not line_cfg:
+                    violations.append(ValidationViolation(
+                        rule_id="UNKNOWN_LINE",
+                        entity_id=line_id,
+                        message=f"Order {ord_item.order_id} assigned to unknown line {line_id}",
+                    ))
+                    continue
+
+                # Check eligibility
+                if ord_item.sku_id not in line_cfg.allowed_skus or ord_item.pack_size_code not in line_cfg.allowed_pack_sizes:
+                    violations.append(ValidationViolation(
+                        rule_id="LINE_ELIGIBILITY_VIOLATION",
+                        entity_id=line_id,
+                        message=f"Order {ord_item.order_id} ({ord_item.sku_id}, {ord_item.pack_size_code}) not eligible on line {line_id}",
+                        details={"allowed_skus": line_cfg.allowed_skus, "allowed_sizes": line_cfg.allowed_pack_sizes}
+                    ))
+
+                # Check lateness integrity
+                if verdict.dapat_dipenuhi and verdict.lateness_minutes > 0:
+                    violations.append(ValidationViolation(
+                        rule_id="LATENESS_INCONSISTENCY",
+                        entity_id=ord_item.order_id,
+                        message=f"Order {ord_item.order_id} marked dapat_dipenuhi but has lateness {verdict.lateness_minutes}m",
+                        time_minute=verdict.scheduled_end_minute
+                    ))
+
+                line_schedule[line_id].append(
+                    (verdict.scheduled_start_minute, verdict.scheduled_end_minute or verdict.scheduled_start_minute, verdict, ord_item)
+                )
+
+        # Helper to compute required changeover gap
+        def get_required_gap(o1: ProductionOrder, o2: ProductionOrder) -> int:
+            s1 = skus_map.get(o1.sku_id)
+            s2 = skus_map.get(o2.sku_id)
+            f1 = s1.flavour if s1 else ""
+            f2 = s2.flavour if s2 else ""
+
+            setup_min = 0
+            if f1 != f2:
+                setup_min = 90
+            elif o1.pack_size_code != o2.pack_size_code:
+                setup_min = 60
+            elif o1.market_variant != o2.market_variant:
+                setup_min = 20
+
+            cip_min = 0
+            if f1 in ["Chocolate", "Strawberry"] and f2 in ["Full Cream", "Skim"]:
+                cip_min = 60
+            elif (f1 == "Chocolate" and f2 == "Strawberry") or (f1 == "Strawberry" and f2 == "Chocolate"):
+                cip_min = 60
+
+            return setup_min + cip_min
+
+        # Check line sequencing & gaps
+        for line_id, runs in line_schedule.items():
+            sorted_runs = sorted(runs, key=lambda x: x[0])
+            for i in range(len(sorted_runs) - 1):
+                s1, e1, v1, o1 = sorted_runs[i]
+                s2, e2, v2, o2 = sorted_runs[i + 1]
+
+                gap_required = get_required_gap(o1, o2)
+                if s2 < e1 + gap_required:
+                    violations.append(ValidationViolation(
+                        rule_id="LINE_CHANGEOVER_OVERLAP",
+                        entity_id=line_id,
+                        message=f"Line {line_id}: Order {o2.order_id} starts at t={s2}m, but previous order {o1.order_id} ends at t={e1}m with required setup gap {gap_required}m",
+                        time_minute=s2,
+                        details={"o1": o1.order_id, "o2": o2.order_id, "actual_gap": s2 - e1, "required_gap": gap_required}
+                    ))
+
+        # Check Shared Aseptic Tank (AT) product consistency
+        at_line_pairs = [
+            ("FL-01", "FL-02", "AT-01"),
+            ("FL-03", "FL-04", "AT-02"),
+            ("FL-05", "FL-06", "AT-03"),
+            ("FL-07", "FL-08", "AT-04"),
+            ("FL-09", "FL-10", "AT-05"),
+        ]
+        for line_a, line_b, at_id in at_line_pairs:
+            runs_a = line_schedule.get(line_a, [])
+            runs_b = line_schedule.get(line_b, [])
+            for s_a, e_a, _, o_a in runs_a:
+                for s_b, e_b, _, o_b in runs_b:
+                    # Check overlap: s_a < e_b and s_b < e_a
+                    if s_a < e_b and s_b < e_a:
+                        if o_a.sku_id != o_b.sku_id:
+                            violations.append(ValidationViolation(
+                                rule_id="SHARED_AT_PRODUCT_CONFLICT",
+                                entity_id=at_id,
+                                message=f"Aseptic Tank {at_id}: Simultaneous runs on {line_a} ({o_a.sku_id}) and {line_b} ({o_b.sku_id}) have conflicting SKUs during [{max(s_a, s_b)}..{min(e_a, e_b)}]",
+                                time_minute=max(s_a, s_b),
+                                details={"line_a": line_a, "line_b": line_b, "sku_a": o_a.sku_id, "sku_b": o_b.sku_id}
+                            ))
+
+        return violations

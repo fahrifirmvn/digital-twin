@@ -149,6 +149,7 @@ class MasterConfig(BaseModel):
     changeover_rules: Dict[str, Any]
     cip_triggers: Dict[str, Any]
     optimizer: Dict[str, Any]
+    replan_thresholds: Dict[str, Any] = Field(default_factory=dict)
 
     def find_all_placeholders(self) -> List[Dict[str, Any]]:
         """Recursively scan configuration dictionary for placeholder: true markers."""

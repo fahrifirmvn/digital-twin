@@ -510,3 +510,11 @@ optimizer:
     w_unfulfilled_order: 1000.0
     w_order_lateness: 20.0
     w_changeover_count: 15.0
+
+replan_thresholds:
+  eta_shift_min: 30
+  lab_overrun_min: 20
+  cip_overrun_min: 20
+  frozen_window_min: 60
+  monte_carlo_samples: 200
+  placeholder: true

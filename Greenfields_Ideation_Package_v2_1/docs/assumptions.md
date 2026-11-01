@@ -102,3 +102,10 @@ Generator sintetis dijalankan dengan seed tetap (`seed=42`) untuk menjamin deter
    * Setiap hari konsumsi diatur sesuai debit penerimaan susu segar yang lolos uji sehingga:
      $$\text{Opening Stock} + \text{Total Milk In} = \text{Liquid Consumed} + \text{Closing Stock} \quad (\text{Residual} < 0.01\text{ L})$$
 
+5. **Replanning Thresholds & Monte Carlo Simulation (Phase 5):**
+   * `eta_shift_min`: $30\text{ menit}$. Jadwal ulang receiving dipicu jika deviasi kedatangan truk melebihi batas ini.
+   * `lab_overrun_min`: $20\text{ menit}$. Dipicu jika pengujian lab melebihi estimasi P80.
+   * `cip_overrun_min`: $20\text{ menit}$. Dipicu jika siklus pencucian tangki/line melebihi waktu SOP.
+   * `frozen_window_min`: $60\text{ menit}$. Tugas yang sedang berjalan atau dijadwalkan dalam $60\text{ menit}$ ke depan dibekukan untuk stabilitas operasional.
+   * `monte_carlo_samples`: $N = 200$. Evaluasi risiko antrean truk ($P(\text{waiting} > 30\text{ min})$) dengan sampling durasi dari distribusi prediksi. Gate pelanggaran lab dipastikan 0 karena unloading hanya dimulai pasca status `RELEASED`.
+

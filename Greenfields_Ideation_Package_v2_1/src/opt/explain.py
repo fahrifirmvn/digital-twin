@@ -82,13 +82,14 @@ class ScheduleExplainer:
 
     def explain(
         self,
+        schedule_id: Optional[str] = None,
         receiving_schedule: Optional[ScheduleResult] = None,
         production_schedule: Optional[ProductionScheduleResult] = None,
         orders: Optional[List[ProductionOrder]] = None,
         available_raw_milk_l: float = 50000.0,
     ) -> ScheduleExplanation:
         """Construct full JSON explanation report."""
-        sched_id = (
+        sched_id = schedule_id or (
             receiving_schedule.schedule_id if receiving_schedule
             else (production_schedule.schedule_id if production_schedule else f"EXP-{int(time.time())}")
         )

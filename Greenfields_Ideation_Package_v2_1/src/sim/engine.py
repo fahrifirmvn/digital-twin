@@ -112,16 +112,18 @@ class PlantSimulator:
         realized_arrival_time: int,
         realized_lab_duration: int,
         qc_passed: bool,
+        departure_time: Optional[int] = None,
         target_bay: Optional[str] = None,
         target_tank: Optional[str] = None,
     ):
         """Process generator modeling tanker trip lifecycle from gate arrival to bay unloading."""
+        dep_time = departure_time if departure_time is not None else max(0, realized_arrival_time - 60)
         trip_record = TankerTrip(
             trip_id=trip_id,
             farm_id=farm_id,
             planned_slot_minute=planned_slot,
             volume_l=volume_l,
-            departure_time_minute=max(0, realized_arrival_time - 60),
+            departure_time_minute=dep_time,
             gate_arrival_time_minute=realized_arrival_time,
             qc_status=QCStatus.PENDING,
         )

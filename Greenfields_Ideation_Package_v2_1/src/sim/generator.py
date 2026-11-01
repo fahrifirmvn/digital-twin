@@ -142,6 +142,7 @@ class SyntheticPlantGenerator:
                     "farm_id": farm_id,
                     "volume_l": vol,
                     "planned_slot": int(slot_time),
+                    "departure_time": departure_minute,
                     "realized_arrival_time": gate_arrival,
                     "realized_lab_duration": realized_lab,
                     "qc_passed": qc_passed,

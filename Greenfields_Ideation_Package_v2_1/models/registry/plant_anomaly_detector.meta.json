@@ -1,0 +1,24 @@
+{
+  "model_name": "plant_anomaly_detector",
+  "created_at": "2026-11-01T16:01:18.883295",
+  "data_classification": "DATA SINTETIS",
+  "partner": "[Nama Pabrik]",
+  "seed": 42,
+  "data_hash": "a4b2790cb6dd6d6e",
+  "features": [
+    "balance_residual_l",
+    "batch_age_h",
+    "flow_deviation_pct"
+  ],
+  "metrics": {
+    "fitted": true,
+    "normal_test_risk": 0.3624488273912746,
+    "anomaly_test_risk": 0.5530636362827642,
+    "detected_anomaly_flags": [
+      "MASS_BALANCE_RESIDUAL_HIGH",
+      "HOLDING_TIME_EXCEEDED",
+      "FLOW_RATE_ANOMALY"
+    ]
+  },
+  "extra": {}
+}

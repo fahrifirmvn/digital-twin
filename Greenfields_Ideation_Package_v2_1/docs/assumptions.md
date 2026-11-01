@@ -64,3 +64,41 @@ Ketika sistem dihubungkan ke database SCADA/ERP/LIMS pabrik:
 * Mengganti generator sintetis dengan `CsvDataAdapter` atau API data connector.
 * Menyesuaikan nilai pada `configs/master.yaml` dan mengubah flag `placeholder: false`.
 * Melakukan kalibrasi ulang model regresi kuantil LightGBM dengan observasi aktual.
+
+---
+
+## 4. Distribusi Generator Data Sintetis (Phase 1)
+
+Generator sintetis dijalankan dengan seed tetap (`seed=42`) untuk menjamin determinisme (Rule R5):
+
+1. **Model Estimasi Waktu Tiba (ETA):**
+   $$\text{ETA} = \text{departure\_time} + \left( \text{base\_transit\_time} \times \exp(\mathcal{N}(0, 0.12^2)) \times \text{rush\_factor} \right)$$
+   * **Departure Delay:** $\mathcal{U}(-10, +20)$ menit terhadap rencana jadwal keberangkatan peternakan.
+   * **Base Transit per Farm:**
+     - `FARM-01`: $45\text{ menit}$ (jarak dekat, $7\text{ rit/hari}$)
+     - `FARM-02`: $75\text{ menit}$ ($6\text{ rit/hari}$)
+     - `FARM-03`: $110\text{ menit}$ ($6\text{ rit/hari}$)
+     - `FARM-04`: $140\text{ menit}$ ($5\text{ rit/hari}$)
+     - `FARM-05`: $180\text{ menit}$ (jarak terjauh, $6\text{ rit/hari}$)
+   * **Rush-Hour Multiplier:**
+     - Jam sibuk pagi ($07:00 - 09:00$ / menit $60..180$): pengali $1.35\times$.
+     - Jam sibuk sore ($16:00 - 18:00$ / menit $600..720$): pengali $1.25\times$.
+     - Di luar jam sibuk: $1.0\times$.
+
+2. **Distribusi Durasi Uji Lab:**
+   $$\text{Durasi} = \max\left(10, \text{round}\left(\text{Lognormal}(\mu=\ln(20.0), \sigma=0.18)\right) + \text{shift\_delay}\right)$$
+   * **Shift Handover Delay:** Ditambahkan $+8\text{ menit}$ antrean jika waktu sampling berada dalam rentang $\pm 20\text{ menit}$ dari pergantian shift ($06:00$, $14:00$, $22:00$).
+
+3. **Tingkat Kegagalan Mutu (QC Fail Rate) per Farm:**
+   * `FARM-01`: $2.0\%$ (Kualitas stabil prima)
+   * `FARM-02`: $3.0\%$
+   * `FARM-03`: $4.0\%$
+   * `FARM-04`: $2.5\%$
+   * `FARM-05`: $5.0\%$ (Resiko kontaminasi atau asam lebih tinggi akibat jarak jauh)
+   * *Penegakan Gate:* Truk dengan QC Gagal langsung berstatus `REJECTED`, dilarang masuk bay unloading, dan muatannya tidak masuk neraca produksi.
+
+4. **Order Mix dan Neraca Massa:**
+   * Campuran produk: ESL Full Cream, ESL Cokelat, UHT Full Cream, UHT Cokelat, ESL Stroberi.
+   * Setiap hari konsumsi diatur sesuai debit penerimaan susu segar yang lolos uji sehingga:
+     $$\text{Opening Stock} + \text{Total Milk In} = \text{Liquid Consumed} + \text{Closing Stock} \quad (\text{Residual} < 0.01\text{ L})$$
+

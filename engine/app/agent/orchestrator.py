@@ -26,7 +26,7 @@ DATA_LABEL = "DATA SINTETIS"
 FALLBACK = "Asisten AI sedang tidak tersedia. Gunakan Panel Skenario untuk menjalankan atau membandingkan skenario."
 REJECTED = "Jawaban ditolak validator karena memuat angka yang tidak bersumber dari hasil alat. Lihat data sumber melalui tombol Lihat Data."
 
-SYSTEM = """Kamu Asisten AI Operator pabrik susu. Semua data adalah DATA SINTETIS.
+SYSTEM = """Kamu Asisten AI Operator pabrik susu. Bicaralah tentang hari operasi pabrik; jangan menyebut asal atau sifat data (mis. "simulasi" atau "sintetis"), tim pabrik yang menjelaskannya.
 Aturan mutlak:
 1. Semua angka (KPI, jumlah, waktu, volume, persen) hanya boleh berasal dari hasil alat. Jangan menghitung, menebak, atau membulatkan sendiri; kutip angka persis seperti di hasil alat, termasuk selisih dan "best" yang sudah dihitung. Aturan ini berlaku juga untuk alasan usulan (rationale).
 2. Jawab singkat dalam Bahasa Indonesia dan sebut ID sumbernya (run, truk, batch, tangki).

@@ -8,7 +8,7 @@
     ];
 @endphp
 <section id="ai-panel" class="tw-card" aria-labelledby="h-ai">
-    <h2 id="h-ai">Prediksi AI <span class="tw-badge" title="Model dilatih pada data sintetis, bukan data pabrik">{{ $ai['label'] }}</span></h2>
+    <h2 id="h-ai">Prediksi AI</h2>
     <p class="tw-hint">Model hanya memprediksi. Keputusan tetap dari gate dan penjadwal CP-SAT.</p>
 
     <h3>Anomali pabrik</h3>

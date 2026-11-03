@@ -17,15 +17,15 @@
         <h2>{{ $mode === 'operator' ? 'Operator View' : 'Check-in kedatangan truk' }}</h2>
         <p id="field-status" role="status">Memuat...</p>
         <button type="button" id="field-sync" hidden>Kirim sekarang</button>
-        <p id="field-empty" hidden>Belum ada run selesai. Minta PPIC menjalankan simulasi.</p>
+        <p id="field-empty" hidden>Belum ada run selesai. Minta PPIC memulai operasi.</p>
     </div>
 
     <div id="field-content" hidden>
         @if ($mode === 'operator')
             <div class="card">
-                <h3>Jam simulasi: <span id="sim-clock" class="mono">--:--</span></h3>
-                <input id="sim-slider" type="range" min="0" max="100" value="0" aria-label="Jam simulasi">
-                <p>Status aset dan tugas dihitung dari rencana jadwal pada jam simulasi ini (perkiraan; rencana tidak memuat durasi aktual).</p>
+                <h3>Jam: <span id="sim-clock" class="mono">--:--</span></h3>
+                <input id="sim-slider" type="range" min="0" max="100" value="0" aria-label="Jam">
+                <p>Status aset dan tugas dihitung dari rencana jadwal pada jam ini (perkiraan; rencana tidak memuat durasi aktual).</p>
                 <h4>Status aset</h4>
                 <table><thead><tr><th>Aset</th><th>Status</th></tr></thead><tbody id="assets-body"></tbody></table>
                 <h4>Tugas aktif dan berikutnya</h4>

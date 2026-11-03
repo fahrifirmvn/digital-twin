@@ -57,7 +57,7 @@ class DashboardPagesTest extends TestCase
     {
         $run = $this->finishedRun(7);
         $this->as(Role::Ppic)->get(route('runs.show', $run))
-            ->assertOk()->assertSee('Prediksi AI')->assertSee('DATA SINTETIS')->assertSee('Anomali pabrik');
+            ->assertOk()->assertSee('Prediksi AI')->assertDontSee('DATA SINTETIS')->assertSee('Anomali pabrik');
     }
 
     public function test_pages_without_any_run_show_empty_state(): void
@@ -211,7 +211,7 @@ class DashboardPagesTest extends TestCase
         $this->finishedRun(1);
 
         $this->as(Role::Ppic)->get('/maps')->assertOk()
-            ->assertSee('id="map"', false)->assertSee('id="m-rows"', false)->assertSee('Baru tiba di gerbang')
+            ->assertSee('id="map"', false)->assertSee('id="m-rows"', false)->assertSee('id="m-card"', false)
             ->assertSee('data-replay-url="'.route('runs.replay', 1).'"', false)
             ->assertSee('data-twin-url="'.route('twin', ['run' => 1]).'"', false)
             ->assertSee('id="tw-minimize"', false);

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', $campaign->name.' | Kampanye')
+@section('title', $campaign->name.' | Operasi')
 @if ($current && $current->status === 'running')
     @push('head')<meta http-equiv="refresh" content="4">@endpush
 @endif
@@ -7,12 +7,12 @@
 @section('content')
 @php $status = ['planned' => 'Direncanakan', 'running' => 'Berjalan', 'closed' => 'Ditutup', 'failed' => 'Gagal']; @endphp
 <div class="card">
-    <h1>{{ $campaign->name }} <span class="badge">SIMULASI</span></h1>
+    <h1>{{ $campaign->name }}</h1>
     <button id="cp-open" type="button" aria-expanded="false" aria-controls="cp-drawer">Asisten AI</button>
     <p>
         Konfigurasi {{ $campaign->config }}, skenario {{ config('twin.scenarios')[$campaign->scenario] ?? $campaign->scenario }}, seed {{ $campaign->seed }},
         volume {{ $campaign->params['volume_ton'] ?? '-' }} t/hari.
-        @if ($campaign->parent_campaign_id)Cabang dari <a href="{{ route('campaigns.show', $campaign->parent_campaign_id) }}">kampanye #{{ $campaign->parent_campaign_id }}</a> hari {{ $campaign->branched_from_day }}.@endif
+        @if ($campaign->parent_campaign_id)Cabang dari <a href="{{ route('campaigns.show', $campaign->parent_campaign_id) }}">operasi #{{ $campaign->parent_campaign_id }}</a> hari {{ $campaign->branched_from_day }}.@endif
     </p>
     <p class="{{ $integrity['ok'] ? 'ok' : 'err' }}">
         @if ($integrity['ok'])Rantai checkpoint utuh.@else Rantai checkpoint rusak pada hari {{ $integrity['broken_day'] }}.@endif

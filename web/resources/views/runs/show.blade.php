@@ -30,7 +30,7 @@
                     {{ $run->config_snapshot['params']['extra_bad'] ?? 0 }} truk di luar batas mutu.
                 </p>
             </div>
-            <div class="tw-dock tw-dock-inline" role="group" aria-label="Kontrol waktu simulasi">
+            <div class="tw-dock tw-dock-inline" role="group" aria-label="Kontrol waktu">
                 <button id="play" class="tw-play" type="button"></button>
                 <select id="speed" aria-label="Kecepatan">
                     <option value="5">5 mnt/dtk</option>
@@ -41,7 +41,7 @@
                     <option value="300">300 mnt/dtk</option>
                     <option value="600">600 mnt/dtk</option>
                 </select>
-                <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu simulasi">
+                <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu">
                 <strong id="clock" class="mono">00:00</strong>
             </div>
         </div>

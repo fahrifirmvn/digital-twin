@@ -226,7 +226,7 @@ class SimulationTest extends TestCase
         $base = $this->base();
         SimRun::forceCreate(['kind' => 'simulation', 'seed' => 3, 'status' => 'finished', 'parent_run_id' => $base->id, 'fork_minute' => 420, 'config_snapshot' => []]);
 
-        $this->as(Role::Ppic)->get('/runs')->assertOk()->assertSee("SIMULASI dari #{$base->id}");
+        $this->as(Role::Ppic)->get('/runs')->assertOk()->assertSee("Pratinjau dari #{$base->id}");
     }
 
     public function test_intervention_fork_stores_truck_args_and_sends_them_to_engine(): void

@@ -47,6 +47,7 @@ class TruckLayer {
         const o = maplibregl.MercatorCoordinate.fromLngLat(GATE_LL, 0);
         this.origin = o;
         this.unit = o.meterInMercatorCoordinateUnits();
+        if (this.pending) this.sync(...this.pending);
     }
 
     onRemove() {
@@ -56,6 +57,11 @@ class TruckLayer {
 
     /** Taruh, putar, dan beri warna truk; truk yang tidak ada lagi dibuang. */
     sync(list, selected) {
+        // Layer baru ada setelah gaya peta selesai dimuat; data terakhir dipakai begitu layer siap.
+        if (!this.scene) {
+            this.pending = [list, selected];
+            return;
+        }
         const live = new Set(list.map((t) => t.code));
         for (const [code, it] of this.items) {
             if (live.has(code)) continue;
@@ -119,6 +125,27 @@ class ViewControl {
     }
 }
 
+/** Panah putih bertepi biru untuk arah jalan. */
+function arrowImage() {
+    const n = 32;
+    const c = document.createElement('canvas');
+    c.width = n;
+    c.height = n;
+    const g = c.getContext('2d');
+    g.beginPath();
+    g.moveTo(9, 7);
+    g.lineTo(23, 16);
+    g.lineTo(9, 25);
+    g.lineTo(13, 16);
+    g.closePath();
+    g.fillStyle = '#ffffff';
+    g.strokeStyle = '#0b4aa8';
+    g.lineWidth = 2;
+    g.stroke();
+    g.fill();
+    return g.getImageData(0, 0, n, n);
+}
+
 const el = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -127,8 +154,24 @@ const el = (tag, cls, text) => {
 };
 
 export class GeoMap {
+    /** Ambil gaya peta dulu (batas 6 dtk); tanpa internet peta langsung memakai latar polos, jalur dan truk tetap tampil. */
+    static async create(container, opts = {}) {
+        let style = BLANK_STYLE;
+        try {
+            const ctl = new AbortController();
+            const timer = setTimeout(() => ctl.abort(), 6000);
+            const res = await fetch(STYLE_URL, { signal: ctl.signal });
+            clearTimeout(timer);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            style = await res.json();
+        } catch {
+            opts.onFallback?.();
+        }
+        return new GeoMap(container, { ...opts, style });
+    }
+
     /** onSelect(code) dipanggil saat truk atau labelnya diklik. onFallback() saat peta dasar tidak bisa dimuat. */
-    constructor(container, { onSelect, onFallback } = {}) {
+    constructor(container, { onSelect, onFallback, style } = {}) {
         this.onSelect = onSelect ?? (() => {});
         this.onFallback = onFallback ?? (() => {});
         this.labels = new Map();
@@ -142,7 +185,7 @@ export class GeoMap {
         const bounds = pts.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
         this.bounds = bounds;
         this.map = new maplibregl.Map({
-            container, style: STYLE_URL, bounds, fitBoundsOptions: { padding: 70 }, pitch: 40, maxPitch: 75,
+            container, style: style ?? STYLE_URL, bounds, fitBoundsOptions: { padding: 70 }, pitch: 40, maxPitch: 75,
             attributionControl: { compact: true }, canvasContextAttributes: { antialias: true },
         });
         const map = this.map;
@@ -160,11 +203,20 @@ export class GeoMap {
             this.overlays();
         });
         map.on('error', (e) => {
-            if (this.styleReady || this.fellBack) return;
+            if (this.fellBack) return;
+            // Gaya sudah tampil tetapi petak peta gagal: beri tahu saja; gaya yang gagal dimuat diganti latar polos.
+            if (this.styleReady) {
+                if (e.sourceId) {
+                    this.fellBack = true;
+                    this.onFallback(e.error);
+                }
+                return;
+            }
             this.fellBack = true;
             this.onFallback(e?.error);
             map.setStyle(BLANK_STYLE);
         });
+        map.on('dragstart', () => { this.following = false; });
         map.on('click', (e) => this.onSelect(this.pick(e.point)));
         map.on('mousemove', (e) => { map.getCanvas().style.cursor = this.pick(e.point) ? 'pointer' : ''; });
     }
@@ -190,6 +242,9 @@ export class GeoMap {
         add({ id: 'route-line', type: 'line', source: 'routes', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ROUTE_COLOR, 'line-width': w } });
         add({ id: 'fence-fill', type: 'fill', source: 'fence', paint: { 'fill-color': ROUTE_COLOR, 'fill-opacity': 0.12 } });
         add({ id: 'fence-line', type: 'line', source: 'fence', paint: { 'line-color': ROUTE_COLOR, 'line-width': 2, 'line-dasharray': [3, 2] } });
+        // Panah arah jalan: truk selalu menuju gerbang.
+        if (!map.hasImage('route-arrow')) map.addImage('route-arrow', arrowImage(), { pixelRatio: 2 });
+        add({ id: 'route-arrows', type: 'symbol', source: 'routes', layout: { 'symbol-placement': 'line', 'symbol-spacing': 110, 'icon-image': 'route-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.8, 18, 1.1], 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-rotation-alignment': 'map' } });
         if (!map.getLayer(this.truckLayer.id)) map.addLayer(this.truckLayer);
         this.truckLayer.sync(this.list, this.selected);
     }
@@ -239,8 +294,9 @@ export class GeoMap {
     }
 
     /** list = inboundList(state, GEO_GEOMETRY); arrivals = recentArrivals(state). */
-    update(list, arrivals, selected) {
+    update(list, arrivals, selected, follow = false) {
         const prev = this.selected;
+        if (selected !== prev) this.following = follow;
         this.list = list;
         this.selected = selected;
         this.truckLayer.sync(list, selected);
@@ -256,6 +312,7 @@ export class GeoMap {
         }
         const cur = selected && list.find((t) => t.code === selected);
         if (cur && selected !== prev) this.map.easeTo({ center: [cur.pos.lng, cur.pos.lat], zoom: Math.max(this.map.getZoom(), 13), duration: 700 });
+        else if (cur && this.following && !this.map.isMoving()) this.map.easeTo({ center: [cur.pos.lng, cur.pos.lat], duration: 400 });
     }
 
     resize() {

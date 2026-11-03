@@ -418,7 +418,7 @@ class ProposalTest extends TestCase
 
         $this->as(Role::Ppic);
         $this->get(route('campaigns.show', $campaign))->assertOk()
-            ->assertSee('id="cp-drawer"', false)->assertSee('DATA SINTETIS | mode SIMULASI')
+            ->assertSee('id="cp-drawer"', false)->assertDontSee('DATA SINTETIS')
             ->assertSee('data-can-approve="1"', false)->assertSee('data-campaign-id="'.$campaign->id.'"', false);
 
         $this->as(Role::Operator);

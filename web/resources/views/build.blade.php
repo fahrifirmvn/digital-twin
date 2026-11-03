@@ -21,7 +21,7 @@
 
         <section class="tw-card tw-build-plant" data-collapse="build-plant" aria-labelledby="b-h-plant">
             <h2 id="b-h-plant">Susunan pabrik</h2>
-            <p class="tw-hint">Jumlah tiap modul 1 sampai 8. Perubahan memengaruhi simulasi baru, tidak mengubah run yang sudah ada.</p>
+            <p class="tw-hint">Jumlah tiap modul 1 sampai 8. Perubahan berlaku untuk uji baru, tidak mengubah hari yang sudah ada.</p>
             <div id="b-fields" class="tw-sim-form"></div>
             <p id="b-summary" class="tw-hint" role="status"></p>
             <div class="tw-sim-form">
@@ -41,7 +41,7 @@
         </section>
 
         <section class="tw-card tw-build-run" data-collapse="build-run" aria-labelledby="b-h-run">
-            <h2 id="b-h-run">Jalankan simulasi</h2>
+            <h2 id="b-h-run">Jalankan uji</h2>
             @error('engine')<p class="tw-sim-err" role="alert">{{ $message }}</p>@enderror
             @if ($errors->any() && ! $errors->has('engine'))<p class="tw-sim-err" role="alert">{{ $errors->first() }}</p>@endif
             <form id="b-run" class="tw-sim-form" method="POST" action="{{ route('runs.store') }}">
@@ -69,7 +69,7 @@
                 <label>Truk di luar batas mutu <input type="number" name="extra_bad" value="{{ old('extra_bad', 0) }}" min="0" max="10" required></label>
                 <button class="tw-iv-btn primary" type="submit">Jalankan dengan susunan ini</button>
             </form>
-            <p class="tw-hint">Seluruh data adalah simulasi. Hasil dibuka di Digital Twin begitu run selesai.</p>
+            <p class="tw-hint">Hasil dibuka di Digital Twin begitu uji selesai.</p>
         </section>
     </main>
 </div>

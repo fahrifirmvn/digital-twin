@@ -539,3 +539,16 @@ button.tw-daychip:hover { background: var(--hover); }
 .dash-more > summary { cursor: pointer; font-weight: 700; font-size: 16px; }
 .dash-more[open] > summary { margin-bottom: 14px; }
 .dash-more > .dash-cols, .dash-more > section { margin-top: 16px; }
+
+/* Maps: kartu truk di bawah peta */
+.tw-gm-card { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); width: min(380px, calc(100% - 32px)); display: grid; gap: 6px; padding: 14px 16px; z-index: 6; }
+.tw-gm-card[hidden] { display: none; }
+.tw-gm-card-head { display: flex; align-items: center; gap: 10px; }
+.tw-gm-card-head b { font-size: 18px; }
+.tw-gm-card-head .tw-ico { margin-left: auto; }
+.tw-gm-card p { margin: 0; }
+.tw-gm-eta b { font-size: 20px; }
+.tw-gm-bar { display: block; height: 6px; border-radius: 3px; background: var(--mute-soft); overflow: hidden; }
+.tw-gm-bar i { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+.tw-gm-card-actions { display: flex; gap: 8px; margin-top: 4px; }
+.tw-gm-card-actions .tw-btn { flex: 1; justify-content: center; }

@@ -6,7 +6,7 @@
 
 @can('run-scenario')
 <div class="card">
-    <h2>Jalankan simulasi</h2>
+    <h2>Jalankan uji</h2>
     <form method="POST" action="{{ route('runs.store') }}" class="run-form">
         @csrf
         <label>Konfigurasi
@@ -45,7 +45,7 @@
             <tbody>
             @foreach ($runs as $r)
                 <tr>
-                    <td>{{ $r->id }}@if ($r->kind === 'simulation') <small title="Cabang what-if dari run #{{ $r->parent_run_id }}">SIMULASI dari #{{ $r->parent_run_id }}</small>@elseif ($r->kind === 'campaign') <small>KAMPANYE</small>@endif</td>
+                    <td>{{ $r->id }}@if ($r->kind === 'simulation') <small title="Pratinjau dampak dari run #{{ $r->parent_run_id }}">Pratinjau dari #{{ $r->parent_run_id }}</small>@elseif ($r->kind === 'campaign') <small>Operasi</small>@endif</td>
                     <td>{{ $r->config }}</td>
                     <td>{{ config('twin.scenarios')[$r->scenario] ?? $r->scenario }}</td>
                     <td>{{ $r->status }}</td>

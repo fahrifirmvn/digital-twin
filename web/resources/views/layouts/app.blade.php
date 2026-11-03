@@ -33,7 +33,7 @@
     <header>
         <nav>
             <a href="{{ route('dashboard') }}">Dashboard</a>
-            @can('view-twin-full')<a href="{{ route('twin') }}">Digital Twin</a><a href="{{ route('runs.index') }}">Daftar run</a><a href="{{ route('campaigns.index') }}">Kampanye</a>@endcan
+            @can('view-twin-full')<a href="{{ route('twin') }}">Digital Twin</a><a href="{{ route('campaigns.index') }}">Operasi</a>@endcan
             @can('check-in-truck')<a href="{{ route('driver') }}">Check-in truk</a>@endcan
             @can('confirm-handoff')<a href="{{ route('operator') }}">Operator</a>@endcan
             @can('view-trace')<a href="{{ route('trace') }}">Traceability</a>@endcan
@@ -47,7 +47,7 @@
     </header>
 @endauth
 <main>
-    <p><span class="badge">DATA SINTETIS</span> Seluruh data adalah data simulasi.
+    <p>
     @yield('content')
 </main>
 @endif

@@ -164,7 +164,7 @@
                     <p class="tw-hint">Run ini belum punya neraca volume. Buat run baru untuk melihatnya.</p>
                 @else
                     <p class="dash-verdict" data-state="{{ $balance['balanced'] ? 'ok' : 'over' }}"><b>{{ $balance['balanced'] ? 'Neraca seimbang.' : 'Neraca tidak seimbang, periksa data run.' }}</b></p>
-                    <details class="dash-note"><summary>Catatan asumsi</summary><p class="muted">Satuan liter; engine menghitung dalam ton dengan massa jenis susu 1,03 kg/L (1 ton = 970,87 L). @if ($balance['not_received_ton'] > 0) {{ \App\Support\Volume::l($balance['not_received_ton']) }} susu tidak diterima karena truk ditahan atau ditolak di gerbang atau lab. @endif Stok awal bukan bagian dari proses simulasi; ia dicatat apa adanya sebagai sisa.</p></details>
+                    <details class="dash-note"><summary>Catatan asumsi</summary><p class="muted">Satuan liter; engine menghitung dalam ton dengan massa jenis susu 1,03 kg/L (1 ton = 970,87 L). @if ($balance['not_received_ton'] > 0) {{ \App\Support\Volume::l($balance['not_received_ton']) }} susu tidak diterima karena truk ditahan atau ditolak di gerbang atau lab. @endif Stok awal bukan bagian dari proses hari ini; ia dicatat apa adanya sebagai sisa.</p></details>
                     <div class="tw-table-scroll" tabindex="0" aria-label="Neraca volume, dapat digulir">
                         <table class="dash-table">
                             <thead><tr><th>Masuk</th><th class="num">Liter</th><th>Keluar atau sisa</th><th class="num">Liter</th></tr></thead>

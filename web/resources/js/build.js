@@ -35,7 +35,7 @@ function preview() {
 
 function renderFields() {
     $('b-fields').replaceChildren(...PLANT_FIELDS.map((f) => h('label', {},
-        h('span', {}, f.label, f.drawn ? '' : ' (hanya simulasi)'),
+        h('span', {}, f.label, f.drawn ? '' : ' (belum tampil)'),
         h('input', {
             type: 'number', min: f.min, max: f.max, step: 1, value: plant[f.key], 'data-key': f.key,
             oninput: (e) => {

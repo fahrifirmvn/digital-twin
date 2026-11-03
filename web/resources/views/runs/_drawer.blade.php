@@ -15,11 +15,11 @@
         <button id="cp-new" class="as-new as-secondary" type="button">Percakapan baru</button>
         <button id="cp-close" class="tw-ico" type="button" aria-label="Tutup asisten" data-icon="x"></button>
     </div>
-    <p id="cp-label" class="as-label">DATA SINTETIS | mode {{ $asMode }}</p>
-    <p class="as-meta">Asisten hanya membaca hasil simulasi dan mengusulkan. Keputusan tetap di PPIC.</p>
+    <p id="cp-label" class="as-label" data-mode="{{ $asMode }}" hidden></p>
+    <p class="as-meta">Asisten hanya membaca data operasi dan mengusulkan. Keputusan tetap di PPIC.</p>
     @isset($campaign)
     <section aria-labelledby="cp-ptitle">
-        <h3 id="cp-ptitle">Usulan kampanye</h3>
+        <h3 id="cp-ptitle">Usulan operasi</h3>
         <p id="cp-empty" class="as-meta">Belum ada usulan. Minta asisten mengusulkan jadwal maintenance tangki.</p>
         <div id="cp-plist" class="as-log"></div>
     </section>

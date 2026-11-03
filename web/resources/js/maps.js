@@ -36,7 +36,7 @@ async function start(data) {
     const canvas = $('map');
     canvas.hidden = false;
     const { GeoMap } = await import('./twin/map/geomap.js');
-    const map = new GeoMap(canvas, {
+    const map = await GeoMap.create(canvas, {
         onSelect: (code) => { if (code) select(code); else if (selected) select(selected); },
         onFallback: () => { $('m-offline').hidden = false; },
     });
@@ -47,7 +47,6 @@ async function start(data) {
     let minute = Math.min(savedMinute(runId), model.endMin);
     let selected = null;
     let rowsSig = '';
-    let arrivedSig = '';
 
     scrub.max = Math.ceil(model.endMin);
     $('m-nodata').hidden = hasTrips;
@@ -83,32 +82,54 @@ async function start(data) {
         h('td', {}, h('span', { class: 'mono' }, clock(t.etaM)), h('small', { class: 'tw-sub' }, `${t.minsLeft} mnt lagi`), t.inGeofence ? chipEl({ tone: 'ok', icon: 'check', label: 'Di geofence' }) : null))));
     }
 
-    function renderArrived(list) {
-        const sig = list.map((t) => `${t.code}:${t.ago}`).join(',');
-        if (sig === arrivedSig) return;
-        arrivedSig = sig;
-        const ul = $('m-arrived-list');
-        if (!list.length) {
-            ul.replaceChildren(h('li', { class: 'tw-hint' }, 'Belum ada truk yang baru tiba.'));
+    function closeBtn(code) {
+        const b = h('button', { class: 'tw-ico', type: 'button', 'aria-label': 'Tutup kartu truk', onclick: () => select(code) });
+        b.innerHTML = icon('x', 18);
+        return b;
+    }
+
+    // Kartu truk di bawah peta (ala Google Maps): plat, asal, ETA, kemajuan, dan tombol ikuti.
+    let cardSig = '';
+    function renderCard(list) {
+        const card = $('m-card');
+        const t = selected ? list.find((x) => x.code === selected) : null;
+        if (!t) {
+            card.hidden = true;
+            cardSig = '';
             return;
         }
-        ul.replaceChildren(...list.map((t) => h('li', { class: 'row-item' },
-            h('span', {}, h('b', { class: 'mono' }, t.plate ?? t.code), h('small', {}, `${t.farmName} · ${t.ago} mnt lalu`)),
-            h('a', { href: twinLink(t.code), 'aria-label': `Buka ${t.plate ?? t.code} di Digital Twin` }, 'Buka di Twin'))));
+        const sig = `${t.code}|${t.minsLeft}|${t.inGeofence}|${Math.round(t.progress * 100)}|${map.following}`;
+        if (sig === cardSig) return;
+        cardSig = sig;
+        card.hidden = false;
+        const bar = h('span', { class: 'tw-gm-bar' }, h('i', {}));
+        bar.firstChild.style.width = `${Math.round(Math.max(0, Math.min(1, t.progress)) * 100)}%`;
+        card.replaceChildren(
+            h('div', { class: 'tw-gm-card-head' },
+                h('b', { class: 'mono' }, t.plate ?? t.code),
+                t.inGeofence ? chipEl({ tone: 'ok', icon: 'check', label: 'Di geofence' }) : h('span', { class: 'tw-sub' }, 'Menuju gerbang'),
+                closeBtn(t.code)),
+            h('p', { class: 'tw-sub' }, `${t.farmName} · jalur ${t.routeName.toLowerCase()}`),
+            h('p', { class: 'tw-gm-eta' }, h('b', {}, `${t.minsLeft} mnt lagi`), h('span', { class: 'mono' }, ` tiba ${clock(t.etaM)}`)),
+            bar,
+            h('div', { class: 'tw-gm-card-actions' },
+                h('button', { class: 'tw-btn', type: 'button', 'aria-pressed': String(Boolean(map.following)), onclick: () => { map.following = !map.following; cardSig = ''; renderCard(list); } }, map.following ? 'Berhenti ikuti' : 'Ikuti'),
+                h('a', { class: 'tw-btn', href: twinLink(t.code) }, 'Buka di Twin')),
+        );
     }
 
     function render() {
         const s = replay.seek(minute);
         const list = inboundList(s, GEO_GEOMETRY);
         if (selected && !list.some((t) => t.code === selected)) selected = null;
-        map.update(list, recentArrivals(s, 10), selected);
+        map.update(list, recentArrivals(s, 10), selected, true);
         const k = mapStats(s, total, GEO_GEOMETRY);
         $('m-inbound').textContent = k.inbound;
         $('m-next').textContent = k.nextEtaM == null ? '-' : clock(k.nextEtaM);
         $('m-fence').textContent = k.inGeofence;
         $('m-arrived').textContent = `${k.arrived}/${k.total}`;
         renderRows(list);
-        renderArrived(recentArrivals(s, 15));
+        renderCard(list);
         scrub.value = Math.floor(minute);
         $('clock').textContent = clock(minute);
     }

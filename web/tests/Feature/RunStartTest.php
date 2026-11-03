@@ -65,7 +65,7 @@ class RunStartTest extends TestCase
         $this->withoutVite();
         $run = SimRun::forceCreate(['kind' => 'live', 'seed' => 1, 'status' => 'running', 'config_snapshot' => json_encode(['params' => ['volume_ton' => 320, 'extra_bad' => 0]])]);
 
-        $this->as(Role::Ppic)->get('/runs')->assertOk()->assertSee('Jalankan simulasi')->assertSee('Run terbaru');
+        $this->as(Role::Ppic)->get('/runs')->assertOk()->assertSee('Jalankan uji')->assertSee('Run terbaru');
         $this->get('/dashboard')->assertOk()->assertSee('Dashboard')->assertSee(route('twin', ['run' => $run->id]), false);
         $this->get("/runs/{$run->id}")->assertOk()->assertSee('Dashboard Monitoring')->assertSee('id="gantt"', false)
             ->assertSee('id="twin-preview"', false)->assertSee('Buka Digital Twin')
@@ -74,7 +74,7 @@ class RunStartTest extends TestCase
             ->assertDontSee('id="view-3d"', false)->assertSee('id="day-end"', false)->assertSee('Statistik Langsung')
             ->assertSee('Pelacakan Truk')->assertSee('Kontrol peta')->assertSee(route('runs.show', $run->id), false);
 
-        $this->as(Role::Qa)->get('/runs')->assertOk()->assertDontSee('Jalankan simulasi');
+        $this->as(Role::Qa)->get('/runs')->assertOk()->assertDontSee('Jalankan uji');
         $this->as(Role::Driver)->get('/dashboard')->assertOk()->assertDontSee('Run terbaru');
         $this->get("/runs/{$run->id}")->assertForbidden();
         $this->get("/runs/{$run->id}/twin")->assertForbidden();

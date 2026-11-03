@@ -182,7 +182,7 @@
             </section>
         </div>
 
-        <div class="tw-dock" role="group" aria-label="Kontrol waktu simulasi">
+        <div class="tw-dock" role="group" aria-label="Kontrol waktu">
             <button id="play" class="tw-play" type="button"></button>
             <select id="speed" aria-label="Kecepatan">
                 <option value="2">1x</option>
@@ -190,7 +190,7 @@
                 <option value="40">20x</option>
             </select>
             <div class="tw-scrub">
-                <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu simulasi">
+                <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu">
                 <div id="scrub-marks" class="tw-marks" aria-hidden="true"></div>
             </div>
             <strong id="clock" class="mono">00:00</strong>

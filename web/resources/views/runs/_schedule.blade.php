@@ -12,7 +12,7 @@
 @endphp
 <div class="card" id="schedule">
     <h3>Rencana jadwal</h3>
-    <p class="muted">Optimizer hanya mengusulkan; keputusan release tetap dari gate G1-G6. Data sintetis.</p>
+    <p class="muted">Optimizer hanya mengusulkan; keputusan release tetap dari gate G1-G6.</p>
     <table>
         <thead><tr><th>Versi</th><th>Status</th><th>Dibuat oleh</th><th>Truk</th><th>Persetujuan</th></tr></thead>
         <tbody>

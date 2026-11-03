@@ -19,9 +19,8 @@
         <h1 class="sr-only">Peta truk menuju gerbang</h1>
         <div id="map" class="tw-map tw-geomap" role="application" aria-label="Peta truk menuju gerbang pabrik; rincian ada pada daftar truk" hidden></div>
         <p id="m-offline" class="tw-gm-note tw-gm-offline" role="status" hidden>Peta dasar tidak dapat dimuat (perlu internet). Jalur, geofence, dan truk tetap tampil.</p>
-        <p class="tw-gm-note">Lokasi pabrik dan jalur adalah simulasi. Plat nomor sintetis.</p>
 
-        <p id="tw-loading" class="tw-loading" role="status"><span id="run-msg">Memuat simulasi...</span></p>
+        <p id="tw-loading" class="tw-loading" role="status"><span id="run-msg">Memuat peta…</span></p>
 
         <section class="tw-card tw-stats" data-collapse="maps-stats" aria-label="Ringkasan perjalanan">
             <h2>Menuju Gerbang</h2>
@@ -31,8 +30,7 @@
                 <div class="tw-stat"><b id="m-fence">0</b><span>di geofence</span></div>
                 <div class="tw-stat"><b id="m-arrived">0</b><span>sudah tiba</span></div>
             </div>
-            <p id="m-nodata" class="tw-hint" hidden>Run ini dibuat sebelum data perjalanan tersedia. Jalankan run baru untuk melihat truk menuju gerbang.</p>
-            <p class="tw-hint"><a href="{{ route('twin', ['run' => $run->id]) }}">Lihat di Digital Twin</a></p>
+            <p id="m-nodata" class="tw-hint" hidden>Belum ada data perjalanan untuk hari ini.</p>
         </section>
 
         <div class="tw-rail">
@@ -45,23 +43,18 @@
                     </table>
                 </div>
             </section>
-            <section class="tw-card tw-arrived" data-collapse="maps-arrived" aria-labelledby="h-arrived">
-                <h2 id="h-arrived">Baru tiba di gerbang</h2>
-                <ul id="m-arrived-list" class="plain"></ul>
-            </section>
         </div>
 
-        <div class="tw-dock" role="group" aria-label="Kontrol waktu simulasi">
+        <section id="m-card" class="tw-card tw-gm-card" aria-live="polite" hidden></section>
+
+        <div class="tw-dock" role="group" aria-label="Kontrol waktu">
             <button id="play" class="tw-play" type="button"></button>
             <select id="speed" aria-label="Kecepatan">
-                <option value="5">5 mnt/dtk</option>
-                <option value="10" selected>10 mnt/dtk</option>
-                <option value="30">30 mnt/dtk</option>
-                <option value="60">60 mnt/dtk</option>
-                <option value="120">120 mnt/dtk</option>
-                <option value="300">300 mnt/dtk</option>
+                <option value="2">1x</option>
+                <option value="10" selected>5x</option>
+                <option value="40">20x</option>
             </select>
-            <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu simulasi">
+            <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu">
             <strong id="clock" class="mono">00:00</strong>
         </div>
     </main>

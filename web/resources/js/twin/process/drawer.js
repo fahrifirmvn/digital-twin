@@ -171,7 +171,7 @@ export function createDrawer({ onClose, onAsk, now }) {
         }, label)));
         const pane = h('div', { class: 'px-pane', id: 'px-pane', role: 'tabpanel', 'aria-labelledby': `px-tab-${tab}`, tabindex: 0 }, sampleChip(), PANES[tab](a, now));
         const sim = simPrompt(a);
-        const simBtn = h('button', { class: 'px-btn', type: 'button', disabled: !sim, title: sim ? 'Menyiapkan pertanyaan simulasi di Asisten (tidak mengubah aset)' : 'Belum ada padanan di mesin simulasi (data contoh)', onclick: () => onAsk(sim) }, 'Simulasikan maintenance');
+        const simBtn = h('button', { class: 'px-btn', type: 'button', disabled: !sim, title: sim ? 'Menyiapkan pertanyaan di Asisten (tidak mengubah aset)' : 'Belum ada padanan di mesin simulasi (data contoh)', onclick: () => onAsk(sim) }, 'Simulasikan maintenance');
         const askBtn = h('button', { class: 'px-btn primary', type: 'button', title: 'Menyiapkan pertanyaan di Asisten (tidak mengubah aset)', onclick: () => onAsk(askPrompt(a)) }, 'Tanya Asisten');
         el.replaceChildren(head, tabs, pane, h('footer', { class: 'px-dr-foot' }, simBtn, askBtn));
     };

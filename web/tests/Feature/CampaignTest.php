@@ -84,7 +84,7 @@ class CampaignTest extends TestCase
         $this->as(Role::Driver);
         $this->get('/campaigns')->assertForbidden();
         $this->as(Role::Admin);
-        $this->get("/campaigns/{$c->id}")->assertOk()->assertSee('SIMULASI');
+        $this->get("/campaigns/{$c->id}")->assertOk()->assertDontSee('SIMULASI');
     }
 
     public function test_plan_maintenance_validates_and_records_reason_and_actor(): void

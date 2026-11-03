@@ -220,6 +220,11 @@ class RunResult(Strict):
     gates: list[GateOut]
     cips: list[CipOut]
     events: list[TwinEvent]
+    day: int | None = Field(default=None, description="Nomor hari operasi; null = run tunggal")
+    carry_out: dict | None = Field(
+        default=None, description="Keadaan akhir hari yang menjadi keadaan awal hari berikut"
+    )
+    day_summary: dict | None = Field(default=None, description="Ringkasan akhir hari")
 
 
 class RunFailure(Strict):

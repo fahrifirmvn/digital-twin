@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 import simpy.rt
 
+from app.carry import CarryState
 from app.commands import Command
 from app.contracts.result import RunFailure, RunResult
 from app.experiment import CONFIGS, simulate
@@ -30,6 +31,9 @@ class Run:
     speed: float | None = None
     plant: PlantConfig | None = None  # None = pabrik bawaan
     commands: tuple[Command, ...] = ()  # perintah mode Simulasi
+    day: int | None = None  # nomor hari operasi
+    carry: CarryState | None = None
+    date: str | None = None
     status: str = "running"  # running, finished, failed
     error: str | None = None
     delivered: bool = False  # hasil sudah diterima Laravel
@@ -59,6 +63,9 @@ class RunManager:
         scenario: str = "normal",
         plant: PlantConfig | None = None,
         commands: tuple[Command, ...] = (),
+        day: int | None = None,
+        carry: CarryState | None = None,
+        date: str | None = None,
     ) -> Run:
         """run_id dialokasikan Laravel. speed = menit simulasi per detik nyata, None = secepat mungkin.
 
@@ -75,6 +82,7 @@ class RunManager:
         run.speed = speed
         run.plant = plant
         run.commands = commands
+        run.day, run.carry, run.date = day, carry, date
         run.thread = threading.Thread(target=self._execute, args=(run,), daemon=True)
         run.thread.start()
         return run
@@ -95,6 +103,9 @@ class RunManager:
                 scenario=run.scenario,
                 cfg=run.plant,
                 commands=run.commands,
+                day=run.day,
+                carry=run.carry,
+                date=run.date,
             )
             run.sim.run()
             # Prediksi ETA hanya untuk truk yang diumumkan; truk dadakan tidak punya jadwal.

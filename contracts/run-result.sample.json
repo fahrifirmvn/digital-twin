@@ -6718,5 +6718,8 @@
         "paused": true
       }
     }
-  ]
+  ],
+  "day": null,
+  "carry_out": null,
+  "day_summary": null
 }

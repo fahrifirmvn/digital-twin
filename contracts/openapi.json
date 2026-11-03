@@ -1006,6 +1006,57 @@
         ],
         "title": "CandidateOut"
       },
+      "CarryState": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
+          "day": {
+            "type": "integer",
+            "title": "Day",
+            "description": "Hari yang menghasilkannya; 0 = belum ada hari berjalan",
+            "default": 0
+          },
+          "line_sku": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Line Sku"
+          },
+          "fouling_min": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Fouling Min"
+          },
+          "late_trucks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Late Trucks",
+            "description": "Truk yang tiba lewat batas hari, waktunya relatif hari berikut"
+          },
+          "fg_stock_ton": {
+            "type": "number",
+            "title": "Fg Stock Ton",
+            "default": 0.0
+          },
+          "qa_hold_ton": {
+            "type": "number",
+            "title": "Qa Hold Ton",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "title": "CarryState",
+        "description": "Keadaan akhir hari D yang menjadi keadaan awal hari D+1. Versi 1."
+      },
       "CipEvent": {
         "properties": {
           "type": {
@@ -1365,6 +1416,169 @@
         ],
         "title": "CommandIn",
         "description": "Perintah mode Simulasi. Argumen yang tidak berlaku untuk jenisnya diabaikan."
+      },
+      "DayIncident": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "day.incident",
+            "title": "Type",
+            "default": "day.incident"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "machine",
+              "tank"
+            ],
+            "title": "Kind"
+          },
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "duration_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "asset_code",
+          "text",
+          "duration_min"
+        ],
+        "title": "DayIncident",
+        "description": "Kejadian acak hari itu yang mengganggu operasi (mesin atau tangki)."
+      },
+      "DayStarted": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "day.started",
+            "title": "Type",
+            "default": "day.started"
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Day"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Tanggal operasi, YYYY-MM-DD"
+          },
+          "carried_trucks": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Carried Trucks",
+            "description": "Truk tertunda dari kemarin"
+          },
+          "stock_ton": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Stock Ton",
+            "description": "Stok barang jadi di awal hari"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "day",
+          "date",
+          "carried_trucks",
+          "stock_ton"
+        ],
+        "title": "DayStarted",
+        "description": "Awal hari operasi. Keadaan dari hari sebelumnya sudah terbawa (SKU line, umur fouling, truk tertunda)."
+      },
+      "DaySummary": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "day.summary",
+            "title": "Type",
+            "default": "day.summary"
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Day"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "trucks": {
+            "type": "integer",
+            "title": "Trucks"
+          },
+          "late_carried_in": {
+            "type": "integer",
+            "title": "Late Carried In"
+          },
+          "received_ton": {
+            "type": "number",
+            "title": "Received Ton"
+          },
+          "rejected_ton": {
+            "type": "number",
+            "title": "Rejected Ton"
+          },
+          "processed_ton": {
+            "type": "number",
+            "title": "Processed Ton"
+          },
+          "released_ton": {
+            "type": "number",
+            "title": "Released Ton"
+          },
+          "qa_hold_ton": {
+            "type": "number",
+            "title": "Qa Hold Ton"
+          },
+          "stock_ton": {
+            "type": "number",
+            "title": "Stock Ton"
+          },
+          "overtime_min": {
+            "type": "number",
+            "title": "Overtime Min"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "day",
+          "date",
+          "trucks",
+          "late_carried_in",
+          "received_ton",
+          "rejected_ton",
+          "processed_ton",
+          "released_ton",
+          "qa_hold_ton",
+          "stock_ton",
+          "overtime_min",
+          "issues"
+        ],
+        "title": "DaySummary",
+        "description": "Ringkasan akhir hari: diterima, ditolak, diolah, dirilis, stok, dan masalah."
       },
       "ExpiryReport": {
         "properties": {
@@ -2856,6 +3070,44 @@
             "maxItems": 20,
             "title": "Commands",
             "description": "Perintah mode Simulasi; kosong = hari dasar"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3650.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day",
+            "description": "Nomor hari operasi; kosong = run tunggal"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "Tanggal hari operasi, YYYY-MM-DD"
+          },
+          "carry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CarryState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Keadaan akhir hari sebelumnya (hanya bersama `day`)"
           }
         },
         "type": "object",
@@ -3003,6 +3255,44 @@
             },
             "type": "array",
             "title": "Events"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day",
+            "description": "Nomor hari operasi; null = run tunggal"
+          },
+          "carry_out": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carry Out",
+            "description": "Keadaan akhir hari yang menjadi keadaan awal hari berikut"
+          },
+          "day_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Summary",
+            "description": "Ringkasan akhir hari"
           }
         },
         "additionalProperties": false,
@@ -3855,6 +4145,15 @@
                 "$ref": "#/components/schemas/SimClock"
               },
               {
+                "$ref": "#/components/schemas/DayStarted"
+              },
+              {
+                "$ref": "#/components/schemas/DayIncident"
+              },
+              {
+                "$ref": "#/components/schemas/DaySummary"
+              },
+              {
                 "$ref": "#/components/schemas/TruckDispatched"
               },
               {
@@ -3912,6 +4211,9 @@
                 "cip.finished": "#/components/schemas/CipEvent",
                 "cip.started": "#/components/schemas/CipEvent",
                 "command.applied": "#/components/schemas/CommandApplied",
+                "day.incident": "#/components/schemas/DayIncident",
+                "day.started": "#/components/schemas/DayStarted",
+                "day.summary": "#/components/schemas/DaySummary",
                 "fouling.expiry": "#/components/schemas/FoulingExpiry",
                 "gate.decided": "#/components/schemas/GateDecided",
                 "line.changeover": "#/components/schemas/LineChangeover",

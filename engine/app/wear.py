@@ -28,7 +28,7 @@ def fouling(sim) -> dict:
                 timeline.append((rec.ster_start, 0, b.volume_ton / cfg.sterilizer_tph * 60))
         cips = [c for c in sim.cips if c.asset == ste]
         timeline += [(c.start, 1, 0.0) for c in cips]
-        acc = peak = 0.0
+        acc = peak = sim.carry.fouling_min.get(ste, 0.0)
         reached: float | None = None
         for t, kind, dur in sorted(timeline):
             if kind == 1:

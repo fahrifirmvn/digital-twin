@@ -1,9 +1,11 @@
 """KPI Evaluator (PRD 3.1): fungsi murni atas hasil simulasi, sama untuk semua konfigurasi."""
 
 import math
+from contextvars import ContextVar
 from dataclasses import asdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+from app.carry import carry_out, day_summary
 from app.contracts.events import AssetStatus, AssetStatusChanged
 from app.contracts.result import (
     AiOut,
@@ -24,6 +26,9 @@ from app.contracts.result import (
 from app.plan import Plan
 from app.predictor import Forecast
 from app.sim import DAY_START, TwinSimulation
+
+# Awal hari simulasi yang sedang dievaluasi (berbeda tiap hari operasi); per konteks agar aman antar thread.
+_BASE: ContextVar[datetime] = ContextVar("kpi_base", default=DAY_START)
 
 ASSET_TYPES = {"BAY": "bay", "DEG": "degassing", "THM": "thermal", "SEP": "separator",
                "STE": "sterilizer", "LINE": "filling_line"}  # fmt: skip
@@ -59,7 +64,7 @@ def _utilization(sim: TwinSimulation, horizon: float) -> dict[str, float]:
         p = e.payload
         if not isinstance(p, AssetStatusChanged):
             continue
-        t = (e.sim_time - DAY_START).total_seconds() / 60
+        t = (e.sim_time - sim.day0).total_seconds() / 60
         if p.asset_code in since:
             busy[p.asset_code] = busy.get(p.asset_code, 0.0) + t - since.pop(p.asset_code)
         if p.status == AssetStatus.IN_USE:
@@ -159,7 +164,7 @@ def evaluate(sim: TwinSimulation) -> Kpi:
 
 
 def _dt(minutes: float | None):
-    return None if minutes is None else DAY_START + timedelta(minutes=minutes)
+    return None if minutes is None else _BASE.get() + timedelta(minutes=minutes)
 
 
 def _plan_out(plan: Plan) -> PlanOut:
@@ -200,6 +205,7 @@ def build_result(
 ) -> RunResult:
     """eta_forecast: kode truk -> prediksi keterlambatan (menit) terhadap ETA terjadwal."""
     eta_forecast = eta_forecast or {}
+    _BASE.set(sim.day0)
 
     def eta(code: str, q: float):
         f = eta_forecast.get(code)
@@ -211,7 +217,7 @@ def build_result(
         config=config,  # type: ignore[arg-type]
         scenario=scenario,
         params=params,
-        sim_start=DAY_START,
+        sim_start=sim.day0,
         sim_end=_dt(sim.t_end),
         kpi=evaluate(sim),
         plan=_plan_out(plan) if plan else None,
@@ -305,4 +311,7 @@ def build_result(
             for c in sim.cips
         ],
         events=sim.events,
+        day=sim.day,
+        carry_out=carry_out(sim, sim.carry, sim.day).model_dump() if sim.day else None,
+        day_summary=day_summary(sim, sim.carry, sim.day) if sim.day else None,
     )

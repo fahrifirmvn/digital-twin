@@ -298,8 +298,49 @@ class CommandApplied(Strict):
     )
 
 
+class DayStarted(Strict):
+    """Awal hari operasi. Keadaan dari hari sebelumnya sudah terbawa (SKU line, umur fouling, truk tertunda)."""
+
+    type: Literal["day.started"] = "day.started"
+    day: int = Field(ge=1)
+    date: str = Field(description="Tanggal operasi, YYYY-MM-DD")
+    carried_trucks: int = Field(ge=0, description="Truk tertunda dari kemarin")
+    stock_ton: float = Field(ge=0, description="Stok barang jadi di awal hari")
+
+
+class DayIncident(Strict):
+    """Kejadian acak hari itu yang mengganggu operasi (mesin atau tangki)."""
+
+    type: Literal["day.incident"] = "day.incident"
+    kind: Literal["machine", "tank"]
+    asset_code: str
+    text: str
+    duration_min: float = Field(gt=0)
+
+
+class DaySummary(Strict):
+    """Ringkasan akhir hari: diterima, ditolak, diolah, dirilis, stok, dan masalah."""
+
+    type: Literal["day.summary"] = "day.summary"
+    day: int = Field(ge=1)
+    date: str
+    trucks: int
+    late_carried_in: int
+    received_ton: float
+    rejected_ton: float
+    processed_ton: float
+    released_ton: float
+    qa_hold_ton: float
+    stock_ton: float
+    overtime_min: float
+    issues: list[str]
+
+
 TwinPayload = Annotated[
     SimClock
+    | DayStarted
+    | DayIncident
+    | DaySummary
     | TruckDispatched
     | TruckArrived
     | TankerStatusChanged

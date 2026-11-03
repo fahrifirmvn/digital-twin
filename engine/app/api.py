@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.carry import CarryState
 from app.commands import INTERVENTION_KINDS, MAX_COMMANDS, Command, CommandKind
 from app.config import settings
 from app.contracts.result import RunResult
@@ -176,6 +177,15 @@ class RunRequest(BaseModel):
         max_length=MAX_COMMANDS,
         description="Perintah mode Simulasi; kosong = hari dasar",
     )
+    day: int | None = Field(
+        default=None, ge=1, le=3650, description="Nomor hari operasi; kosong = run tunggal"
+    )
+    date: str | None = Field(
+        default=None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Tanggal hari operasi, YYYY-MM-DD"
+    )
+    carry: CarryState | None = Field(
+        default=None, description="Keadaan akhir hari sebelumnya (hanya bersama `day`)"
+    )
 
     @model_validator(mode="after")
     def _params_fit_plant(self) -> "RunRequest":
@@ -231,6 +241,9 @@ def start_run(body: RunRequest, runs: Annotated[RunManager, Depends(manager)]) -
             body.scenario,
             body.to_plant(),
             tuple(c.to_command() for c in body.commands),
+            body.day,
+            body.carry,
+            body.date,
         )
     except DuplicateRunError as exc:
         raise HTTPException(status_code=409, detail="run_id sudah dipakai") from exc

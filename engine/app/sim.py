@@ -14,6 +14,7 @@ from typing import Any
 import simpy
 
 from app import balance, gates, orders, wear
+from app.carry import CarryState, day_date, day_summary
 from app.commands import INTERVENTION_KINDS, Command
 from app.contracts.events import (
     AssetLevel,
@@ -21,6 +22,9 @@ from app.contracts.events import (
     AssetStatusChanged,
     CipEvent,
     CommandApplied,
+    DayIncident,
+    DayStarted,
+    DaySummary,
     FoulingExpiry,
     GateDecided,
     GateId,
@@ -355,7 +359,24 @@ class TwinSimulation:
         plan: Plan | None = None,
         disturbances: tuple[Disturbance, ...] = (),
         commands: tuple[Command, ...] = (),
+        day: int | None = None,
+        date: str | None = None,
+        carry: CarryState | None = None,
+        deferred: tuple[TankerSpec, ...] = (),
+        incident_notes: tuple[tuple[float, str, str, str, float], ...] = (),
     ):
+        # `day` mengaktifkan mode operasi harian: tanggal dari nomor hari, keadaan awal dari `carry`.
+        self.day = day
+        self.carry = carry or CarryState()
+        self.deferred = deferred  # truk yang tiba lewat batas hari, dilayani besok
+        self.incident_notes = incident_notes
+        self.day0 = (
+            (datetime.fromisoformat(date) if date else day_date(day)).replace(
+                hour=DAY_START_HOUR, tzinfo=UTC
+            )
+            if day
+            else DAY_START
+        )
         self.cfg = cfg or PlantConfig()
         self.env = env or simpy.Environment()
         self.plan = plan
@@ -402,7 +423,9 @@ class TwinSimulation:
             k: Pool(self.env, self.routing.usable_lines(k)) for k in range(1, c.n_sterilizers + 1)
         }
         self.line_sku: dict[str, Sku | None] = {
-            code: None for pool in self.lines.values() for code in pool.codes
+            code: SKU_BY_CODE.get(self.carry.line_sku.get(code, ""))
+            for pool in self.lines.values()
+            for code in pool.codes
         }
         self.aseptic_sterile = {k: True for k in self.lines}
         self.aseptic = {k: Aseptic() for k in self.lines}
@@ -412,11 +435,10 @@ class TwinSimulation:
     # --- infrastruktur event ---
 
     def now_dt(self) -> datetime:
-        return DAY_START + timedelta(minutes=self.env.now)
+        return self.day0 + timedelta(minutes=self.env.now)
 
-    @staticmethod
-    def at(minute: float) -> datetime:
-        return DAY_START + timedelta(minutes=minute)
+    def at(self, minute: float) -> datetime:
+        return self.day0 + timedelta(minutes=minute)
 
     def _plant_routes(self) -> PlantRoutes:
         r = self.routing
@@ -442,7 +464,7 @@ class TwinSimulation:
             event_id=uuid.uuid5(uuid.NAMESPACE_URL, f"lactos:{self.run_id}:{self._seq}"),
             run_id=self.run_id,
             seq=self._seq,
-            sim_time=DAY_START + timedelta(minutes=self.env.now if at is None else at),
+            sim_time=self.day0 + timedelta(minutes=self.env.now if at is None else at),
             payload=payload,
         )
         self._seq += 1
@@ -484,10 +506,8 @@ class TwinSimulation:
                 level_ton=level,
                 capacity_ton=self.cfg.aseptic_cap_ton,
                 lot=first[0] if first else None,
-                since=DAY_START + timedelta(minutes=first[2]) if first else None,
-                fill_start=DAY_START + timedelta(minutes=first[3])
-                if first and first[3] is not None
-                else None,
+                since=self.at(first[2]) if first else None,
+                fill_start=self.at(first[3]) if first and first[3] is not None else None,
                 hold_max_min=self.cfg.thresholds.holding_max_min,
                 low=aseptic_low(level, tank.busy, self.cfg.filling_tph),
             )
@@ -600,6 +620,15 @@ class TwinSimulation:
 
     def run(self) -> "TwinSimulation":
         self.emit(SimClock(speed=self.speed, paused=False))
+        if self.day is not None:
+            self.emit(
+                DayStarted(
+                    day=self.day,
+                    date=self.day0.date().isoformat(),
+                    carried_trucks=len(self.carry.late_trucks),
+                    stock_ton=self.carry.fg_stock_ton,
+                )
+            )
         self.emit(self._plant_routes())
         for r in self.routing.routes:
             if not r.usable:
@@ -622,6 +651,8 @@ class TwinSimulation:
         # Penanda perintah dijadwalkan sebelum efeknya, supaya tercatat lebih dulu pada menit yang sama.
         for i, c in enumerate(self.commands):
             self.env.process(self._command(i + 1, c))
+        for note in self.incident_notes:
+            self.env.process(self._incident(*note))
         for d in self.disturbances:
             if d.kind == "ster_down":
                 self.env.process(self._ster_down(d))
@@ -635,8 +666,23 @@ class TwinSimulation:
         )
         self.emit(VolumeBalance(**balance.compute(self)), at=self.t_end)
         self.emit(FoulingExpiry(**wear.compute(self)), at=self.t_end)
+        if self.day is not None:
+            self.emit(DaySummary(**day_summary(self, self.carry, self.day)), at=self.t_end)
         self.emit(SimClock(speed=self.speed, paused=True), at=self.t_end)
         return self
+
+    def _incident(
+        self, minute: float, text: str, kind: str, asset: str, duration: float
+    ) -> Generator[simpy.Event, Any, None]:
+        yield self.env.timeout(minute)
+        self.emit(
+            DayIncident(
+                kind=kind,  # type: ignore[arg-type]
+                asset_code=asset,
+                text=text,
+                duration_min=round(duration, 1),
+            )
+        )
 
     def _command(self, command_id: int, c: Command) -> Generator[simpy.Event, Any, None]:
         yield self.env.timeout(c.minute)
@@ -725,7 +771,7 @@ class TwinSimulation:
                 farm_code=spec.farm_code,
                 plate=spec.plate or spec.code,
                 route=spec.route,
-                eta=DAY_START + timedelta(minutes=spec.arrival_min),
+                eta=self.at(spec.arrival_min),
                 window_min=window,
             )
         )

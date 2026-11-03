@@ -184,7 +184,7 @@ test('rute: ASEP dan STE menampilkan matriks line x SKU, LINE menampilkan alasan
     assert.ok(!detailOf(s, 'BAY-1').rows.some((r) => r[0] === 'Rute'));
 });
 
-test('lencana: persen isi tangki dan status singkat unit aktif, tanpa unit siaga', () => {
+test('lencana: persen isi semua tangki (kosong 0%) dan status singkat unit aktif, tanpa unit siaga', () => {
     const s = base({
         assets: {
             'TK-RAW-1': { status: 'in_use', level: 15, cap: 30 },
@@ -198,8 +198,9 @@ test('lencana: persen isi tangki dan status singkat unit aktif, tanpa unit siaga
         },
     });
     const b = levelBadges(s, any);
-    assert.deepEqual(b.map((x) => x.key), ['ASEP-1', 'STE-1', 'TK-RAW-1', 'TK-RAW-10', 'TK-STO-1']);
+    assert.deepEqual(b.map((x) => x.key), ['ASEP-1', 'STE-1', 'TK-RAW-1', 'TK-RAW-2', 'TK-RAW-10', 'TK-STO-1']);
     const by = Object.fromEntries(b.map((x) => [x.key, x]));
+    assert.deepEqual([by['TK-RAW-2'].text, by['TK-RAW-2'].tone], ['0%', 'mute']);
     assert.deepEqual([by['TK-RAW-1'].text, by['TK-RAW-1'].tone, by['TK-RAW-1'].kind], ['50%', 'brand', 'level']);
     assert.equal(by['TK-RAW-1'].title, 'TK-RAW-1 · 14.563 L / 29.126 L (50%)');
     assert.equal(by['TK-RAW-10'].tone, 'warn');

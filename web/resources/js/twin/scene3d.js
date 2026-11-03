@@ -23,7 +23,7 @@ const LEAVING_EXTRA = 8;
 const SNAP_MIN = 45;
 const MAX_DT = 0.1;
 const FLOW_ALPHA = 0.7;
-const MILK_HOLD = 2; // susu di pipa terlihat lebih lama dari garis aliran 2D (kelipatan dari masa tampil dasar)
+export const MILK_HOLD_SEC = 7; // detik nyata susu menempuh pipa; tetap pada semua kecepatan putar
 const FLOW_COLOR = '#2563eb';
 const HELD_COLOR = '#dc2626';
 const FOCUS_ZOOM = 1.8;
@@ -280,9 +280,9 @@ export class TwinScene3D {
         return this.world.anchors.has(key);
     }
 
-    /** Lencana persen isi hanya di dalam bangunan produksi (zona Proses) agar tampilan luar tidak ramai. */
+    /** Lencana persen isi tampil di semua zona kamera. */
     labelsOn() {
-        return this.inside;
+        return true;
     }
 
     /** Tempat pin truk yang sudah meninggalkan scene (ditolak lab): lab pertama. */
@@ -392,7 +392,7 @@ export class TwinScene3D {
         const { anchors } = this.world;
         if (this.world.milk) {
             // Model pabrik: susu mengalir di dalam pipa; RT -> BAY dan LINE -> PACK-OUT tidak lewat pipa sehingga tidak digambar.
-            this.world.milk.update(activeFlowLinks(state, (speed || 60) * MILK_HOLD), !reducedMotion());
+            this.world.milk.update(activeFlowLinks(state, speed, MILK_HOLD_SEC), !reducedMotion());
             if (!this.raf) this.render();
             return;
         }

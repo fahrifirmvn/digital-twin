@@ -8,7 +8,7 @@ const POOL = 60;
 const FILL = 0.7; // radius susu terhadap radius pipa
 const MIN_R = 0.03;
 const GLASS = 0.3; // opasitas pipa saat dialiri susu
-const FRONT_GAIN = 1.6; // muka susu sampai ujung sebelum aliran selesai
+const FRONT_GAIN = 1.15; // muka susu sampai ujung sedikit sebelum aliran selesai
 const MILK_COLOR = '#4f8dff';
 const HELD_COLOR = '#dc2626';
 const UP = new THREE.Vector3(0, 1, 0);
@@ -31,7 +31,7 @@ varying float vDist;
 varying vec3 vNormal;
 void main() {
     if (vDist > uFront) discard;
-    float wave = 0.5 + 0.5 * sin((vDist - uTime * 5.0) * 7.0);
+    float wave = 0.5 + 0.5 * sin((vDist - uTime * 1.2) * 5.0);
     float lit = 0.72 + 0.28 * clamp(dot(normalize(vNormal), normalize(vec3(0.4, 0.7, 0.6))), 0.0, 1.0);
     gl_FragColor = vec4(uColor * lit * (0.82 + 0.18 * wave) + vec3(0.1 * wave), uAlpha);
 }`;

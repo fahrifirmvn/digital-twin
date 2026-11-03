@@ -141,7 +141,14 @@ export class TwinCanvas {
 
         c.fillStyle = '#1d2733';
         c.fillText(code, n.x + 6, n.y + 11);
-        if (cap) c.fillText(`${fmtL(a?.level ?? 0)} / ${fmtL(cap)}`, n.x + 6, n.y + n.h - 10);
+        if (cap) {
+            c.fillText(`${fmtL(a?.level ?? 0)} / ${fmtL(cap)}`, n.x + 6, n.y + n.h - 10);
+            c.textAlign = 'right';
+            c.font = 'bold 11px system-ui, sans-serif';
+            c.fillText(`${Math.min(100, Math.round(((a?.level ?? 0) / cap) * 100))}%`, n.x + n.w - 6, n.y + 11);
+            c.textAlign = 'left';
+            c.font = '11px system-ui, sans-serif';
+        }
         else if (status !== 'idle') {
             c.fillStyle = COLORS[status];
             c.fillText(status === 'in_use' ? 'aktif' : status.toUpperCase(), n.x + 6, n.y + n.h - 10);

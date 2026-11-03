@@ -117,8 +117,7 @@ export function anomalyMarks(anomaly) {
 }
 
 /**
- * Lencana di atas aset: persen isi untuk tangki yang berisi (TK-RAW, TK-STO, ASEP) dan status singkat untuk unit proses yang sedang aktif;
- * tangki kosong tidak diberi lencana agar tampilan tidak ramai (kecuali perlu perhatian).
+ * Lencana di atas aset: persen isi untuk semua tangki (TK-RAW, TK-STO, ASEP; kosong = 0%) dan status singkat untuk unit proses yang sedang aktif.
  * Nada mengikuti isi (hampir penuh = warn) atau chip perhatian aseptic tank; teks selalu menyertakan angka/label, bukan warna saja.
  */
 export function levelBadges(state, hasAnchor, marks = new Map()) {
@@ -129,8 +128,7 @@ export function levelBadges(state, hasAnchor, marks = new Map()) {
         if (cap && a.level != null) {
             const pct = Math.max(0, Math.min(100, Math.round((a.level / cap) * 100)));
             const chip = assetChip(a, state.m, code);
-            if (pct <= 0 && !ATTENTION.has(chip.tone)) continue;
-            const tone = ATTENTION.has(chip.tone) ? chip.tone : pct >= NEAR_FULL ? 'warn' : 'brand';
+            const tone = ATTENTION.has(chip.tone) ? chip.tone : pct >= NEAR_FULL ? 'warn' : pct <= 0 ? 'mute' : 'brand';
             const note = ATTENTION.has(chip.tone) ? ` · ${chip.label}` : '';
             out.push({ key: code, code, kind: 'level', pct, tone, text: pct <= 0 && ATTENTION.has(chip.tone) ? chip.label : `${pct}%`, title: `${code} · ${fmtL(a.level)} / ${fmtL(cap)} (${pct}%)${note}` });
         } else if (STATUS_UNITS.test(code) && a.status && a.status !== 'idle') {

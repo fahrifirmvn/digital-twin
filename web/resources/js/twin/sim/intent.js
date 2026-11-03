@@ -80,9 +80,9 @@ export function placeTrucks(state, layout) {
     return { trucks, overflow };
 }
 
-/** Aliran yang masih terlihat dengan kode aset asal dan tujuan; posisi dicari pemanggil dari jangkar dunia. */
-export function activeFlowLinks(state, speed) {
-    const ttl = Math.max(12, (speed || 60) * 0.9);
+/** Aliran yang masih terlihat dengan kode aset asal dan tujuan; holdSec = detik nyata aliran tampil pada kecepatan `speed`. */
+export function activeFlowLinks(state, speed, holdSec = 0.9) {
+    const ttl = Math.max(12, (speed || 60) * holdSec);
     const out = [];
     for (const f of state.flows) {
         const age = state.m - f.m;

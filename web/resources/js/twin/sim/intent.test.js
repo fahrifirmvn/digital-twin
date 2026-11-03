@@ -67,3 +67,10 @@ test('aliran memudar menurut umur dan RT- menjadi ENTRANCE', () => {
     assert.equal(links[0].from, 'ENTRANCE');
     assert.ok(links[0].alpha > 0 && links[0].alpha < 1);
 });
+
+test('masa tampil aliran mengikuti detik nyata: lebih lama bila holdSec lebih besar', () => {
+    const st = state([], [{ from: 'TK-RAW-1', to: 'TK-STO-1', m: 0 }], 100);
+    assert.equal(activeFlowLinks(st, 60).length, 0);
+    const [slow] = activeFlowLinks(st, 60, 7);
+    assert.ok(slow.progress > 0.2 && slow.progress < 0.3);
+});

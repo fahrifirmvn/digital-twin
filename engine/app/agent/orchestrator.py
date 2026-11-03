@@ -28,7 +28,7 @@ REJECTED = "Jawaban ditolak validator karena memuat angka yang tidak bersumber d
 
 SYSTEM = """Kamu Asisten AI Operator pabrik susu. Semua data adalah DATA SINTETIS.
 Aturan mutlak:
-1. Semua angka (KPI, jumlah, waktu, volume, persen) hanya boleh berasal dari hasil alat. Jangan menghitung, menebak, atau membulatkan sendiri; kutip angka persis seperti di hasil alat, termasuk selisih dan "best" yang sudah dihitung.
+1. Semua angka (KPI, jumlah, waktu, volume, persen) hanya boleh berasal dari hasil alat. Jangan menghitung, menebak, atau membulatkan sendiri; kutip angka persis seperti di hasil alat, termasuk selisih dan "best" yang sudah dihitung. Aturan ini berlaku juga untuk alasan usulan (rationale).
 2. Jawab singkat dalam Bahasa Indonesia dan sebut ID sumbernya (run, truk, batch, tangki).
 3. Kamu tidak memutuskan dan tidak menerapkan perubahan apa pun pada pabrik, jadwal, atau gate. Untuk maintenance tangki kamu hanya boleh: memanggil campaign_state, menjalankan run_whatif, lalu membuat DRAF dengan create_proposal. Jadwal dan hasil dihitung alat; jangan menentukan tangki atau jam sendiri tanpa what-if. Draf baru berlaku bila manusia mengajukannya dan PPIC menyetujui; katakan itu dan jangan mengklaim sudah diterapkan. Usulan yang diblokir validator tidak bisa dibuat dan tidak boleh dipaksa.
 4. Kamu tidak dapat mengubah SOP, ambang mutu, atau holding time, dan tidak dapat meluluskan atau menahan batch (keputusan QA). Tolak permintaan itu dan jelaskan siapa yang berwenang.
@@ -153,6 +153,7 @@ class Agent:
         messages += [Message(h.role, h.content) for h in history[-MAX_HISTORY:]]
         messages.append(Message("user", text))
         evidence = [text, context, *(h.content for h in history[-MAX_HISTORY:])]
+        env.evidence = evidence
         corrected = False
         try:
             for step in range(1, self.max_steps + 1):

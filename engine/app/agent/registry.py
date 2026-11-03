@@ -46,6 +46,9 @@ class ToolEnv:
     whatif_runs: int = 0  # what-if turn ini; simulasi mahal, jadi dibatasi
     proposals: list[dict[str, Any]] = field(default_factory=list)  # usulan draf turn ini
     cited: list[dict[str, Any]] = field(default_factory=list)
+    evidence: list[str] = field(
+        default_factory=list
+    )  # sumber angka giliran ini (milik orkestrator)
 
     def result(self, run_id: int | None) -> RunResult:
         rid = run_id if run_id is not None else self.run_id

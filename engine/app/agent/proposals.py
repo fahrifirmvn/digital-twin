@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import Field
 
+from app.agent.guard import unsupported_numbers
 from app.agent.registry import READ_ROLES, Args, AssetId, Tool, ToolEnv, ToolError
 from app.agent.tools import HIGHER_BETTER, LOWER_BETTER, _kpi_row
 from app.agent.whatif import (
@@ -165,6 +166,12 @@ def run_whatif(env: ToolEnv, a: WhatIfArgs) -> dict[str, Any]:
 
 def create_proposal(env: ToolEnv, a: CreateProposalArgs) -> dict[str, Any]:
     ctx = _campaign(env)
+    # Alasan tampil di kartu PPIC: angka di dalamnya harus dari hasil alat, sama seperti jawaban (P4).
+    if ungrounded := unsupported_numbers(a.rationale, env.evidence):
+        shown = ", ".join(f"{n:g}" for n in ungrounded[:8])
+        raise ToolError(
+            f"alasan memuat angka yang tidak ada di hasil alat: {shown}; tulis ulang tanpa angka itu"
+        )
     item = env.whatifs.get(a.whatif_id)
     if item is None:
         raise ToolError("what-if tidak ditemukan atau sudah kedaluwarsa; jalankan run_whatif lagi")

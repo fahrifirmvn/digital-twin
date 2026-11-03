@@ -98,6 +98,13 @@ export function replyNote(reply) {
     return reply.error?.message || reply.text || 'Asisten tidak dapat menjawab saat ini.';
 }
 
+/** Label model di bawah label data; mock harus terbaca sebagai mode demo, bukan LLM sungguhan. */
+export function modelNote(reply) {
+    if (!reply?.provider) return '';
+    if (reply.provider === 'mock') return 'model: mode demo (tiruan, bukan LLM sungguhan)';
+    return `model: ${reply.model || reply.provider}`;
+}
+
 /** Galat HTTP -> pesan ramah; 422 memakai pesan validasi pertama. */
 export function httpError(status, body) {
     if (status === 429) return 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.';

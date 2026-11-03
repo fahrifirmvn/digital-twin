@@ -53,7 +53,11 @@ def agent(request: Request) -> Agent | None:
 
 @router.get("/status")
 def status(bot: Annotated[Agent | None, Depends(agent)]) -> dict[str, Any]:
-    return {"available": bot is not None, "provider": bot.provider.name if bot else None}
+    return {
+        "available": bot is not None,
+        "provider": bot.provider.name if bot else None,
+        "model": getattr(bot.provider, "model", bot.provider.name) if bot else None,
+    }
 
 
 @router.post("/turn")

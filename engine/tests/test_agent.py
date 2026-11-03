@@ -352,7 +352,8 @@ def test_api_turn_requires_token_and_validates_input():
         assert res.status_code == 200
         data = res.json()
         assert data["status"] == "ok" and data["text"] == "Halo juga" and data["audit"] == []
-        assert client.get("/v1/agent/status", headers=H).json()["available"] is True
+        info = client.get("/v1/agent/status", headers=H).json()
+        assert info["available"] is True and info["provider"] == "mock" and info["model"]
 
 
 def test_api_unavailable_without_llm_config():

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-    MAX_HISTORY, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, pushHistory, reasonError, replyNote, statusLabel,
+    MAX_HISTORY, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, modelNote, pushHistory, reasonError, replyNote, statusLabel,
 } from './assistant-model.js';
 
 test('buildTurn memotong pesan dan riwayat, hanya mengirim id yang ada', () => {
@@ -114,4 +114,10 @@ test('revisePrompt menyebut jendela dan versi; revealStep terbatas', async () =>
     assert.match(p, /versi 2/);
     assert.equal(revealStep(10), 2);
     assert.ok(Math.ceil(1500 / revealStep(1500)) <= 70);
+});
+
+test('modelNote menandai mock sebagai mode demo dan menampilkan model sungguhan', () => {
+    assert.match(modelNote({ provider: 'mock', model: 'mock' }), /mode demo/);
+    assert.equal(modelNote({ provider: 'gemini', model: 'gemini-2.5-flash' }), 'model: gemini-2.5-flash');
+    assert.equal(modelNote({}), '');
 });

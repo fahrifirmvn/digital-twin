@@ -4,7 +4,7 @@ import { h } from './dom.js';
 import { hydrateIcons } from './icons.js';
 import {
     MAX_MESSAGE, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, pushHistory, reasonError, replyNote, restoreChat,
-    revealStep, revisePrompt, serializeChat, statusLabel, storageKey, suggestions,
+    modelNote, revealStep, revisePrompt, serializeChat, statusLabel, storageKey, suggestions,
 } from './assistant-model.js';
 
 const STATUS_TONE = { draft: 'brand', pending: 'warn', approved: 'ok', rejected: 'bad', expired: 'mute', superseded: 'mute' };
@@ -151,7 +151,7 @@ export function initAssistant(root) {
                 body: JSON.stringify(buildTurn({ message: text, conversationId, runId: cfg.runId, campaignId: cfg.campaignId, history })),
             });
             conversationId = reply.conversation_id ?? conversationId;
-            if (reply.label) $('#cp-label').textContent = reply.label;
+            if (reply.label) $('#cp-label').textContent = [reply.label, modelNote(reply)].filter(Boolean).join(' | ');
             const ok = reply.status === 'ok';
             const body = ok ? reply.text : replyNote(reply);
             const src = ok ? sourcesText(reply.sources) : '';

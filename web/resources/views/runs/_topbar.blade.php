@@ -24,7 +24,7 @@
             @else
                 <b class="tw-daychip">{{ $dayLabel }}</b>
             @endif
-            <span id="run-status" class="tw-pill">{{ $staticStatus ?? 'memuat' }}</span>
+            <span id="run-status" class="tw-pill" @if (($staticStatus ?? null) === 'finished') hidden @endif>{{ $staticStatus ?? 'memuat' }}</span>
         </span>
     @endisset
     <div class="tw-topbar-tools">

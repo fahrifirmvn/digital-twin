@@ -169,10 +169,10 @@ class RunParamsTest extends TestCase
         $run = SimRun::forceCreate(['kind' => 'live', 'seed' => 3, 'status' => 'running', 'config_snapshot' => ['config' => 'A', 'scenario' => 'normal',
             'params' => ['volume_ton' => 320, 'extra_bad' => 0, 'params' => ['filling_tph' => 8, 'maintenance' => [['asset' => 'STE-2', 'start_min' => 150, 'duration_min' => 90]]]]]]);
 
-        $this->as(Role::Ppic)->get("/dashboard?run={$run->id}")->assertOk()
+        $this->as(Role::Ppic)->get("/runs/{$run->id}")->assertOk()
             ->assertSee('Parameter operasional')->assertSee('nilai demo, bukan SOP')
             ->assertSee('name="params[filling_tph]" value="8"', false)->assertSee('value="08:30"', false)
             ->assertSee('Uji ulang A dan B');
-        $this->as(Role::Qa)->get("/dashboard?run={$run->id}")->assertOk()->assertDontSee('Parameter operasional');
+        $this->as(Role::Qa)->get("/runs/{$run->id}")->assertOk()->assertDontSee('Parameter operasional');
     }
 }

@@ -5,6 +5,7 @@
 // P5: intervensi PPIC (usulan, keputusan, skor) menambah twin js dan css bersama.
 // Maps geografis: peta MapLibre + truk 3D dimuat malas hanya di halaman Maps (chunk geomap); maps.js memuat data jalur nyata.
 // Zona Proses: skema 2D contoh dimuat malas (chunk zona-proses).
+// Dashboard: pratinjau 3D dimuat malas dari chunk scene3d (home.js hanya memuatnya bila perangkat mampu).
 // Jalankan setelah `npm run build`: `npm run budget`.
 import { readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
@@ -20,7 +21,7 @@ const BUDGET = [
     { name: 'maps', ext: '.js', raw: 10, gz: 4.2 },
     { name: 'geomap', ext: '.js', raw: 1120, gz: 305 },
     { name: 'geomap', ext: '.css', raw: 75, gz: 11 },
-    { name: 'home', ext: '.js', raw: 5.5, gz: 2.5 },
+    { name: 'home', ext: '.js', raw: 8, gz: 3.5 },
     { name: 'shell', ext: '.js', raw: 24, gz: 10 },
     { name: 'shell', ext: '.css', raw: 36, gz: 8 },
     { name: 'app', ext: '.js', raw: 100, gz: 30 },

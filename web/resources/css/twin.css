@@ -379,7 +379,7 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .dash-head h1 { margin: 0 0 4px; font-size: 24px; }
 .dash-head p { max-width: 720px; }
-.dash-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.dash-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .dash-alerts { margin: 0; padding-left: 18px; }
 .dash-alerts [data-state='over'] { color: var(--bad-text); }
 .dash-alerts [data-state='near'] { color: var(--warn-text); }
@@ -421,9 +421,6 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .tw-tile p { margin: 0; }
 .tw-tile-ico { color: var(--brand); display: inline-flex; }
 .tw-tile-go { margin-top: 6px; font-weight: 700; font-size: 13px; color: var(--brand-text); }
-.tw-tile:has(.tw-mini) { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: 16px; align-items: start; }
-.tw-tile:has(.tw-mini) > * { grid-column: 1; }
-.tw-tile:has(.tw-mini) > .tw-mini { grid-column: 2; grid-row: 1 / span 5; align-self: center; }
 .gantt-wrap { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-btn); }
 .legend { margin-bottom: 8px; }
 .legend span { display: inline-block; margin-right: 12px; font-size: 12px; color: var(--mute); }
@@ -451,7 +448,7 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
     .tw-track, .tw-table { display: none; }
     .tw-dock { left: 16px; }
     .dash-grid { grid-template-columns: minmax(0, 1fr); }
-    .dash-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dash-cols { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'ord' 'bal' 'hold' 'wear'; }
     .dash-pair { grid-template-columns: minmax(0, 1fr); }
 }
@@ -496,9 +493,7 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
     .dash-tiles { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 520px) {
-    .tw-tile:has(.tw-mini) { grid-template-columns: minmax(0, 1fr); }
-    .tw-tile:has(.tw-mini) > .tw-mini { grid-column: 1; grid-row: auto; }
-}
+        }
 @media (prefers-reduced-motion: reduce) {
     .tw-sheet { animation: none; }
 }
@@ -533,3 +528,14 @@ button.tw-daychip:hover { background: var(--hover); }
 .tw-day-actions { display: flex; gap: 8px; margin-top: 14px; }
 .tw-day-actions .tw-btn { flex: 1; justify-content: center; }
 .tw-dock .tw-btn { white-space: nowrap; }
+
+/* Dashboard sederhana: 4 angka, daftar perhatian, pratinjau, rincian dilipat */
+.tw-prev { position: relative; aspect-ratio: 16 / 9; }
+.tw-prev .tw-mini, .tw-tile > .tw-mini { width: 100%; height: 100%; }
+.tw-tile > canvas.tw-mini { aspect-ratio: 16 / 9; height: auto; }
+.tw-mini3d { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.tw-mini3d canvas { display: block; width: 100% !important; height: 100% !important; }
+.dash-attn h2 { margin: 0 0 8px; font-size: 18px; }
+.dash-more > summary { cursor: pointer; font-weight: 700; font-size: 16px; }
+.dash-more[open] > summary { margin-bottom: 14px; }
+.dash-more > .dash-cols, .dash-more > section { margin-top: 16px; }

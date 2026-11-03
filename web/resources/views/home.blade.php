@@ -14,46 +14,46 @@
 @php
     $q = ['run' => $run->id];
     $fmt = fn ($v, $d = 1) => $v === null ? '-' : number_format((float) $v, $d, ',', '.');
-    $holds = $kpi ? array_sum($kpi['gate_holds'] ?? []) : null;
     $chips = [
-        ['Truk hari ini', $kpi['trucks'] ?? null, 0, 'terjadwal dan dadakan'],
-        ['Selesai bongkar', isset($kpi) ? ($kpi['completed'] + $kpi['held_qa']) : null, 0, 'termasuk ditahan QA'],
-        ['FG keluar', isset($kpi['fg_ton']) ? \App\Support\Volume::liters($kpi['fg_ton']) : null, 0, 'liter'],
+        ['Truk hari ini', $kpi['trucks'] ?? null, 0, isset($kpi) ? ($kpi['completed'] + $kpi['held_qa']).' selesai bongkar' : ''],
+        ['Susu diterima', isset($kpi['raw_ton']) ? \App\Support\Volume::liters($kpi['raw_ton']) : null, 0, 'liter'],
+        ['Produk jadi', isset($kpi['fg_ton']) ? \App\Support\Volume::liters($kpi['fg_ton']) : null, 0, 'liter'],
         ['Tunggu truk', $kpi['truck_wait_min']['mean'] ?? null, 1, 'menit, rata-rata'],
-        ['Gate menahan', $holds, 0, 'G1 sampai G6'],
-        ['False accept', $kpi['false_accept'] ?? null, 0, 'target 0'],
     ];
+    // Perlu perhatian: hanya yang menyimpang; kejadian rutin (CIP malam) tidak ditampilkan.
+    $attention = collect($run->day_result['summary']['issues'] ?? [])->reject(fn ($t) => str_starts_with($t, 'CIP terjadwal'))->values()->all();
+    if ($kpi) {
+        if (! empty($holding)) {
+            $attention[] = count($holding).' lot aseptic tank mendekati atau melewati batas holding time';
+        }
+        $short = $orders ? count($orders['orders']) - $orders['met'] : 0;
+        if ($short > 0) {
+            $attention[] = $short.' order belum terpenuhi penuh';
+        }
+        $overN = $wear ? collect($wear['fouling']['sterilizers'])->where('state', 'over')->count() : 0;
+        if ($overN > 0) {
+            $attention[] = $overN.' sterilizer melewati batas fouling, CIP disarankan';
+        }
+        if (($kpi['false_accept'] ?? 0) > 0) {
+            $attention[] = $kpi['false_accept'].' susu di luar mutu lolos gerbang (false accept)';
+        }
+    }
+    $dayNo = $run->day_result['day'] ?? null;
 @endphp
-<div id="tw" class="tw tw-dash" data-theme="light" @if ($kpi) data-replay-url="{{ route('runs.replay', $run) }}" data-run-id="{{ $run->id }}" @endif>
+<div id="tw" class="tw tw-dash" data-theme="light" @if ($kpi) data-replay-url="{{ route('runs.replay', $run) }}" data-run-id="{{ $run->id }}" data-day="{{ $dayNo }}" data-plant="{{ json_encode((object) $run->plant()) }}" @endif>
     @include('runs._topbar', ['active' => 'dashboard', 'staticStatus' => $run->status])
 
     <main class="dash">
         <div class="dash-head">
-            <div>
-                <h1>Dashboard</h1>
-                <p class="muted">
-                    Konfigurasi {{ $run->config_snapshot['config'] ?? 'A' }}
-                    ({{ config('twin.configs')[$run->config_snapshot['config'] ?? 'A'] ?? '' }}).
-                    Skenario: {{ config('twin.scenarios')[$run->config_snapshot['scenario'] ?? 'normal'] ?? '-' }}.
-                    Seed {{ $run->seed }}, {{ isset($run->config_snapshot['params']['volume_ton']) ? \App\Support\Volume::l($run->config_snapshot['params']['volume_ton']) : '?' }}/hari.
-                </p>
-            </div>
-            <a class="tw-btn" href="{{ route('runs.show', $run) }}" data-icon="dashboard" data-icon-size="18"><span>Monitoring dan What-if</span></a>
+            <h1>Dashboard</h1>
         </div>
 
         @if (session('status'))
             <div class="tw-card ok" role="status">{{ session('status') }}</div>
         @endif
-        @include('runs._params')
 
         @if (! $kpi)
-            <div class="tw-card" role="status"><p class="muted">Run ini belum selesai, jadi ringkasan dan jadwal belum tersedia. Digital Twin dan Maps akan terisi setelah run selesai.</p></div>
-        @endif
-
-        @if ($kpi)
-            <nav class="dash-nav" aria-label="Bagian dashboard">
-                <a href="#s-ord">Order</a><a href="#h-bal">Neraca</a><a href="#h-hold">Holding</a><a href="#h-wear">Fouling</a><a href="#h-sched">Jadwal</a>
-            </nav>
+            <div class="tw-card" role="status"><p class="muted">Hari ini belum selesai dihitung. Ringkasan akan muncul setelahnya.</p></div>
         @endif
 
         <section class="dash-kpis" aria-label="Ringkasan hari ini">
@@ -62,29 +62,45 @@
             @endforeach
         </section>
 
-        <section class="dash-tiles" aria-label="Tampilan layar penuh">
+        <section class="tw-card dash-attn" aria-labelledby="h-attn">
+            <h2 id="h-attn">Perlu perhatian</h2>
+            @if ($kpi && $attention === [])
+                <p class="tw-hint">Tidak ada. Semua berjalan normal.</p>
+            @elseif ($attention !== [])
+                <ul class="dash-alerts">
+                    @foreach ($attention as $t)
+                        <li>{{ $t }}</li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="tw-hint">-</p>
+            @endif
+        </section>
+
+        <section class="dash-tiles" aria-label="Pratinjau">
             <a class="tw-card tw-tile" href="{{ route('twin', $q) }}">
-                <span class="tw-tile-ico" data-icon="box" data-icon-size="28"></span>
                 <h2>Digital Twin</h2>
-                <p class="muted">Denah pabrik dengan truk, bay, silo, dan gate SOP. Putar ulang run menit demi menit.</p>
                 @if ($kpi)
-                    <canvas id="mini-twin" class="tw-mini" aria-hidden="true"></canvas>
-                    <span class="tw-tile-time">Simulasi <span id="mini-twin-clock" class="mono">00:00</span></span>
+                    <div class="tw-prev">
+                        <canvas id="mini-twin" class="tw-mini" aria-hidden="true"></canvas>
+                        <div id="home3d" class="tw-mini tw-mini3d" aria-hidden="true" hidden></div>
+                    </div>
+                    <span class="tw-tile-time">@if ($dayNo) Hari {{ $dayNo }} · @endif<span id="mini-twin-clock" class="mono">00:00</span></span>
                 @endif
                 <span class="tw-tile-go">Buka layar penuh</span>
             </a>
             <a class="tw-card tw-tile" href="{{ route('maps', $q) }}">
-                <span class="tw-tile-ico" data-icon="map" data-icon-size="28"></span>
                 <h2>Maps</h2>
-                <p class="muted">Truk dalam perjalanan menuju gerbang, lengkap dengan plat nomor dan perkiraan tiba.</p>
                 @if ($kpi)
                     <canvas id="mini-map" class="tw-mini" aria-hidden="true"></canvas>
-                    <span class="tw-tile-time">Simulasi <span id="mini-map-clock" class="mono">00:00</span></span>
+                    <span class="tw-tile-time"><span id="mini-map-clock" class="mono">00:00</span></span>
                 @endif
                 <span class="tw-tile-go">Buka layar penuh</span>
             </a>
         </section>
 
+        <details class="tw-card dash-more">
+            <summary>Rincian operasional</summary>
         <div class="dash-cols">
         @if ($kpi)
             <section class="tw-card dash-c-hold" aria-labelledby="h-hold">
@@ -261,9 +277,10 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="muted">Waktu simulasi (UTC). Plat nomor sintetis.</p>
+                <p class="muted">Waktu dalam UTC.</p>
             @endif
         </section>
+        </details>
     </main>
 
     @include('runs._drawer')

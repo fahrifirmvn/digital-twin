@@ -3,10 +3,12 @@
 @if ($current && $current->status === 'running')
     @push('head')<meta http-equiv="refresh" content="4">@endpush
 @endif
+@push('head')@vite('resources/js/assistant.js')@endpush
 @section('content')
 @php $status = ['planned' => 'Direncanakan', 'running' => 'Berjalan', 'closed' => 'Ditutup', 'failed' => 'Gagal']; @endphp
 <div class="card">
     <h1>{{ $campaign->name }} <span class="badge">SIMULASI</span></h1>
+    <button id="cp-open" type="button" aria-expanded="false" aria-controls="cp-drawer">Asisten AI</button>
     <p>
         Konfigurasi {{ $campaign->config }}, skenario {{ config('twin.scenarios')[$campaign->scenario] ?? $campaign->scenario }}, seed {{ $campaign->seed }},
         volume {{ $campaign->params['volume_ton'] ?? '-' }} t/hari.
@@ -107,4 +109,5 @@
         </tbody>
     </table>
 </div>
+@include('runs._drawer', ['plain' => true])
 @endsection

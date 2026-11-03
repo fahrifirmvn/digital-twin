@@ -5,14 +5,14 @@
 <header class="tw-topbar">
     <a class="tw-brand" href="{{ route('dashboard', $q) }}" title="Beranda">
         <span class="tw-logo" aria-hidden="true">L</span>
-        <span class="tw-brand-name">LactOS Twin</span>
+        <span class="tw-brand-name">LactaTwin</span>
     </a>
     <nav class="tw-switch" aria-label="Tampilan">
         <a href="{{ route('dashboard', $q) }}" @if ($active === 'dashboard') aria-current="page" @endif>Dashboard</a>
         <a href="{{ route('twin', $q) }}" @if ($active === 'twin') aria-current="page" @endif>Digital Twin</a>
         <a href="{{ route('maps', $q) }}" @if ($active === 'maps') aria-current="page" @endif>Maps</a>
     </nav>
-    <span class="tw-demo" title="Seluruh data adalah data simulasi">DEMO</span>
+    <span class="tw-demo" title="Seluruh data adalah data simulasi">DATA SINTETIS</span>
     @isset($run)
         @php $badge = $run->modeBadge(); @endphp
         <span id="run-mode" class="tw-mode" data-mode="{{ $badge['key'] }}" title="Asal data: LIVE = run sedang berjalan, SIMULASI = cabang what-if, DATA CONTOH = hasil run yang sudah selesai">{{ $badge['label'] }}</span>

@@ -1,0 +1,202 @@
+// Drawer Asisten AI: chat dan kartu usulan. Semua teks dari server dipasang lewat textContent (tidak ada innerHTML).
+import '../../../css/assistant.css';
+import { h } from './dom.js';
+import { hydrateIcons } from './icons.js';
+import {
+    MAX_MESSAGE, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, pushHistory, reasonError, replyNote, statusLabel,
+} from './assistant-model.js';
+
+const STATUS_TONE = { draft: 'brand', pending: 'warn', approved: 'ok', rejected: 'bad', expired: 'mute', superseded: 'mute' };
+
+export function initAssistant(root) {
+    hydrateIcons(root);
+    const drawer = root.querySelector('#cp-drawer');
+    const openBtn = root.querySelector('#cp-open');
+    if (!drawer || !openBtn) return;
+
+    const d = drawer.dataset;
+    const cfg = {
+        runId: d.runId || '', campaignId: d.campaignId || '', userId: Number(d.userId), canApprove: d.canApprove === '1',
+        turnUrl: d.turnUrl, proposalsUrl: d.proposalsUrl, reloadOnApprove: d.reloadOnApprove === '1',
+    };
+    const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const $ = (sel) => drawer.querySelector(sel);
+    const log = $('#cp-log');
+    const form = $('#cp-form');
+    const input = $('#cp-input');
+    const send = $('#cp-send');
+    const plist = $('#cp-plist');
+    let conversationId = null;
+    let history = [];
+    let loaded = false;
+    let busy = false;
+    const cards = new Map();
+
+    async function call(url, init = {}) {
+        const res = await fetch(url, {
+            credentials: 'same-origin',
+            ...init,
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(httpError(res.status, body));
+        return body;
+    }
+
+    function setOpen(open) {
+        drawer.hidden = !open;
+        openBtn.setAttribute('aria-expanded', String(open));
+        if (open) {
+            input.focus({ preventScroll: true });
+            if (cfg.campaignId && !loaded) {
+                loaded = true;
+                loadProposals();
+            }
+        } else openBtn.focus({ preventScroll: true });
+    }
+    openBtn.addEventListener('click', () => setOpen(drawer.hidden));
+    $('#cp-close').addEventListener('click', () => setOpen(false));
+    root.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !drawer.hidden && !document.querySelector('dialog[open]')) {
+            e.stopPropagation();
+            setOpen(false);
+        }
+    });
+
+    function addMessage(role, text, meta) {
+        const msg = h('div', { class: `as-msg as-${role}` },
+            h('div', { class: 'as-who' }, role === 'user' ? 'Anda' : 'Asisten'),
+            h('div', { class: 'as-text' }, text));
+        if (meta) msg.append(h('div', { class: 'as-meta' }, meta));
+        log.append(msg);
+        log.scrollTop = log.scrollHeight;
+        return msg;
+    }
+
+    const sourcesText = (sources) => {
+        const parts = (sources ?? []).filter((s) => s.tool).map((s) => (s.run_id ? `${s.tool} run #${s.run_id}` : s.tool));
+        return parts.length ? `Sumber: ${[...new Set(parts)].join(', ')}` : '';
+    };
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text || busy) return;
+        busy = true;
+        send.disabled = true;
+        input.value = '';
+        addMessage('user', text);
+        const wait = addMessage('assistant', 'Menyusun jawaban dari data...');
+        wait.setAttribute('aria-busy', 'true');
+        try {
+            const reply = await call(cfg.turnUrl, {
+                method: 'POST',
+                body: JSON.stringify(buildTurn({ message: text, conversationId, runId: cfg.runId, campaignId: cfg.campaignId, history })),
+            });
+            conversationId = reply.conversation_id ?? conversationId;
+            if (reply.label) $('#cp-label').textContent = reply.label;
+            const note = replyNote(reply);
+            wait.querySelector('.as-text').textContent = reply.status === 'ok' ? reply.text : note;
+            wait.classList.toggle('as-error', reply.status !== 'ok');
+            const src = reply.status === 'ok' ? sourcesText(reply.sources) : '';
+            if (src) wait.append(h('div', { class: 'as-meta' }, src));
+            history = pushHistory(history, text, reply);
+            (reply.proposals ?? []).forEach(renderProposal);
+        } catch (err) {
+            wait.querySelector('.as-text').textContent = err.message;
+            wait.classList.add('as-error');
+        } finally {
+            wait.removeAttribute('aria-busy');
+            busy = false;
+            send.disabled = false;
+            input.focus({ preventScroll: true });
+        }
+    });
+    input.maxLength = MAX_MESSAGE;
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
+    // --- usulan ---------------------------------------------------------------------------------
+
+    async function loadProposals() {
+        try {
+            const body = await call(`${cfg.proposalsUrl}?campaign_id=${encodeURIComponent(cfg.campaignId)}`);
+            plist.replaceChildren();
+            cards.clear();
+            [...body.proposals].reverse().forEach(renderProposal);
+            $('#cp-empty').hidden = body.proposals.length > 0;
+        } catch (err) {
+            $('#cp-empty').hidden = false;
+            $('#cp-empty').textContent = err.message;
+        }
+    }
+
+    async function act(p, action, payload, card) {
+        const err = card.querySelector('.as-err');
+        err.textContent = '';
+        card.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+        try {
+            const { proposal } = await call(`${cfg.proposalsUrl}/${p.id}/${action}`, { method: 'POST', body: JSON.stringify(payload ?? {}) });
+            renderProposal(proposal);
+            if (action === 'approve' && cfg.reloadOnApprove) setTimeout(() => window.location.reload(), 900);
+        } catch (e) {
+            // status bisa berubah di server (mis. kedaluwarsa); tampilkan keadaan terbaru bersama pesannya
+            try {
+                renderProposal((await call(`${cfg.proposalsUrl}/${p.id}`)).proposal, e.message);
+            } catch {
+                err.textContent = e.message;
+                card.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+            }
+        }
+    }
+
+    function renderProposal(p, error = '') {
+        $('#cp-empty').hidden = true;
+        const rows = changeRows(p.whatif);
+        const card = h('article', { class: 'as-card', dataset: { status: p.status }, 'aria-label': `Usulan ${describeWindow(p.payload)}` },
+            h('div', { class: 'as-card-head' },
+                h('strong', {}, `Maintenance ${describeWindow(p.payload)}`),
+                h('span', { class: 'as-chip', dataset: { tone: STATUS_TONE[p.status] ?? 'mute' } }, statusLabel(p.status))),
+            h('p', { class: 'as-meta' }, `Hari ${p.day_no}, versi ${p.version}. ${p.label}`),
+            h('p', {}, p.rationale),
+            rows.length
+                ? h('ul', { class: 'as-changes', 'aria-label': 'Dampak what-if terhadap hari tanpa maintenance ini' },
+                    rows.map((r) => h('li', { dataset: { tone: r.tone } }, `${r.label}: ${r.text}, `, h('b', {}, r.verdict))))
+                : h('p', { class: 'as-meta' }, 'What-if tidak menunjukkan perubahan KPI.'));
+        if (p.decision_reason) card.append(h('p', { class: 'as-meta' }, `Alasan keputusan: ${p.decision_reason}`));
+        card.append(h('p', { class: 'as-err err', role: 'alert' }, error));
+
+        if (canSubmit(p, cfg.userId, cfg.canApprove)) {
+            card.append(h('div', { class: 'as-actions' },
+                h('button', { type: 'button', onclick: () => act(p, 'submit', null, card) }, 'Ajukan ke PPIC')));
+        }
+        if (canDecide(p, cfg.canApprove)) {
+            const reason = h('textarea', { id: `r-${p.id}`, rows: 2, maxlength: 500, required: true });
+            const decide = (action) => {
+                const msg = reasonError(reason.value);
+                if (msg) {
+                    card.querySelector('.as-err').textContent = msg;
+                    reason.focus();
+                    return;
+                }
+                act(p, action, { reason: reason.value.trim() }, card);
+            };
+            card.append(
+                h('label', { for: `r-${p.id}` }, 'Alasan keputusan (wajib, min. 5 karakter)'),
+                reason,
+                h('p', { class: 'as-meta' }, 'Menyetujui menambah jadwal maintenance pada hari ini dan dicatat ke audit log. Aturan keras tetap diperiksa ulang.'),
+                h('div', { class: 'as-actions' },
+                    h('button', { type: 'button', onclick: () => decide('approve') }, 'Setujui'),
+                    h('button', { type: 'button', class: 'as-secondary', onclick: () => decide('reject') }, 'Tolak')));
+        }
+
+        const old = cards.get(p.id);
+        if (old) old.replaceWith(card);
+        else plist.prepend(card);
+        cards.set(p.id, card);
+    }
+}

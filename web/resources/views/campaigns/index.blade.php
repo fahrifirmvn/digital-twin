@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Kampanye | LactOS Digital Twin')
+@section('title', 'Kampanye | LactaTwin')
 @section('content')
 <h1 class="sr-only">Kampanye harian</h1>
 

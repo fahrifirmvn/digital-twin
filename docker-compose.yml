@@ -8,7 +8,7 @@ x-web: &web
       VITE_REVERB_PORT: ${REVERB_PORT:-8080}
       VITE_REVERB_SCHEME: http
   environment: &web-env
-    APP_NAME: LactOS
+    APP_NAME: LactaTwin
     APP_ENV: ${APP_ENV:-local}
     APP_KEY: ${APP_KEY}
     APP_URL: http://localhost:8000

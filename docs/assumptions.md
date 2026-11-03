@@ -52,3 +52,12 @@ Semua data adalah DATA SINTETIS. Diganti saat data nyata tersedia.
 - Persetujuan: hanya PPIC dan Admin (`approve-proposal`), alasan wajib 5–500 karakter, usulan harus `pending`. Penerapan = jadwal maintenance biasa lewat `CampaignService::planMaintenance` dengan pelaku persetujuan, sehingga jejaknya sama dengan jadwal manual. Pembuat usulan boleh menyetujui usulannya sendiri bila perannya PPIC/Admin. QA diperlakukan seperti pengamat: dapat melihat dan membuat draf, tetapi tidak memutuskan.
 - Mode: usulan hanya dibuat dalam SIMULASI; permintaan dengan kampanye selalu dipaksa SIMULASI. Usulan bermode LIVE tidak pernah diterapkan.
 - Audit: `agent.proposal_created`, `_submitted`, `_approved`, `_rejected`, `_expired`, `_discarded`, selain `agent.tool_call` yang memuat `proposal_id` hanya untuk usulan yang benar-benar tersimpan.
+
+## Operator Agent: antarmuka (Fase 4)
+
+- Satu drawer "Asisten AI" dipakai di dashboard, Twin, Maps, halaman run, dan halaman kampanye. Logika DOM di `ui/assistant.js`; logika murni (isi permintaan, label, aturan tombol) di `ui/assistant-model.js` dan diuji dengan `node:test`. Halaman kampanye (tanpa shell Twin) memuat entri Vite terpisah `assistant.js`.
+- Semua teks dari server atau LLM dipasang lewat `textContent`; tidak ada `innerHTML` untuk isi percakapan atau usulan.
+- Kartu usulan menampilkan jendela, status, alasan, dan selisih what-if dengan kata "lebih baik/lebih buruk" (tidak hanya warna). Tombol Ajukan/Setujui/Tolak mengikuti peran hanya sebagai kemudahan tampilan; keputusan izin tetap di server (`approve-proposal`). Alasan wajib 5-500 karakter dicek di klien dan di server.
+- Label "DATA SINTETIS | mode X" tampil di drawer dan diganti dengan label dari server setiap balasan. Badge DEMO diganti "DATA SINTETIS" di semua halaman, termasuk layar sempit.
+- Halaman kampanye memuat ulang otomatis 4 detik saat hari berjalan, sehingga percakapan di drawer hilang pada saat itu. Setelah persetujuan, halaman dimuat ulang agar jadwal tampil.
+- Nama produk: LactaTwin (judul halaman, topbar, login, manifest PWA, judul API Engine). Nama pabrik asli tidak dipakai.

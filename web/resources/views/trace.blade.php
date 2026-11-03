@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Traceability | LactOS Digital Twin')
+@section('title', 'Traceability | LactaTwin')
 @section('content')
 <div class="card">
     <h1>Traceability</h1>

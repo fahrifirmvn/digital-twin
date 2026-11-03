@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Bangun pabrik | LactOS')
+@section('title', 'Bangun pabrik | LactaTwin')
 @section('bare', '1')
 
 @push('head')

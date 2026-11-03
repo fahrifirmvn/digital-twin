@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', "Digital Twin Run #{$run->id} | LactOS")
+@section('title', "Digital Twin Run #{$run->id} | LactaTwin")
 @section('bare', '1')
 @php
     $canSim = auth()->user()->can('simulate');

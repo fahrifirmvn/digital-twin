@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Belum ada run | LactOS')
+@section('title', 'Belum ada run | LactaTwin')
 @section('bare', '1')
 
 @push('head')

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', "Maps Run #{$run->id} | LactOS")
+@section('title', "Maps Run #{$run->id} | LactaTwin")
 @section('bare', '1')
 
 @push('head')

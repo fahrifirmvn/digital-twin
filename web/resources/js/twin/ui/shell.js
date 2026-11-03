@@ -1,7 +1,8 @@
-// Perilaku TopBar yang sama di Dashboard dan Twin: ikon, tema, dan drawer Asisten AI.
+// Perilaku TopBar yang sama di Dashboard dan Twin: ikon, tema, dan drawer Asisten AI (lihat assistant.js).
 import { hydrateIcons, icon } from './icons.js';
 import { initTheme } from './theme.js';
 import { initDraggable } from './drag.js';
+import { initAssistant } from './assistant.js';
 
 // Kartu [data-collapse] bisa diciutkan ke judulnya; pilihan diingat per kartu, default ciut di layar kecil.
 function initFolds(root) {
@@ -60,23 +61,7 @@ export function initShell(root, { onTheme } = {}) {
     initControls(root.querySelector('.tw-controls'));
     const theme = initTheme(root, root.querySelector('#tw-theme'), onTheme);
 
-    const drawer = root.querySelector('#cp-drawer');
-    const openBtn = root.querySelector('#cp-open');
-    if (!drawer || !openBtn) return { theme };
-    function setDrawer(open) {
-        drawer.hidden = !open;
-        openBtn.setAttribute('aria-expanded', String(open));
-        if (open) root.querySelector('#cp-input')?.focus({ preventScroll: true });
-        else openBtn.focus({ preventScroll: true });
-    }
-    openBtn.addEventListener('click', () => setDrawer(drawer.hidden));
-    root.querySelector('#cp-close').addEventListener('click', () => setDrawer(false));
-    root.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !drawer.hidden && !document.querySelector('dialog[open]')) {
-            e.stopPropagation();
-            setDrawer(false);
-        }
-    });
+    initAssistant(root);
     return { theme };
 }
 

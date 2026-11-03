@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'LactOS Digital Twin')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'LactaTwin')</title>
     <style>
         body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6f8; color: #1d2733; }
         header { background: #0b3d5c; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
@@ -46,7 +47,7 @@
     </header>
 @endauth
 <main>
-    <p><span class="badge">DEMO</span> Seluruh data adalah data simulasi.</p>
+    <p><span class="badge">DATA SINTETIS</span> Seluruh data adalah data simulasi.
     @yield('content')
 </main>
 @endif

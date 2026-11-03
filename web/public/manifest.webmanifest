@@ -1,6 +1,6 @@
 {
-  "name": "LactOS Digital Twin (DEMO)",
-  "short_name": "LactOS",
+  "name": "LactaTwin (DATA SINTETIS)",
+  "short_name": "LactaTwin",
   "start_url": "/driver",
   "scope": "/",
   "display": "standalone",

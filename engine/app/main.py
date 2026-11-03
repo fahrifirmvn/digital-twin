@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
         relay.close()
 
 
-app = FastAPI(title="LactOS Engine", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="LactaTwin Engine", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
 app.include_router(agent_router)
 

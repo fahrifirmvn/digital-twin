@@ -383,4 +383,18 @@ class ProposalTest extends TestCase
         auth()->logout();
         $this->getJson("/agent/proposals?campaign_id={$c->id}")->assertUnauthorized();
     }
+
+    public function test_campaign_page_renders_assistant_drawer_with_label_and_role_flag(): void
+    {
+        $campaign = $this->campaign();
+
+        $this->as(Role::Ppic);
+        $this->get(route('campaigns.show', $campaign))->assertOk()
+            ->assertSee('id="cp-drawer"', false)->assertSee('DATA SINTETIS | mode SIMULASI')
+            ->assertSee('data-can-approve="1"', false)->assertSee('data-campaign-id="'.$campaign->id.'"', false);
+
+        $this->as(Role::Operator);
+        $this->get(route('campaigns.show', $campaign))->assertOk()
+            ->assertSee('data-can-approve="0"', false);
+    }
 }

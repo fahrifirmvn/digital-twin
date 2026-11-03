@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Daftar run | LactOS Digital Twin')
+@section('title', 'Daftar run | LactaTwin')
 @section('content')
 <h1 class="sr-only">Daftar run</h1>
 @error('engine')<div class="card err">{{ $message }}</div>@enderror

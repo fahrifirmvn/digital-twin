@@ -364,7 +364,6 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .tw-drawer-head h2 { margin: 0; font-size: 18px; }
 .tw-drawer .card { border: 0; box-shadow: none; padding: 0; }
 .tw-drawer .card h3 { display: none; }
-.tw-drawer #cp-log > div { color: #0f172a; }
 .tw-drawer input, .tw-drawer textarea { background: var(--bg); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--r-btn); padding: 10px 12px; }
 .tw-drawer button:not(.tw-ico), .tw dialog button, .tw .dash td button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-weight: 700; cursor: pointer; }
 .tw dialog { background: var(--card); color: var(--ink); }
@@ -468,7 +467,8 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
     .tw-runinfo { display: none; }
 }
 @media (max-width: 700px) {
-    .tw-topbar .tw-pick, .tw-demo { display: none; }
+    .tw-topbar .tw-pick { display: none; }
+    .tw-demo { font-size: 9px; padding: 2px 5px; }
     .tw-dash .tw-topbar { height: auto; min-height: var(--topbar); flex-wrap: wrap; padding-block: 6px; row-gap: 6px; }
     .tw-switch a { padding: 0 12px; }
     .tw-stats { left: 8px; right: 8px; top: 8px; width: auto; }

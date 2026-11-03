@@ -39,6 +39,8 @@ class ToolCall:
     id: str
     name: str
     arguments: dict
+    # Data khusus provider yang harus dikirim balik apa adanya (mis. thoughtSignature Gemini).
+    meta: dict = field(default_factory=dict, compare=False)
 
 
 @dataclass(frozen=True)

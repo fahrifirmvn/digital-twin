@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
@@ -40,6 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
         Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
         Route::get('/campaigns/{campaign}/state', [CampaignController::class, 'state'])->whereNumber('campaign')->name('campaigns.state');
+        Route::post('/agent/turn', [AgentController::class, 'turn'])->middleware('throttle:'.config('twin.agent.per_minute').',1')->name('agent.turn');
     });
 
     // Kampanye harian: membuat, memulai hari, menjadwalkan maintenance, dan memulihkan cabang hanya PPIC dan Admin.

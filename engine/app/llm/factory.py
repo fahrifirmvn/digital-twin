@@ -2,14 +2,17 @@ import httpx
 
 from app.config import Settings, settings
 from app.llm.anthropic import AnthropicProvider
+from app.llm.gemini import GeminiProvider
 from app.llm.mock import MockProvider
 from app.llm.openai_compat import LocalProvider, OpenAIProvider
 from app.llm.types import LLMConfigError, Provider
 
 DEFAULT_BASE_URL = {
+    "gemini": "https://generativelanguage.googleapis.com",
     "openai": "https://api.openai.com/v1",
     "anthropic": "https://api.anthropic.com",
 }
+DEFAULT_MODEL = {"gemini": "gemini-2.5-flash"}
 
 
 def build_provider(cfg: Settings | None = None, client: httpx.Client | None = None) -> Provider:
@@ -21,21 +24,27 @@ def build_provider(cfg: Settings | None = None, client: httpx.Client | None = No
 
     key = cfg.llm_api_key.get_secret_value()
     base = cfg.llm_base_url or DEFAULT_BASE_URL.get(kind, "")
+    model = cfg.llm_model or DEFAULT_MODEL.get(kind, "")
     problems = []
     if not base:
         problems.append("ENGINE_LLM_BASE_URL")
-    if not cfg.llm_model:
+    if not model:
         problems.append("ENGINE_LLM_MODEL")
     if kind in DEFAULT_BASE_URL and not key:
         problems.append("ENGINE_LLM_API_KEY")
     if problems:
         raise LLMConfigError(f"provider '{kind}' butuh: {', '.join(problems)}")
 
-    cls = {"openai": OpenAIProvider, "anthropic": AnthropicProvider, "local": LocalProvider}[kind]
+    cls = {
+        "gemini": GeminiProvider,
+        "openai": OpenAIProvider,
+        "anthropic": AnthropicProvider,
+        "local": LocalProvider,
+    }[kind]
     return cls(
         base,
         key,
-        cfg.llm_model,
+        model,
         timeout=cfg.llm_timeout,
         max_tokens=cfg.llm_max_tokens,
         temperature=cfg.llm_temperature,

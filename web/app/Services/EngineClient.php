@@ -26,4 +26,29 @@ class EngineClient
             throw new RuntimeException("Engine menolak run (HTTP {$res->status()})");
         }
     }
+
+    /**
+     * Satu giliran Operator Agent. Identitas dan peran berasal dari sesi Laravel, bukan dari klien.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function agentTurn(array $payload): array
+    {
+        try {
+            $res = Http::baseUrl(config('services.engine.url'))
+                ->withHeaders(['X-Internal-Token' => (string) config('services.engine.token')])
+                ->timeout((int) config('twin.agent.timeout'))
+                ->acceptJson()
+                ->post('/v1/agent/turn', $payload);
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('Engine tidak dapat dihubungi', previous: $e);
+        }
+
+        if (! $res->successful() || ! is_array($res->json())) {
+            throw new RuntimeException("Engine menolak giliran agen (HTTP {$res->status()})");
+        }
+
+        return $res->json();
+    }
 }

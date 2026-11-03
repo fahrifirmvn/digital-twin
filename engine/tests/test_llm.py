@@ -239,7 +239,7 @@ def cfg(**kw) -> Settings:
 
 
 def test_factory_builds_each_provider_and_validates_config():
-    assert isinstance(build_provider(cfg()), MockProvider)
+    assert isinstance(build_provider(cfg(llm_provider="mock")), MockProvider)
     assert isinstance(
         build_provider(cfg(llm_provider="openai", llm_api_key="k", llm_model="m")), OpenAIProvider
     )

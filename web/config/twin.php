@@ -16,6 +16,8 @@ return [
         'out_of_spec' => 'Truk di luar batas mutu',
         'peak_450' => 'Puncak 450 t',
     ],
+    // Operator Agent: batas giliran. Engine membatasi langkah dan waktu per langkah; ini batas total HTTP.
+    'agent' => ['timeout' => 120, 'per_minute' => 20],
     // Kampanye harian: pabrik yang berjalan hari demi hari dengan checkpoint tiap akhir hari.
     'campaign' => [
         'max_days' => 365,

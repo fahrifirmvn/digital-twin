@@ -314,6 +314,100 @@
         }
       }
     },
+    "/v1/agent/status": {
+      "get": {
+        "summary": "Status",
+        "operationId": "status_v1_agent_status_get",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Status V1 Agent Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/agent/turn": {
+      "post": {
+        "summary": "Turn",
+        "operationId": "turn_v1_agent_turn_post",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TurnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Turn V1 Agent Turn Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -3421,6 +3515,99 @@
           "fill_end"
         ],
         "title": "TruckPlanOut"
+      },
+      "Turn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Turn"
+      },
+      "TurnRequest": {
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]{8,64}$",
+            "title": "Conversation Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "User Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ppic",
+              "qa",
+              "operator",
+              "driver",
+              "admin",
+              "observer"
+            ],
+            "title": "Role"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "SIMULASI",
+              "LIVE"
+            ],
+            "title": "Mode"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/Turn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "History"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "conversation_id",
+          "user_id",
+          "role",
+          "mode",
+          "message"
+        ],
+        "title": "TurnRequest"
       },
       "TwinEvent": {
         "properties": {

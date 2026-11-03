@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SimRun;
+use App\Services\CampaignService;
 use App\Services\RunResultStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 // Endpoint internal: Engine mengirim hasil akhir run (kontrak: contracts/run-result.schema.json).
 class RunResultController extends Controller
 {
-    public function store(Request $request, SimRun $run, RunResultStore $store): JsonResponse
+    public function store(Request $request, SimRun $run, RunResultStore $store, CampaignService $campaigns): JsonResponse
     {
         // Idempoten: Engine mengulang kiriman bila respons hilang.
         if (in_array($run->status, ['finished', 'failed'], true)) {
@@ -24,6 +25,7 @@ class RunResultController extends Controller
         if ($status === 'failed') {
             $data = $request->validate(['run_id' => ['required', 'integer', Rule::in([$run->id])], 'error' => ['required', 'string']]);
             $store->storeFailed($run, $data['error']);
+            $campaigns->onRunFailed($run, $data['error']);
 
             return response()->json(['status' => 'recorded']);
         }
@@ -141,6 +143,7 @@ class RunResultController extends Controller
 
         $this->assertReferences($r);
         $store->storeFinished($run, $r);
+        $campaigns->onRunFinished($run);
 
         return response()->json(['status' => 'recorded']);
     }

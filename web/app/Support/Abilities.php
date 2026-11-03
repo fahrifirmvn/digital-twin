@@ -20,6 +20,8 @@ final class Abilities
             'intervene' => [Role::Ppic, Role::Admin],
             // Mode membangun: mengubah jumlah modul pabrik dan menyimpan denah; hasilnya selalu run baru.
             'build-layout' => [Role::Ppic, Role::Admin],
+            // Kampanye harian: buat, mulai hari, jadwalkan maintenance, pulihkan cabang. Semuanya sandbox SIMULASI.
+            'manage-campaign' => [Role::Ppic, Role::Admin],
             'propose-schedule' => [Role::Ppic],
             'approve-schedule' => [Role::Ppic],
             'decide-quality-gate' => [Role::Qa],

@@ -16,6 +16,13 @@ return [
         'out_of_spec' => 'Truk di luar batas mutu',
         'peak_450' => 'Puncak 450 t',
     ],
+    // Kampanye harian: pabrik yang berjalan hari demi hari dengan checkpoint tiap akhir hari.
+    'campaign' => [
+        'max_days' => 365,
+        'max_planned' => 10, // maintenance yang diputuskan manusia per hari (engine memuat maks 20 perintah)
+        'maintenance_minutes' => [15, 720], // sama dengan batas CommandIn.duration_min di engine
+        'speeds' => ['' => 'Secepat mungkin', '5' => '5 menit/detik', '10' => '10 menit/detik', '30' => '30 menit/detik', '60' => '60 menit/detik'],
+    ],
     // Perintah mode Simulasi (jenis dan batas harus sama dengan engine/app/commands.py dan CommandIn di api.py).
     'commands' => [
         'max' => 20,

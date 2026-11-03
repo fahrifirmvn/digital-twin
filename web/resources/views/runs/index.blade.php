@@ -45,7 +45,7 @@
             <tbody>
             @foreach ($runs as $r)
                 <tr>
-                    <td>{{ $r->id }}@if ($r->kind === 'simulation') <small title="Cabang what-if dari run #{{ $r->parent_run_id }}">SIMULASI dari #{{ $r->parent_run_id }}</small>@endif</td>
+                    <td>{{ $r->id }}@if ($r->kind === 'simulation') <small title="Cabang what-if dari run #{{ $r->parent_run_id }}">SIMULASI dari #{{ $r->parent_run_id }}</small>@elseif ($r->kind === 'campaign') <small>KAMPANYE</small>@endif</td>
                     <td>{{ $r->config }}</td>
                     <td>{{ config('twin.scenarios')[$r->scenario] ?? $r->scenario }}</td>
                     <td>{{ $r->status }}</td>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\LayoutController;
 use App\Http\Controllers\RunController;
@@ -36,6 +37,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/runs/{run}', [RunController::class, 'show'])->name('runs.show');
         Route::get('/runs/{run}/twin', [RunController::class, 'twin'])->name('runs.twin');
         Route::get('/runs/{run}/replay', [RunController::class, 'replay'])->name('runs.replay');
+        Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
+        Route::get('/campaigns/{campaign}/state', [CampaignController::class, 'state'])->whereNumber('campaign')->name('campaigns.state');
+    });
+
+    // Kampanye harian: membuat, memulai hari, menjadwalkan maintenance, dan memulihkan cabang hanya PPIC dan Admin.
+    Route::middleware('can:manage-campaign')->group(function () {
+        Route::post('/campaigns', [CampaignController::class, 'store'])->middleware('throttle:10,1')->name('campaigns.store');
+        Route::post('/campaigns/{campaign}/start', [CampaignController::class, 'start'])->middleware('throttle:10,1')->whereNumber('campaign')->name('campaigns.start');
+        Route::post('/campaigns/{campaign}/maintenance', [CampaignController::class, 'plan'])->middleware('throttle:20,1')->whereNumber('campaign')->name('campaigns.plan');
+        Route::delete('/campaigns/{campaign}/maintenance/{index}', [CampaignController::class, 'cancel'])->whereNumber(['campaign', 'index'])->name('campaigns.cancel');
+        Route::post('/campaigns/{campaign}/autoplay', [CampaignController::class, 'autoplay'])->middleware('throttle:10,1')->whereNumber('campaign')->name('campaigns.autoplay');
+        Route::post('/campaigns/{campaign}/branch', [CampaignController::class, 'branch'])->middleware('throttle:10,1')->whereNumber('campaign')->name('campaigns.branch');
     });
 
     // Mode membangun: atur jumlah modul pabrik, simpan denah, lalu jalankan sebagai run baru.

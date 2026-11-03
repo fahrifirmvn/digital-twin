@@ -38,7 +38,7 @@ class SimRun extends Model
      */
     public function modeBadge(): array
     {
-        if ($this->isSimulation()) {
+        if ($this->isSimulation() || $this->kind === 'campaign') {
             return ['key' => 'sim', 'label' => 'SIMULASI'];
         }
         if (in_array($this->status, ['pending', 'running'], true)) {

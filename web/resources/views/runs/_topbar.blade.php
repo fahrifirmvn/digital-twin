@@ -22,6 +22,7 @@
         @stack('topbar-tools')
         @if ($runsLink ?? true)
             <a class="tw-btn" href="{{ route('runs.index') }}" title="Daftar run" data-icon="replay" data-icon-size="18"><span>Daftar run</span></a>
+            <a class="tw-btn" href="{{ route('campaigns.index') }}" title="Kampanye harian" data-icon="replay" data-icon-size="18"><span>Kampanye</span></a>
         @endif
         <button id="tw-theme" class="tw-ico" type="button"></button>
         @auth

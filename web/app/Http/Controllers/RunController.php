@@ -361,7 +361,7 @@ class RunController extends Controller
         $base = $run->isSimulation() ? $this->baseline($run) : null;
 
         return response()->json([
-            'run' => ['id' => $run->id, 'status' => $run->status, 'error' => $run->error, 'kind' => $run->kind, 'fork_minute' => $run->fork_minute, 'parent_id' => $run->parent_run_id, 'badge' => $run->modeBadge()],
+            'run' => ['id' => $run->id, 'status' => $run->status, 'error' => $run->error, 'kind' => $run->kind, 'fork_minute' => $run->fork_minute, 'parent_id' => $run->parent_run_id],
             'kpi' => $this->kpiOf($run),
             'baseline' => $base ? ['id' => $base->id, 'kpi' => $this->kpiOf($base)] : null,
             'plans' => $finished ? $this->planVersions($run) : [],

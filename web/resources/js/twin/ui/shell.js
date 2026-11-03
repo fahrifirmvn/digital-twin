@@ -68,5 +68,6 @@ export function initShell(root, { onTheme } = {}) {
 export function setStatus(root, text, tone = '') {
     const pill = root.querySelector('#run-status');
     pill.textContent = text;
+    pill.hidden = text === 'selesai';
     pill.dataset.tone = tone;
 }

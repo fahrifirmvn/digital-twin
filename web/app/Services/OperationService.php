@@ -107,7 +107,8 @@ class OperationService
     /** @return list<array{day:int, date:string, run_id:int|null, hash:string, summary:array<string,mixed>|null}> */
     private function history(Campaign $c): array
     {
-        return $c->days()->where('status', 'closed')->get()->map(fn (CampaignDay $d) => [
+        // Hari yang sudah dihitung tetapi belum ditonton tidak ikut tampil.
+        return $c->days()->where('status', 'closed')->where('day_no', '<=', (int) ($c->watch_day ?? 0))->get()->map(fn (CampaignDay $d) => [
             'day' => $d->day_no,
             'date' => $c->dateOf($d->day_no),
             'run_id' => $d->run_id,

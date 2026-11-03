@@ -12,18 +12,23 @@
         <a href="{{ route('twin', $q) }}" @if ($active === 'twin') aria-current="page" @endif>Digital Twin</a>
         <a href="{{ route('maps', $q) }}" @if ($active === 'maps') aria-current="page" @endif>Maps</a>
     </nav>
-    <span class="tw-demo" title="Seluruh data adalah data simulasi">DATA SINTETIS</span>
     @isset($run)
-        @php $badge = $run->modeBadge(); @endphp
-        <span id="run-mode" class="tw-mode" data-mode="{{ $badge['key'] }}" title="Asal data: LIVE = run sedang berjalan, SIMULASI = cabang what-if, DATA CONTOH = hasil run yang sudah selesai">{{ $badge['label'] }}</span>
-        <span class="tw-runinfo">Run #{{ $run->id }} <span id="run-status" class="tw-pill">{{ $staticStatus ?? 'memuat' }}</span>@if ($run->isSimulation() && $run->parent_run_id) dari <a href="{{ route('twin', ['run' => $run->parent_run_id]) }}">#{{ $run->parent_run_id }}</a>@endif</span>
+        @php
+            $day = $run->day_result['day'] ?? null;
+            $date = $run->day_result['summary']['date'] ?? null;
+            $dayLabel = $day ? 'Hari '.$day.($date ? ' · '.\Illuminate\Support\Carbon::parse($date)->locale('id')->translatedFormat('j M Y') : '') : 'Run #'.$run->id;
+        @endphp
+        <span class="tw-runinfo">
+            @if ($daysMenu ?? false)
+                <button id="run-day" class="tw-daychip" type="button" popovertarget="tw-days" title="Riwayat hari">{{ $dayLabel }}</button>
+            @else
+                <b class="tw-daychip">{{ $dayLabel }}</b>
+            @endif
+            <span id="run-status" class="tw-pill">{{ $staticStatus ?? 'memuat' }}</span>
+        </span>
     @endisset
     <div class="tw-topbar-tools">
         @stack('topbar-tools')
-        @if ($runsLink ?? true)
-            <a class="tw-btn" href="{{ route('runs.index') }}" title="Daftar run" data-icon="replay" data-icon-size="18"><span>Daftar run</span></a>
-            <a class="tw-btn" href="{{ route('campaigns.index') }}" title="Kampanye harian" data-icon="replay" data-icon-size="18"><span>Kampanye</span></a>
-        @endif
         <button id="tw-theme" class="tw-ico" type="button"></button>
         @auth
             <form method="POST" action="{{ route('logout') }}" class="tw-user">

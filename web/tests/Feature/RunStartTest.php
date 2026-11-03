@@ -71,7 +71,7 @@ class RunStartTest extends TestCase
             ->assertSee('id="twin-preview"', false)->assertSee('Buka Digital Twin')
             ->assertSee(route('runs.twin', $run->id), false)->assertDontSee('id="twin3d"', false);
         $this->get("/runs/{$run->id}/twin")->assertOk()->assertSee('id="twin"', false)->assertSee('id="twin3d"', false)
-            ->assertSee('id="view-3d"', false)->assertSee('id="view-2d"', false)->assertSee('Statistik Langsung')
+            ->assertDontSee('id="view-3d"', false)->assertSee('id="day-end"', false)->assertSee('Statistik Langsung')
             ->assertSee('Pelacakan Truk')->assertSee('Kontrol peta')->assertSee(route('runs.show', $run->id), false);
 
         $this->as(Role::Qa)->get('/runs')->assertOk()->assertDontSee('Jalankan simulasi');

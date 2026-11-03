@@ -514,3 +514,22 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .param-input { display: inline-flex; align-items: center; gap: 6px; flex: none; color: var(--mute); font-size: 12px; min-width: 120px; }
 .param-submit { position: sticky; bottom: 0; padding: 10px 0; background: var(--card); }
 #params h2, #params h3 { margin: 14px 0 4px; font-size: 14px; }
+
+/* Hari operasi: label hari di topbar, ringkasan akhir hari, riwayat hari */
+.tw-daychip { padding: 4px 12px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--card); color: var(--ink); font: 700 13px/1.2 inherit; font-family: inherit; white-space: nowrap; }
+button.tw-daychip { cursor: pointer; }
+button.tw-daychip:hover { background: var(--hover); }
+.tw-days { width: 340px; max-height: min(70vh, 520px); overflow: auto; inset: calc(var(--topbar) + 8px) auto auto 50%; transform: translateX(-50%); }
+.tw-pop-title { margin: 4px 12px 8px; font-size: 16px; }
+.tw-days-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.tw-days-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 8px 12px; border-radius: var(--r-btn); }
+.tw-days-list li[data-current='1'] { background: var(--brand-soft); }
+.tw-days-list li span { grid-column: 1; color: var(--mute); font-size: 12px; }
+.tw-days-list li a, .tw-days-list li em { grid-row: 1 / span 2; grid-column: 2; font-size: 13px; font-weight: 700; font-style: normal; }
+.tw-days-list li.tw-hint { display: block; }
+.tw-daysheet dl { grid-template-columns: 1fr auto; }
+.tw-daysheet dd { text-align: right; }
+.tw-day-issues { margin: 12px 0 0; padding-left: 18px; font-size: 13px; }
+.tw-day-actions { display: flex; gap: 8px; margin-top: 14px; }
+.tw-day-actions .tw-btn { flex: 1; justify-content: center; }
+.tw-dock .tw-btn { white-space: nowrap; }

@@ -64,7 +64,7 @@ class DashboardPagesTest extends TestCase
     {
         $this->as(Role::Ppic);
         foreach (['/dashboard', '/twin', '/maps'] as $url) {
-            $this->get($url)->assertOk()->assertSee('Belum ada run simulasi');
+            $this->get($url)->assertOk()->assertSee('Operasi pabrik belum dimulai');
         }
     }
 
@@ -238,7 +238,8 @@ class DashboardPagesTest extends TestCase
 
         $this->as(Role::Ppic)->get('/twin')->assertOk()
             ->assertSee('id="view-proc"', false)->assertSee('id="tw-proc"', false)
-            ->assertSee('Penerimaan 3D');
+            ->assertSee('Penerimaan')
+            ->assertDontSee('id="view-3d"', false);
     }
 
     public function test_twin_has_minimize_back_to_dashboard_and_roles_are_enforced(): void

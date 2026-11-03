@@ -12,12 +12,6 @@
 @endpush
 
 @push('topbar-tools')
-    @if ($canSim || $run->isSimulation())
-        <div class="tw-seg" role="group" aria-label="Mode">
-            <button id="mode-watch" type="button" aria-pressed="true" title="Memantau run apa adanya">Pantau</button>
-            <button id="mode-sim" type="button" aria-pressed="false" title="Uji kejadian what-if tanpa mengubah jadwal nyata">Simulasi</button>
-        </div>
-    @endif
     <button id="cp-open" class="tw-btn primary" type="button" data-icon="sparkles" data-icon-size="18" aria-controls="cp-drawer" aria-expanded="false" title="Tanya Asisten AI"><span>Tanya Asisten AI</span></button>
     <button class="tw-ico" type="button" popovertarget="tw-more" data-icon="more" aria-label="Menu lainnya" title="Menu lainnya"></button>
     <div id="tw-more" class="tw-pop" popover>
@@ -30,18 +24,23 @@
             </select>
         </label>
         <hr>
-        <a id="tw-minimize" class="tw-pop-item" href="{{ route('dashboard', ['run' => $run->id]) }}" data-icon="minimize" data-icon-size="18">Kembali ke Dashboard <kbd>Esc</kbd></a>
-        <a class="tw-pop-item" href="{{ route('runs.show', $run) }}#whatif" data-icon="layers" data-icon-size="18">Perbandingan what-if</a>
-        <a class="tw-pop-item" href="{{ route('runs.index') }}" data-icon="replay" data-icon-size="18">Daftar run</a>
+        @if ($canSim || $run->isSimulation())
+            <button id="mode-sim" class="tw-pop-item" type="button" aria-pressed="false" data-icon="layers" data-icon-size="18" title="Lihat dampak sebuah kejadian tanpa mengubah hari ini">Pratinjau dampak</button>
+        @endif
+        <button class="tw-pop-item" type="button" popovertarget="tw-days" data-icon="replay" data-icon-size="18">Riwayat hari</button>
+        @can('manage-campaign')
+            <a class="tw-pop-item" href="{{ route('campaigns.index') }}" data-icon="layers" data-icon-size="18">Rencana maintenance</a>
+        @endcan
         @can('build-layout')
             <a class="tw-pop-item" href="{{ route('build') }}" data-icon="layers" data-icon-size="18">Bangun pabrik</a>
         @endcan
+        <a id="tw-minimize" class="tw-pop-item" href="{{ route('dashboard', ['run' => $run->id]) }}" data-icon="minimize" data-icon-size="18">Kembali ke Dashboard <kbd>Esc</kbd></a>
     </div>
 @endpush
 
 @section('content')
-<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
-    @include('runs._topbar', ['active' => 'twin', 'runsLink' => false])
+<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-op-state-url="{{ route('operation.state') }}" data-op-advance-url="{{ route('operation.advance') }}" data-twin-url="{{ route('twin') }}" data-twin-run-url="{{ route('twin') }}?run=" data-can-advance="{{ auth()->user()->can('manage-campaign') ? '1' : '0' }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
+    @include('runs._topbar', ['active' => 'twin', 'daysMenu' => true])
 
     <main id="tw-stage" class="tw-stage" aria-label="Digital twin pabrik">
         <div id="twin3d" class="tw-view" hidden></div>
@@ -49,12 +48,12 @@
         <div id="tw-pins" class="tw-pins"></div>
 
         <div class="tw-seg tw-mode" role="group" aria-label="Tampilan pabrik">
-            <button id="view-recv" type="button" aria-pressed="true">Penerimaan 3D</button>
+            <button id="view-recv" type="button" aria-pressed="true">Penerimaan</button>
             <button id="view-proc" type="button" aria-pressed="false">Proses</button>
         </div>
         <div id="tw-proc" class="px" hidden aria-label="Zona Proses"></div>
 
-        <p id="tw-loading" class="tw-loading" role="status"><span id="run-msg">Memuat simulasi...</span></p>
+        <p id="tw-loading" class="tw-loading" role="status"><span id="run-msg">Memuat hari operasi…</span></p>
 
         <section class="tw-card tw-stats" data-collapse="twin-stats" aria-label="Statistik langsung">
             <h2>Statistik Langsung</h2>
@@ -79,15 +78,6 @@
                 <button class="tw-grip" type="button" aria-label="Geser kontrol peta: seret, atau pakai tombol panah; Home mengembalikan posisi" title="Seret untuk memindahkan, klik dua kali untuk mengembalikan"></button>
                 <button class="tw-ctl-toggle" type="button" aria-expanded="true" data-icon="chevron-up" data-icon-size="16"></button>
             </div>
-            <div class="tw-seg tw-seg-v" role="group" aria-label="Jenis tampilan">
-                <button id="view-3d" type="button" aria-pressed="false">3D</button>
-                <button id="view-2d" type="button" aria-pressed="false">2D</button>
-            </div>
-            <div class="tw-seg tw-seg-v tw-seg-z" role="group" aria-label="Zona pabrik (kamera; Proses membuka atap bangunan)">
-                <button type="button" data-zone="all" aria-pressed="true" title="Seluruh pabrik">Semua</button>
-                <button type="button" data-zone="intake" aria-pressed="false" title="Penerimaan: gerbang, area tunggu, lab, dan depan bay">Terima</button>
-                <button type="button" data-zone="process" aria-pressed="false" title="Masuk bangunan produksi: bay sampai filling (klik 2x bangunan; Esc untuk keluar)">Proses</button>
-            </div>
             <button id="cm-in" class="tw-ico" type="button" data-icon="zoom-in" aria-label="Zoom masuk" title="Zoom masuk"></button>
             <button id="cm-out" class="tw-ico" type="button" data-icon="zoom-out" aria-label="Zoom keluar" title="Zoom keluar"></button>
             <button id="cm-rot" class="tw-ico" type="button" data-icon="rotate-3d" aria-label="Putar tampilan" title="Putar tampilan"></button>
@@ -95,6 +85,19 @@
         </div>
 
         <div class="tw-rail">
+            <section id="tw-day" class="tw-card tw-sheet tw-daysheet" role="dialog" aria-labelledby="tw-day-title" hidden>
+                <div class="tw-sheet-head">
+                    <h2 id="tw-day-title">Ringkasan hari</h2>
+                    <button id="tw-day-close" class="tw-ico" type="button" aria-label="Tutup ringkasan" data-icon="x"></button>
+                </div>
+                <div id="tw-day-body"></div>
+                <div class="tw-day-actions">
+                    <button id="day-replay" class="tw-btn" type="button">Putar ulang</button>
+                    <button id="day-next" class="tw-btn primary" type="button"></button>
+                </div>
+                <p id="day-err" class="tw-sim-err" role="alert"></p>
+            </section>
+
             <section id="tw-sheet" class="tw-card tw-sheet" role="dialog" aria-labelledby="tw-sheet-title" hidden>
                 <div class="tw-sheet-head">
                     <h2 id="tw-sheet-title"></h2>
@@ -108,9 +111,9 @@
                 </section>
             </section>
 
-            <section id="tw-sim" class="tw-card tw-sim" data-collapse="twin-sim" aria-label="Simulasi what-if" hidden>
-                <h2>Simulasi what-if</h2>
-                <p class="tw-hint">Cabang dari run ini dengan seed yang sama. Jadwal nyata tidak berubah, dan setiap perintah tercatat.</p>
+            <section id="tw-sim" class="tw-card tw-sim" data-collapse="twin-sim" aria-label="Pratinjau dampak" hidden>
+                <h2>Pratinjau dampak</h2>
+                <p class="tw-hint">Coba satu kejadian dari jam yang dipilih. Hari ini tidak berubah.</p>
                 @can('intervene')
                     <form id="iv-form" class="tw-sim-form tw-iv" method="POST" action="{{ route('runs.fork', $run) }}" onsubmit="return false">
                         @csrf
@@ -181,25 +184,26 @@
 
         <div class="tw-dock" role="group" aria-label="Kontrol waktu simulasi">
             <button id="play" class="tw-play" type="button"></button>
-            <button id="jump" class="tw-ico" type="button" data-icon="skip-forward" aria-label="Kejadian berikutnya" title="Kejadian berikutnya"></button>
             <select id="speed" aria-label="Kecepatan">
-                <option value="5">5 mnt/dtk</option>
-                    <option value="10" selected>10 mnt/dtk</option>
-                    <option value="30">30 mnt/dtk</option>
-                <option value="60">60 mnt/dtk</option>
-                <option value="120">120 mnt/dtk</option>
-                <option value="300">300 mnt/dtk</option>
-                <option value="600">600 mnt/dtk</option>
+                <option value="2">1x</option>
+                <option value="10" selected>5x</option>
+                <option value="40">20x</option>
             </select>
             <div class="tw-scrub">
                 <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu simulasi">
                 <div id="scrub-marks" class="tw-marks" aria-hidden="true"></div>
             </div>
             <strong id="clock" class="mono">00:00</strong>
+            <button id="day-end" class="tw-btn" type="button" title="Lewati ke akhir hari">Akhir hari</button>
         </div>
 
         <p id="view-msg" class="tw-toast" role="status"></p>
     </main>
+
+    <div id="tw-days" class="tw-pop tw-days" popover aria-label="Riwayat hari">
+        <h2 class="tw-pop-title">Riwayat hari</h2>
+        <ol id="tw-days-list" class="tw-days-list"></ol>
+    </div>
 
     @include('runs._drawer')
 </div>

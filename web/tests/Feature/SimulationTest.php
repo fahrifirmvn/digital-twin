@@ -197,12 +197,12 @@ class SimulationTest extends TestCase
         $this->as(Role::Observer);
 
         $res = $this->getJson("/runs/{$leaf->id}/replay")->assertOk();
-        $this->assertSame(['simulation', 420, $mid->id, 'sim'], [$res->json('run.kind'), $res->json('run.fork_minute'), $res->json('run.parent_id'), $res->json('run.badge.key')]);
+        $this->assertSame(['simulation', 420, $mid->id, false], [$res->json('run.kind'), $res->json('run.fork_minute'), $res->json('run.parent_id'), $res->json('run.badge') !== null]);
         $this->assertSame([$base->id, 11], [$res->json('baseline.id'), $res->json('baseline.kpi.truck_wait_min.mean')]);
 
         $plain = $this->getJson("/runs/{$base->id}/replay")->assertOk();
         $this->assertNull($plain->json('baseline'));
-        $this->assertSame('sample', $plain->json('run.badge.key'));
+        $this->assertNull($plain->json('run.badge'));
     }
 
     public function test_twin_page_shows_badge_and_simulation_panel_per_role(): void
@@ -211,9 +211,9 @@ class SimulationTest extends TestCase
         $base = $this->base();
         $fork = SimRun::forceCreate(['kind' => 'simulation', 'seed' => 3, 'status' => 'finished', 'parent_run_id' => $base->id, 'fork_minute' => 420, 'config_snapshot' => []]);
 
-        $this->as(Role::Ppic)->get("/runs/{$base->id}/twin")->assertOk()->assertSee('DATA CONTOH')
+        $this->as(Role::Ppic)->get("/runs/{$base->id}/twin")->assertOk()->assertSee('Pratinjau dampak')
             ->assertSee('id="mode-sim"', false)->assertSee('id="sim-form"', false)->assertSee('id="iv-form"', false)->assertSee('id="sim-score"', false)->assertSee(route('runs.fork', $base), false);
-        $this->get("/runs/{$fork->id}/twin")->assertOk()->assertSee('SIMULASI')->assertSee('dari <a', false)->assertSee('data-simulation="1"', false);
+        $this->get("/runs/{$fork->id}/twin")->assertOk()->assertSee('data-simulation="1"', false);
         $this->as(Role::Observer)->get("/runs/{$base->id}/twin")->assertOk()->assertSee('id="sim-form"', false)->assertDontSee('id="iv-form"', false);
 
         $this->as(Role::Qa)->get("/runs/{$base->id}/twin")->assertOk()->assertDontSee('id="mode-sim"', false)->assertDontSee('id="sim-form"', false)->assertDontSee('id="iv-form"', false);

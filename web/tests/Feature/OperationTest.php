@@ -22,6 +22,7 @@ class OperationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         config(['services.engine.url' => 'http://engine.test', 'services.engine.token' => 'secret']);
         $this->seed(MasterDataSeeder::class);
         Http::fake(fn () => Http::response([], $this->engineStatus));

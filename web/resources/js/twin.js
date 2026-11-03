@@ -11,8 +11,8 @@ import { decisionsAt, planAt, proposalRows } from './twin/ui/proposals.js';
 import { interventionScore } from './twin/ui/score.js';
 import { chipEl, h } from './twin/ui/dom.js';
 import { clock, fmtL } from './twin/ui/format.js';
+import { dayDate, daySummaryRows, historyRows } from './twin/ui/day.js';
 import { deltaText, impactRows } from './twin/ui/impact.js';
-import { nextNotable } from './twin/ui/jump.js';
 import { assetRows, layoutCodes, liveStats, trackerSteps } from './twin/ui/live.js';
 import { initShell, setStatus } from './twin/ui/shell.js';
 import { createStage } from './twin/ui/stage.js';
@@ -203,14 +203,6 @@ function start(data) {
         toastTimer = setTimeout(() => { if (el.dataset.tone === 'info') el.textContent = ''; }, 4000);
     }
 
-    // Lompat ke kejadian penting berikutnya (truk tiba, gate tahan, aset mati, CIP darurat, replan, perintah).
-    $('jump').addEventListener('click', () => {
-        const next = nextNotable(model, minute);
-        if (!next) return toast('Tidak ada kejadian penting lagi.');
-        seekTo(next.m);
-        toast(`${clock(next.m)}: ${next.label}`);
-    });
-
     // Mode Simulasi: log perintah, dampak vs dasar, dan form cabang baru.
     const forkForm = $('sim-form');
     const ivForm = $('iv-form');
@@ -228,19 +220,15 @@ function start(data) {
     function setMode(next) {
         root.dataset.mode = next;
         $('tw-sim').hidden = next !== 'simulasi';
-        $('mode-watch')?.setAttribute('aria-pressed', String(next === 'pantau'));
         $('mode-sim')?.setAttribute('aria-pressed', String(next === 'simulasi'));
     }
 
     function initSim() {
-        const badge = data.run.badge;
-        const chip = $('run-mode');
-        if (badge && chip) {
-            chip.textContent = badge.label;
-            chip.dataset.mode = badge.key;
-        }
-        $('mode-watch')?.addEventListener('click', () => setMode('pantau'));
-        $('mode-sim')?.addEventListener('click', () => { setMode('simulasi'); render(); });
+        $('mode-sim')?.addEventListener('click', () => {
+            setMode(root.dataset.mode === 'simulasi' ? 'pantau' : 'simulasi');
+            document.getElementById('tw-more')?.hidePopover?.();
+            render();
+        });
         setMode(isSim ? 'simulasi' : 'pantau');
 
         $('sim-log').replaceChildren(...(log.length ? log.map((c) => h('li', {},
@@ -258,10 +246,10 @@ function start(data) {
         const rows = impactRows(data.kpi, data.baseline?.kpi);
         $('sim-impact').replaceChildren(rows.length
             ? h('table', { class: 'tw-impact' },
-                h('caption', { class: 'sr-only' }, `Dampak dibanding Run #${data.baseline.id}`),
-                h('thead', {}, h('tr', {}, h('th', {}, `Run #${data.baseline.id}`), h('th', {}, 'Dasar'), h('th', {}, 'Simulasi'), h('th', {}, 'Selisih'))),
+                h('caption', { class: 'sr-only' }, `Dampak dibanding hari dasar`),
+                h('thead', {}, h('tr', {}, h('th', {}, 'Ukuran'), h('th', {}, 'Dasar'), h('th', {}, 'Pratinjau'), h('th', {}, 'Selisih'))),
                 h('tbody', {}, rows.map((r) => h('tr', {}, h('td', {}, `${r.label} (${r.unit})`), h('td', {}, String(r.base)), h('td', {}, String(r.now)), h('td', { dataset: { tone: r.tone } }, deltaText(r.delta))))))
-            : h('p', { class: 'tw-hint' }, isSim ? 'KPI run dasar belum tersedia.' : 'Jalankan sebuah kejadian untuk melihat dampaknya terhadap run ini.'));
+            : h('p', { class: 'tw-hint' }, isSim ? 'KPI hari dasar belum tersedia.' : 'Jalankan sebuah kejadian untuk melihat dampaknya terhadap hari ini.'));
 
         const score = interventionScore(model, data.kpi, data.baseline?.kpi);
         const card = $('sim-score');
@@ -352,20 +340,12 @@ function start(data) {
         view = next;
         $('twin3d').hidden = view !== '3d';
         $('twin').hidden = view !== '2d';
-        $('view-3d').setAttribute('aria-pressed', String(view === '3d'));
-        $('view-2d').setAttribute('aria-pressed', String(view === '2d'));
-        document.querySelectorAll('.tw-controls .tw-ico, .tw-seg-z button').forEach((b) => { b.disabled = view !== '3d'; });
+        document.querySelectorAll('.tw-controls .tw-ico').forEach((b) => { b.disabled = view !== '3d'; });
         stage.setProjector(view === '3d' ? scene3d : twin);
         render({ snap: true });
     }
-    $('view-3d').addEventListener('click', () => setView('3d'));
-    $('view-2d').addEventListener('click', () => setView('2d'));
     $('twin').addEventListener('click', (e) => stage.select(twin.pick(e.clientX, e.clientY)));
 
-    document.querySelectorAll('.tw-seg-z button').forEach((b) => b.addEventListener('click', () => {
-        markZone(b.dataset.zone);
-        scene3d?.setZone(b.dataset.zone);
-    }));
     $('cm-in').addEventListener('click', () => scene3d?.zoomBy(1.3));
     $('cm-out').addEventListener('click', () => scene3d?.zoomBy(1 / 1.3));
     $('cm-rot').addEventListener('click', () => scene3d?.rotateStep(0.45));
@@ -383,6 +363,7 @@ function start(data) {
             if (minute >= model.endMin) {
                 playing = false;
                 stage.setPlaying('ended');
+                showDay();
             }
             render();
             if (view === '3d' && qPref === 'auto') governor.sample(dt * 1000);
@@ -392,17 +373,124 @@ function start(data) {
 
     $('play').addEventListener('click', () => {
         if (minute >= model.endMin) minute = 0;
+        hideDay();
         playing = !playing;
         stage.setPlaying(playing ? 'play' : 'pause');
     });
     $('speed').addEventListener('change', (e) => { speed = Number(e.target.value); });
     scrub.addEventListener('input', () => {
+        hideDay();
         playing = false;
         stage.setPlaying('pause');
         minute = Number(scrub.value);
         render({ snap: true });
     });
     addEventListener('pagehide', () => saveMinute(runId, minute));
+
+
+    // Hari operasi: ringkasan akhir hari, riwayat hari yang sudah lewat, dan lanjut ke hari berikutnya.
+    const dayStart = model.events.find((e) => e.p.type === 'day.started')?.p;
+    const dayEnd = [...model.events].reverse().find((e) => e.p.type === 'day.summary')?.p;
+    const dayNo = dayStart?.day ?? dayEnd?.day ?? null;
+    let opState = null;
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const csrf = () => document.querySelector('meta[name=csrf-token]')?.content ?? '';
+
+    async function getState() {
+        const res = await fetch(root.dataset.opStateUrl, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        opState = await res.json();
+        return opState;
+    }
+
+    async function postAdvance() {
+        const res = await fetch(root.dataset.opAdvanceUrl, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(Object.values(out.errors ?? {}).flat()[0] ?? out.message ?? `Gagal (HTTP ${res.status})`);
+        opState = out;
+        return out;
+    }
+
+    /** Minta engine menghitung hari berikutnya bila belum siap, lalu buka hari itu. */
+    async function advanceDay(btn, err) {
+        err.textContent = '';
+        btn.disabled = true;
+        btn.textContent = `Menyiapkan Hari ${dayNo + 1}…`;
+        try {
+            let st = await postAdvance();
+            while (st.watch_day < dayNo + 1) {
+                await sleep(2500);
+                st = st.target_status === 'running' ? await getState() : await postAdvance();
+            }
+            location.href = root.dataset.twinUrl;
+        } catch (e) {
+            err.textContent = e.message;
+            btn.disabled = false;
+            btn.textContent = `Mulai Hari ${dayNo + 1}`;
+        }
+    }
+
+    function setNext(btn) {
+        const nxt = opState?.days.find((d) => d.day === dayNo + 1);
+        const isWatch = opState && opState.watch_day === dayNo;
+        btn.onclick = null;
+        btn.disabled = false;
+        if (nxt && !isWatch) {
+            btn.textContent = `Lihat Hari ${dayNo + 1}`;
+            btn.onclick = () => { location.href = `${root.dataset.twinRunUrl}${nxt.run_id}`; };
+        } else if (root.dataset.canAdvance === '1') {
+            btn.textContent = `Mulai Hari ${dayNo + 1}`;
+            btn.onclick = () => advanceDay(btn, $('day-err'));
+        } else {
+            btn.textContent = `Hari ${dayNo + 1} belum dimulai`;
+            btn.disabled = true;
+        }
+    }
+
+    function showDay() {
+        if (!dayEnd) return;
+        $('tw-day-title').textContent = `Ringkasan Hari ${dayEnd.day} · ${dayDate(dayEnd.date)}`;
+        $('tw-day-body').replaceChildren(
+            h('dl', {}, daySummaryRows(dayEnd, fmtL).flatMap((r) => [h('dt', {}, r.label), h('dd', {}, r.value)])),
+            dayEnd.issues.length
+                ? h('ul', { class: 'tw-day-issues' }, dayEnd.issues.map((t) => h('li', {}, t)))
+                : h('p', { class: 'tw-hint' }, 'Tidak ada masalah hari ini.'),
+        );
+        $('tw-day').hidden = false;
+        setNext($('day-next'));
+        getState().then(() => setNext($('day-next'))).catch(() => {});
+    }
+    function hideDay() { $('tw-day').hidden = true; }
+    $('tw-day-close').addEventListener('click', hideDay);
+    $('day-replay').addEventListener('click', () => {
+        hideDay();
+        minute = 0;
+        playing = true;
+        stage.setPlaying('play');
+    });
+    $('day-end').addEventListener('click', () => {
+        playing = false;
+        stage.setPlaying('ended');
+        seekTo(model.endMin);
+        showDay();
+    });
+
+    // Riwayat hari: daftar hari yang sudah ditutup, tiap hari bisa diputar ulang.
+    $('tw-days').addEventListener('toggle', async (e) => {
+        if (e.newState !== 'open') return;
+        const list = $('tw-days-list');
+        list.replaceChildren(h('li', { class: 'tw-hint' }, 'Memuat…'));
+        try {
+            const st = await getState();
+            const rows = historyRows(st, dayNo, fmtL);
+            list.replaceChildren(...(rows.length ? rows.map((r) => h('li', { dataset: { current: r.current ? '1' : '' } },
+                h('b', {}, r.title), h('span', {}, r.detail),
+                r.current ? h('em', {}, 'Sedang diputar') : h('a', { href: `${root.dataset.twinRunUrl}${r.runId}` }, 'Putar ulang'),
+            )) : [h('li', { class: 'tw-hint' }, 'Belum ada hari yang selesai.')]), h('li', { class: 'tw-hint' }, st.integrity.ok ? 'Seluruh riwayat tersimpan utuh.' : `Riwayat terganggu pada Hari ${st.integrity.broken_day}.`));
+        } catch {
+            list.replaceChildren(h('li', { class: 'tw-hint' }, 'Riwayat tidak dapat dimuat.'));
+        }
+    });
 
     stage.setPlaying('play');
     initSim();

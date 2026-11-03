@@ -95,6 +95,10 @@ class CampaignService
         }
         [$commands] = $this->segments($day);
         $params = $c->params + ['seed' => $c->daySeed($day->day_no)];
+        // Keadaan akhir kemarin (SKU line, umur fouling, truk tertunda, stok) menjadi keadaan awal hari ini.
+        $engineCarry = $day->day_no > 1
+            ? ($c->days()->where('day_no', $day->day_no - 1)->where('status', 'closed')->first()?->snapshot()['state']['engine_carry'] ?? null)
+            : null;
 
         $run = DB::transaction(function () use ($c, $day, $user, $params, $commands) {
             $run = SimRun::create([
@@ -118,6 +122,7 @@ class CampaignService
         try {
             $this->engine->startRun($run->id, $params + array_filter([
                 'config' => $c->config, 'scenario' => $c->scenario, 'speed' => $c->speed,
+                'day' => $day->day_no, 'date' => $c->dateOf($day->day_no), 'carry' => $engineCarry,
                 'commands' => $run->commands()->get()->map->toEngine()->all(),
             ], fn ($v) => $v !== null));
             DB::table('sim_runs')->where('id', $run->id)->where('status', 'pending')->update(['status' => 'running']);
@@ -154,15 +159,18 @@ class CampaignService
         $c = $day->campaign;
         $kpi = json_decode((string) DB::table('scenarios')->where('id', $run->scenario_id)->value('kpi_result'), true) ?: [];
         [$commands, $carryOut] = $this->segments($day);
+        $result = DB::table('sim_runs')->where('id', $run->id)->value('day_result');
+        $result = $result ? json_decode($result, true) : [];
 
         $checkpoint = json_encode([
-            'v' => 1, 'campaign_seed' => $c->seed, 'day' => $day->day_no, 'date' => $c->dateOf($day->day_no),
+            'v' => 2, 'campaign_seed' => $c->seed, 'day' => $day->day_no, 'date' => $c->dateOf($day->day_no),
             'day_seed' => $c->daySeed($day->day_no), 'run_id' => $run->id, 'config' => $c->config, 'scenario' => $c->scenario,
             'plant' => $c->params['plant'] ?? new \stdClass,
             'volume_ton' => $c->params['volume_ton'] ?? null,
             'commands' => array_map(fn ($x) => Arr::only($x, ['kind', 'asset', 'minute', 'duration_min', 'reason', 'actor_label']), $commands),
             'kpi' => array_intersect_key($kpi, array_flip(self::KPI_KEYS)),
-            'state' => ['maintenance_carry' => $carryOut],
+            'state' => ['maintenance_carry' => $carryOut, 'engine_carry' => $result['carry_out'] ?? null],
+            'summary' => $result['summary'] ?? null,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 
         $prev = (string) CampaignDay::where('campaign_id', $c->id)->where('day_no', $day->day_no - 1)->value('hash');

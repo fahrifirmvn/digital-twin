@@ -7,6 +7,7 @@ use App\Services\AuditLogger;
 use App\Services\DaySchedule;
 use App\Services\EngineClient;
 use App\Services\HoldingAlerts;
+use App\Services\OperationService;
 use App\Services\OrderFeasibility;
 use App\Services\VolumeBalance;
 use App\Services\WearReport;
@@ -20,13 +21,17 @@ use RuntimeException;
 
 class RunController extends Controller
 {
-    /** Run yang ditampilkan: ?run= bila ada, selain itu yang selesai terbaru, lalu run terbaru apa pun. Cabang simulasi tidak pernah jadi bawaan. */
+    /** Run yang ditampilkan: ?run= bila ada, selain itu hari operasi yang sedang ditonton. Run lama yang diarsipkan dan cabang simulasi tidak pernah jadi bawaan. */
     private function resolveRun(Request $request): ?SimRun
     {
         if ($request->filled('run')) {
             return SimRun::findOrFail($request->integer('run'));
         }
-        $real = SimRun::where('kind', '!=', 'simulation');
+
+        if ($watched = app(OperationService::class)->watchRun()) {
+            return $watched;
+        }
+        $real = SimRun::whereNotIn('kind', ['simulation', 'campaign'])->whereNull('archived_at');
 
         return (clone $real)->where('status', 'finished')->orderByDesc('id')->first() ?? $real->orderByDesc('id')->first();
     }
@@ -65,7 +70,7 @@ class RunController extends Controller
     {
         $runs = DB::table('sim_runs')
             ->leftJoin('scenarios', 'scenarios.id', '=', 'sim_runs.scenario_id')
-            ->orderByDesc('sim_runs.id')->limit(10)
+            ->whereNull('sim_runs.archived_at')->orderByDesc('sim_runs.id')->limit(10)
             ->get(['sim_runs.id', 'sim_runs.status', 'sim_runs.kind', 'sim_runs.parent_run_id', 'sim_runs.fork_minute', 'sim_runs.seed', 'sim_runs.config_snapshot', 'sim_runs.created_at', 'scenarios.name', 'scenarios.kpi_result']);
 
         return view('runs.index', ['runs' => $runs->map(function ($r) {

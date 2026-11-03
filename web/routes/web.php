@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\LayoutController;
+use App\Http\Controllers\OperationController;
 use App\Http\Controllers\RunController;
 use App\Http\Controllers\ScheduleApprovalController;
 use App\Http\Controllers\SimulationController;
@@ -40,6 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/runs/{run}/twin', [RunController::class, 'twin'])->name('runs.twin');
         Route::get('/runs/{run}/replay', [RunController::class, 'replay'])->name('runs.replay');
         Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('/operasi/state', [OperationController::class, 'state'])->name('operation.state');
         Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
         Route::get('/campaigns/{campaign}/state', [CampaignController::class, 'state'])->whereNumber('campaign')->name('campaigns.state');
         Route::post('/agent/turn', [AgentController::class, 'turn'])->middleware('throttle:'.config('twin.agent.per_minute').',1')->name('agent.turn');
@@ -56,6 +58,7 @@ Route::middleware('auth')->group(function () {
 
     // Kampanye harian: membuat, memulai hari, menjadwalkan maintenance, dan memulihkan cabang hanya PPIC dan Admin.
     Route::middleware('can:manage-campaign')->group(function () {
+        Route::post('/operasi/lanjut', [OperationController::class, 'advance'])->middleware('throttle:20,1')->name('operation.advance');
         Route::post('/campaigns', [CampaignController::class, 'store'])->middleware('throttle:10,1')->name('campaigns.store');
         Route::post('/campaigns/{campaign}/start', [CampaignController::class, 'start'])->middleware('throttle:10,1')->whereNumber('campaign')->name('campaigns.start');
         Route::post('/campaigns/{campaign}/maintenance', [CampaignController::class, 'plan'])->middleware('throttle:20,1')->whereNumber('campaign')->name('campaigns.plan');

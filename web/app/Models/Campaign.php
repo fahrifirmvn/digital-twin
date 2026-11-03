@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'seed', 'start_date', 'config', 'scenario', 'params', 'speed', 'autoplay', 'current_day', 'parent_campaign_id', 'branched_from_day', 'created_by'])]
+#[Fillable(['name', 'seed', 'start_date', 'config', 'scenario', 'params', 'speed', 'autoplay', 'current_day', 'watch_day', 'parent_campaign_id', 'branched_from_day', 'created_by'])]
 class Campaign extends Model
 {
     protected function casts(): array

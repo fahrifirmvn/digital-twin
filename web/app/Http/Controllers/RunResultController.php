@@ -128,9 +128,12 @@ class RunResultController extends Controller
             'events.*.sim_time' => ['required', 'date'],
             'events.*.payload' => ['required', 'array'],
             'events.*.payload.type' => ['required', 'string', 'max:40'],
+            'day' => ['nullable', 'integer', 'min:1'],
         ]);
 
         // validate() hanya mengembalikan kunci yang punya aturan; kpi dan payload harus utuh.
+        $r['carry_out'] = $request->array('carry_out') ?: null;
+        $r['day_summary'] = $request->array('day_summary') ?: null;
         $r['kpi'] = $request->array('kpi');
         $r['plan'] = $request->array('plan') ?: null;
         $r['replans'] = $request->array('replans');

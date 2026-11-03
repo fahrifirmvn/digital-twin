@@ -18,6 +18,16 @@ return [
     ],
     // Operator Agent: batas giliran. Engine membatasi langkah dan waktu per langkah; ini batas total HTTP.
     'agent' => ['timeout' => 120, 'per_minute' => 20],
+    // Operasi: satu pabrik yang berjalan hari demi hari (kampanye tunggal). Hari 1 = 3 Nov 2026, hari berganti 06:00.
+    'operation' => [
+        'name' => 'Operasi pabrik',
+        'seed' => 2026,
+        'start_date' => '2026-11-03',
+        'config' => env('TWIN_OPERATION_CONFIG', 'D'),
+        'scenario' => 'normal',
+        'volume_ton' => 300,
+        'extra_bad' => 2,
+    ],
     // Kampanye harian: pabrik yang berjalan hari demi hari dengan checkpoint tiap akhir hari.
     'campaign' => [
         'max_days' => 365,

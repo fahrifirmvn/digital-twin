@@ -142,6 +142,7 @@ class RunResultStore
                 'scenario_id' => $scenarioId,
                 'status' => 'finished',
                 'ai_result' => isset($r['ai']) ? json_encode($r['ai']) : null,
+                'day_result' => ($r['day'] ?? null) ? json_encode(['day' => $r['day'], 'summary' => $r['day_summary'] ?? null, 'carry_out' => $r['carry_out'] ?? null]) : null,
                 'sim_start' => $r['sim_start'],
                 'sim_end' => $r['sim_end'],
                 'config_snapshot' => json_encode([

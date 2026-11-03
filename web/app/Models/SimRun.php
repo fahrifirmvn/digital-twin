@@ -11,7 +11,7 @@ class SimRun extends Model
 {
     protected function casts(): array
     {
-        return ['config_snapshot' => 'array', 'sim_start' => 'datetime', 'sim_end' => 'datetime', 'fork_minute' => 'float', 'ai_result' => 'array'];
+        return ['config_snapshot' => 'array', 'sim_start' => 'datetime', 'sim_end' => 'datetime', 'fork_minute' => 'float', 'ai_result' => 'array', 'day_result' => 'array', 'archived_at' => 'datetime'];
     }
 
     /** @return HasMany<SimCommand, $this> */

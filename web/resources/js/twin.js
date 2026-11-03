@@ -5,7 +5,6 @@ import { layoutFromPlant } from './twin/layout/plant.js';
 import { fetchReplay, saveMinute, savedMinute } from './twin/load.js';
 import { QualityGovernor, TIERS, detectTier, deviceSignals } from './twin/kit/quality.js';
 import { Replay, buildModel } from './twin/state.js';
-import { createAgentPanel } from './twin/ui/agent.js';
 import { commandLog } from './twin/ui/commands.js';
 import { createInterventionPanel } from './twin/ui/intervene.js';
 import { decisionsAt, planAt, proposalRows } from './twin/ui/proposals.js';
@@ -157,7 +156,6 @@ function start(data) {
         scrub.value = Math.floor(minute);
         $('clock').textContent = clock(minute);
         syncForkMinute();
-        agent?.sync();
         renderStats(s);
         renderTrack(s);
         renderTable(s);
@@ -194,7 +192,6 @@ function start(data) {
     const ivForm = $('iv-form');
     const log = commandLog(model);
     let iv = null;
-    let agent = null;
     let forkMin = -1;
     function syncForkMinute() {
         const m = Math.min(1439, Math.floor(minute));
@@ -270,27 +267,6 @@ function start(data) {
         syncArgs();
         syncForkMinute();
     }
-
-    // Agen Copilot: umpan tindakan agen, mandat (PPIC), dan keputusan manusia. Tidak mengubah jadwal nyata.
-    const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
-    async function agentApi(method, path, fields = {}) {
-        try {
-            const init = { method, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf } };
-            if (method !== 'GET') {
-                const body = new FormData();
-                for (const [k, v] of Object.entries(fields)) if (v != null && v !== '') body.set(k, v);
-                init.body = body;
-            }
-            const res = await fetch(path, init);
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) return { ok: false, error: Object.values(data.errors ?? {}).flat()[0] ?? data.message ?? `Gagal (HTTP ${res.status})` };
-            return { ok: true, data };
-        } catch {
-            return { ok: false, error: 'Server tidak dapat dihubungi.' };
-        }
-    }
-    agent = createAgentPanel({ el: $('agent-body'), api: agentApi, runId, getMinute: () => minute });
-    agent.refresh();
 
     /** Hanya argumen yang berlaku untuk jenis terpilih yang tampil dan terkirim; isinya nilai bawaan. */
     function syncArgs() {

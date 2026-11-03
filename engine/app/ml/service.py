@@ -1,4 +1,4 @@
-"""Layanan inferensi model Greenfields (data SINTETIS): ETA, durasi lab, peluang lolos QC, anomali.
+"""Layanan inferensi model Decision Core (data SINTETIS): ETA, durasi lab, peluang lolos QC, anomali.
 
 ML hanya memprediksi. Gate dan CP-SAT tetap yang memutuskan. Artefak joblib adalah pickle, jadi
 checksum SHA-256 diperiksa sebelum dimuat; selisih berarti model tidak dipakai (hasil tanpa `ai`).
@@ -209,7 +209,7 @@ def _inputs(specs: list[TankerSpec], arrived: dict[str, float] | None = None) ->
     ]
 
 
-class GreenfieldsPredictor:
+class CorePredictor:
     """Antarmuka sama dengan `Predictor` (forecast/mean/evaluate) agar scheduler, MC dan rolling
     tidak berubah. Keterlambatan = transit prediksi - transit tipikal peternakan itu (median
     paket); durasi lab langsung dari model lab. Model dilatih pada generator berbeda (sintetis)."""
@@ -321,17 +321,17 @@ def build_ai(sim) -> AiOut | None:
 
 
 @cache
-def _greenfields() -> GreenfieldsPredictor | None:
+def _core_predictor() -> CorePredictor | None:
     ai = get_ai()
-    return GreenfieldsPredictor(ai) if ai else None
+    return CorePredictor(ai) if ai else None
 
 
-def active_predictor() -> Predictor | GreenfieldsPredictor:
+def active_predictor() -> Predictor | CorePredictor:
     """Prediktor yang dipakai scheduler/MC/rolling: `ENGINE_PREDICTOR`, dengan jatuh ke builtin
-    bila model Greenfields tidak termuat."""
-    if settings.predictor == "greenfields":
+    bila model Decision Core tidak termuat."""
+    if settings.predictor == "core":
         with _lock:
-            g = _greenfields()
+            g = _core_predictor()
         if g is not None:
             return g
     return get_predictor()

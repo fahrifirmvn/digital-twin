@@ -1,9 +1,7 @@
 <?php
 
-use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CopilotController;
 use App\Http\Controllers\FieldController;
 use App\Http\Controllers\LayoutController;
 use App\Http\Controllers\RunController;
@@ -38,8 +36,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/runs/{run}', [RunController::class, 'show'])->name('runs.show');
         Route::get('/runs/{run}/twin', [RunController::class, 'twin'])->name('runs.twin');
         Route::get('/runs/{run}/replay', [RunController::class, 'replay'])->name('runs.replay');
-        Route::get('/runs/{run}/agent', [AgentController::class, 'state'])->whereNumber('run')->name('agent.state');
-        Route::post('/copilot/chat', [CopilotController::class, 'chat'])->middleware('throttle:20,1')->name('copilot.chat');
     });
 
     // Mode membangun: atur jumlah modul pabrik, simpan denah, lalu jalankan sebagai run baru.
@@ -47,15 +43,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/twin/build', [LayoutController::class, 'build'])->name('build');
         Route::post('/layouts', [LayoutController::class, 'store'])->middleware('throttle:20,1')->name('layouts.store');
         Route::delete('/layouts/{layout}', [LayoutController::class, 'destroy'])->whereNumber('layout')->name('layouts.destroy');
-    });
-
-    // Agen Copilot: mandat hanya PPIC; menjalankan, menyetujui, veto, dan membatalkan butuh izin intervensi.
-    Route::post('/agent/mandate', [AgentController::class, 'mandate'])->middleware(['can:set-agent-mandate', 'throttle:10,1'])->name('agent.mandate');
-    Route::middleware('can:intervene')->group(function () {
-        Route::post('/runs/{run}/agent', [AgentController::class, 'run'])->middleware('throttle:6,1')->whereNumber('run')->name('agent.run');
-        Route::post('/agent/actions/{action}/approve', [AgentController::class, 'approve'])->whereNumber('action')->name('agent.approve');
-        Route::post('/agent/actions/{action}/veto', [AgentController::class, 'veto'])->whereNumber('action')->name('agent.veto');
-        Route::post('/agent/actions/{action}/undo', [AgentController::class, 'undo'])->whereNumber('action')->name('agent.undo');
     });
 
     Route::post('/runs/{run}/versions/{version}/approve', [ScheduleApprovalController::class, 'approve'])

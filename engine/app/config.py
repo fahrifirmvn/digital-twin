@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     # Kosong berarti event tidak direlay ke Laravel.
     web_url: str = ""
 
-    # builtin = prediktor LightGBM internal; greenfields = model paket (sintetis) untuk ETA/lab.
-    predictor: Literal["builtin", "greenfields"] = "builtin"
+    # builtin = prediktor LightGBM internal; core = model paket (sintetis) untuk ETA/lab.
+    predictor: Literal["builtin", "core"] = "builtin"
 
-    # Copilot LLM (PRD 10.6). mock = tanpa jaringan; local = server/router berformat OpenAI.
+    # LLM Asisten Operator. mock = tanpa jaringan; local = server/router berformat OpenAI.
     llm_provider: Literal["mock", "openai", "anthropic", "local"] = "mock"
     llm_base_url: str = ""
     llm_api_key: SecretStr = SecretStr("")

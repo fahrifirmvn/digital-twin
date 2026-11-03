@@ -1,10 +1,10 @@
 # PRD: LactOS Digital Twin
 
-Tim Rawon Gank, Politeknik Negeri Jember | Program PLAY IT! PLUS Deeptech Hackathon 2026 | Studi kasus PT Greenfields Indonesia | Versi 1.0 (draft untuk review tim) | 28 Oktober 2026
+Tim Rawon Gank, Politeknik Negeri Jember | Program PLAY IT! PLUS Deeptech Hackathon 2026 | Studi kasus [Nama Pabrik] | Versi 1.0 (draft untuk review tim) | 28 Oktober 2026
 
 ## 1. Ringkasan Produk
 
-LactOS Digital Twin adalah aplikasi web yang menampilkan Milk Plant Greenfields sebagai twin digital 3D yang hidup, mulai dari truk tangki tiba sampai susu siap dikemas. Twin dijalankan oleh simulator berbasis event, dijadwalkan oleh solver optimasi, diprediksi oleh model machine learning, dan diajak berdiskusi lewat copilot LLM. PPIC dapat bertanya, mensimulasikan gangguan, menyusun ulang jadwal, membandingkannya dengan baseline FIFO, lalu menyetujuinya. QA memegang keputusan rilis mutu. Seluruh keputusan tercatat di audit log yang tidak dapat diubah dan dapat ditelusuri mundur maupun maju.
+LactOS Digital Twin adalah aplikasi web yang menampilkan Milk Plant [Nama Pabrik] sebagai twin digital 3D yang hidup, mulai dari truk tangki tiba sampai susu siap dikemas. Twin dijalankan oleh simulator berbasis event, dijadwalkan oleh solver optimasi, diprediksi oleh model machine learning, dan diajak berdiskusi lewat Asisten Operator (LLM). PPIC dapat bertanya, mensimulasikan gangguan, menyusun ulang jadwal, membandingkannya dengan baseline FIFO, lalu menyetujuinya. QA memegang keputusan rilis mutu. Seluruh keputusan tercatat di audit log yang tidak dapat diubah dan dapat ditelusuri mundur maupun maju.
 
 Produk ini menjawab dua isu dari materi bootcamp: (1) Receiving Flow dan Dynamic Plan Visibility, (2) End-to-End Milk Traceability.
 
@@ -13,7 +13,7 @@ Produk ini menjawab dua isu dari materi bootcamp: (1) Receiving Flow dan Dynamic
 1. **Satu sumber kebenaran.** State twin adalah satu-satunya sumber data untuk 3D, Gantt, KPI, dan chat. Tidak ada animasi hardcoded.
 2. **Mutu adalah syarat jalan.** Setiap tahap hanya berjalan jika tahap sebelumnya lulus mutu dan aset siap. Gate bersifat deterministik, bukan ML.
 3. **AI mengusulkan, manusia memutuskan.** PPIC menyetujui jadwal, QA memutuskan rilis. LLM tidak pernah memutuskan.
-4. **Angka hanya dari tool.** Semua angka di jawaban copilot berasal dari output solver, simulator, atau database, dengan tombol sumber.
+4. **Angka hanya dari tool.** Semua angka di jawaban asisten berasal dari output solver, simulator, atau database, dengan tombol sumber.
 5. **Kejujuran data.** Seluruh data berlabel DEMO. Hasil KPI adalah hasil simulasi di bawah asumsi terdokumentasi, bukan klaim dampak nyata di pabrik.
 
 ## 2. Latar Belakang dan Problem
@@ -57,7 +57,7 @@ Semua target dihitung dari simulasi dengan jumlah run dan seed tetap, dibandingk
 
 ### 3.2 Non-goals
 
-- Tidak terhubung ke sensor atau sistem Greenfields sungguhan (sensor disimulasikan).
+- Tidak terhubung ke sensor atau sistem [Nama Pabrik] sungguhan (sensor disimulasikan).
 - Tidak menggantikan keputusan PPIC atau QA, dan tidak mengotomasi rilis produk.
 - Bukan ERP atau WMS. Cakupan hanya Milk Plant sampai siap dikemas.
 - Tidak mengklaim dampak nyata di pabrik. Angka adalah hasil simulasi.
@@ -67,7 +67,7 @@ Semua target dihitung dari simulasi dengan jumlah run dan seed tetap, dibandingk
 
 | Persona | Kebutuhan utama | Halaman utama |
 | --- | --- | --- |
-| PPIC | Melihat rencana dinamis, mensimulasikan gangguan, menyusun ulang, menyetujui jadwal | Twin 3D, Gantt, KPI, Copilot, Approval |
+| PPIC | Melihat rencana dinamis, mensimulasikan gangguan, menyusun ulang, menyetujui jadwal | Twin 3D, Gantt, KPI, Asisten AI, Approval |
 | QA/Lab | Memutuskan lulus atau tahan, memantau gate, menelusuri batch | Gate Mutu, Traceability |
 | Operator produksi | Tugas aktif, status aset, konfirmasi serah terima | Operator View |
 | Sopir tangki | Check-in kedatangan, slot bongkar, bekerja tanpa sinyal | Driver PWA |
@@ -76,7 +76,7 @@ Semua target dihitung dari simulasi dengan jumlah run dan seed tetap, dibandingk
 
 ### Matriks izin
 
-| Aksi | PPIC | QA | Operator | Sopir | Admin | Copilot LLM |
+| Aksi | PPIC | QA | Operator | Sopir | Admin | Asisten Operator |
 | --- | --- | --- | --- | --- | --- | --- |
 | Lihat twin dan KPI | Ya | Ya | Ya | Terbatas | Ya | Ya (baca) |
 | Jalankan skenario | Ya | Tidak | Tidak | Tidak | Ya | Ya (atas permintaan PPIC) |
@@ -91,7 +91,7 @@ Semua target dihitung dari simulasi dengan jumlah run dan seed tetap, dibandingk
 
 | Prioritas | Fitur |
 | --- | --- |
-| **P0 (wajib untuk demo final)** | Simulator twin, generator data DEMO, Twin Canvas (2D lalu 3D), Gantt, KPI Panel, Scheduler CP-SAT + baseline FIFO, Predictor kuantil, Monte Carlo, Gate Engine, Traceability (back dan forward), audit log hash-chain, Copilot LLM dengan tool calling, Approval Modal, skenario preset |
+| **P0 (wajib untuk demo final)** | Simulator twin, generator data DEMO, Twin Canvas (2D lalu 3D), Gantt, KPI Panel, Scheduler CP-SAT + baseline FIFO, Predictor kuantil, Monte Carlo, Gate Engine, Traceability (back dan forward), audit log hash-chain, Asisten Operator dengan tool calling, Approval Modal, skenario preset |
 | **P1 (sangat diinginkan)** | Re-optimasi rolling otomatis, Anomaly Detector, Driver PWA offline-first, Operator View, perbandingan ablation otomatis, Scenario Panel manual |
 | **P2 (jika waktu ada)** | Partikel aliran susu, animasi truk detail, transisi kamera sinematik, ekspor laporan PDF, mode multi-bahasa |
 
@@ -100,7 +100,7 @@ Semua target dihitung dari simulasi dengan jumlah run dan seed tetap, dibandingk
 ```
 +---------------------------------------------------------------+
 |  BROWSER                                                      |
-|  Twin 3D (Three.js) | Gantt | KPI | Copilot Chat | Approval   |
+|  Twin 3D (Three.js) | Gantt | KPI | Asisten AI | Approval   |
 |  HUD = HTML di atas canvas | Driver PWA (offline-first)       |
 +--------------------------+------------------------------------+
                            | HTTPS + WebSocket (Reverb)
@@ -169,7 +169,7 @@ Genealogi dimodelkan sebagai graf: `Tanker -> RawBatch -> Tank -> IntermediateBa
 
 ### 8.3 Audit log hash-chain
 
-Setiap baris menyimpan `hash = SHA256(prev_hash + payload + waktu)`. Tabel hanya mengizinkan INSERT (tanpa UPDATE dan DELETE lewat izin database). UI menyediakan tombol Verifikasi Integritas yang menghitung ulang rantai dan menandai baris pertama yang tidak cocok. Yang dicatat: keputusan gate, persetujuan dan override jadwal, perubahan ambang, tool call LLM beserta parameternya, dan percakapan copilot.
+Setiap baris menyimpan `hash = SHA256(prev_hash + payload + waktu)`. Tabel hanya mengizinkan INSERT (tanpa UPDATE dan DELETE lewat izin database). UI menyediakan tombol Verifikasi Integritas yang menghitung ulang rantai dan menandai baris pertama yang tidak cocok. Yang dicatat: keputusan gate, persetujuan dan override jadwal, perubahan ambang, tool call LLM beserta parameternya, dan percakapan asisten.
 
 ## 9. Konfigurasi Twin Pabrik
 
@@ -198,7 +198,7 @@ Satu aseptic tank melayani dua filling line, sehingga lima aseptic tank melayani
 | Durasi CIP tangki | 60 sampai 90 menit | Asumsi |
 | Changeover SKU | Berbeda per transisi (kertas, ukuran, rasa) | Asumsi |
 
-Semua asumsi ditampilkan di halaman Konfigurasi dan diekspor bersama laporan, supaya juri dan Greenfields dapat mengoreksinya.
+Semua asumsi ditampilkan di halaman Konfigurasi dan diekspor bersama laporan, supaya juri dan [Nama Pabrik] dapat mengoreksinya.
 
 ### 9.3 Aturan gate mutu (deterministik)
 
@@ -213,13 +213,13 @@ Semua asumsi ditampilkan di halaman Konfigurasi dan diekspor bersama laporan, su
 
 ## 10. Desain AI: Di Mana AI Bekerja dan Apa Buktinya
 
-Ukuran substantif: jika komponen AI dicabut, KPI memburuk dan dapat dibuktikan lewat perbandingan. Loop utamanya adalah **Predict, Optimize, Simulate**, dibungkus **Copilot LLM**.
+Ukuran substantif: jika komponen AI dicabut, KPI memburuk dan dapat dibuktikan lewat perbandingan. Loop utamanya adalah **Predict, Optimize, Simulate**, dibungkus **Asisten Operator**.
 
 ```
 Predictor (kuantil) -> Scheduler (CP-SAT) -> Twin Monte Carlo -> pilih jadwal terbaik
       ^                                                         |
       +-------- event nyata (truk telat, CIP gagal) <-----------+
-                         Copilot LLM menjembatani PPIC ke semua tool
+                         Asisten Operator menjembatani PPIC ke semua tool
 ```
 
 ### 10.1 Predictor (machine learning)
@@ -255,7 +255,7 @@ Aturan deterministik dari konfigurasi QA. Tidak ada model yang boleh meloloskan 
 
 Isolation Forest ditambah aturan statistik multivariat pada suhu, tekanan, flow, holding time, dan divert valve. Hasilnya memicu peringatan dan hold untuk ditinjau QA, bukan keputusan otomatis. Prediksi kelulusan sampel hanya dipakai sebagai **prioritas antrean uji**, sedangkan sampel meragukan tetap diuji penuh.
 
-### 10.6 Copilot LLM (antarmuka percakapan ke seluruh mesin)
+### 10.6 Asisten Operator (antarmuka percakapan ke seluruh mesin)
 
 LLM tidak menghitung jadwal. Ia memanggil tool yang terdefinisi ketat dan merangkum hasilnya.
 

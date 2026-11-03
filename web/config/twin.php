@@ -45,20 +45,6 @@ return [
         ],
         'hold_default' => 60,
     ],
-    // Agen Copilot (P6): tingkat otomasi diberi PPIC. Gate SOP, ambang mutu, dan rilis QA tidak pernah diotomasi.
-    'agent' => [
-        'actor' => 'agent:copilot',
-        'levels' => [
-            0 => ['label' => 'Mati', 'hint' => 'Agen tidak bertindak.'],
-            1 => ['label' => 'Saran', 'hint' => 'Agen menyiapkan dan memverifikasi, PPIC menyetujui satu klik.'],
-            2 => ['label' => 'Otomatis + veto', 'hint' => 'Setujui usulan jadwal yang lulus verifikasi; PPIC bisa membatalkan dalam jendela veto.'],
-            3 => ['label' => 'Otomatis penuh', 'hint' => 'Seperti tingkat 2, ditambah menahan truk di gerbang saat sterilizer mati.'],
-        ],
-        'veto_seconds' => 600,
-        'max_actions' => ['default' => 6, 'max' => 10],
-        'max_per_run' => 5,
-        'hold_minutes' => 60,
-    ],
     // Jumlah modul yang boleh diubah (kunci dan batas harus sama dengan engine/app/plant.py).
     // Batas [min, maks] per jenis mengikuti model 3D pabrik (3 bay, 15 tangki mentah, 6 SFP, 5 aseptic/sterilizer).
     'plant' => [

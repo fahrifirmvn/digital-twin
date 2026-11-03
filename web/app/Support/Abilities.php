@@ -18,8 +18,6 @@ final class Abilities
             'simulate' => [Role::Ppic, Role::Admin, Role::Observer],
             // Intervensi PPIC pada cabang simulasi: setujui/ubah/tolak usulan, tahan/lepas truk. Gate SOP tetap tidak bisa dilewati.
             'intervene' => [Role::Ppic, Role::Admin],
-            // Mandat Agen Copilot (tingkat otomasi 0 sampai 3) hanya PPIC.
-            'set-agent-mandate' => [Role::Ppic],
             // Mode membangun: mengubah jumlah modul pabrik dan menyimpan denah; hasilnya selalu run baru.
             'build-layout' => [Role::Ppic, Role::Admin],
             'propose-schedule' => [Role::Ppic],

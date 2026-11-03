@@ -299,27 +299,6 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .tw-score b { font-size: 13px; }
 .tw-score p, .tw-score ul { margin: 4px 0 0; }
 .tw-score ul { padding-left: 16px; }
-.tw-agent { flex: 0 1 auto; min-height: 0; max-height: 46%; overflow: auto; padding: 14px 16px; }
-.tw-agent h2 { margin: 0 0 4px; font-size: 18px; }
-.tw-agent h3 { margin: 12px 0 6px; font-size: 13px; }
-.tw-agent-body { display: grid; gap: 6px; }
-.tw-ag-level { display: grid; gap: 2px; margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-left: 4px solid var(--line-strong); border-radius: var(--r-btn); font-size: 12px; }
-.tw-ag-level[data-level='1'] { border-left-color: var(--warn); }
-.tw-ag-level[data-level='2'], .tw-ag-level[data-level='3'] { border-left-color: var(--ok); }
-.tw-ag-level b { font-size: 13px; }
-.tw-ag-level small { color: var(--mute); }
-.tw-ag-item { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-left: 3px solid var(--brand-edge); border-radius: var(--r-btn); font-size: 12px; }
-.tw-ag-item p { margin: 0; }
-.tw-ag-item[data-tone='ok'] { border-left-color: var(--ok); }
-.tw-ag-item[data-tone='bad'] { border-left-color: var(--bad); }
-.tw-ag-item[data-tone='warn'] { border-left-color: var(--warn); }
-.tw-ag-left { align-self: center; margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
-.tw-ag-item a.tw-iv-btn { display: inline-flex; align-items: center; text-decoration: none; }
-.tw-ag-reason, .tw-ag-mandate label { display: grid; gap: 2px; font-size: 12px; font-weight: 600; color: var(--mute); }
-.tw-ag-reason input, .tw-ag-mandate input, .tw-ag-mandate select { width: 100%; min-height: 40px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: var(--r-btn); background: var(--bg); color: var(--ink); font-size: 14px; font-weight: 500; }
-.tw-ag-mandate { display: grid; gap: 8px; margin-top: 8px; }
-.tw-ag-set summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; font-size: 12px; font-weight: 700; }
-.tw-agent-body[aria-busy='true'] { opacity: .6; }
 
 /* Bangun pabrik: dua panel melayang di atas pratinjau 3D */
 .tw-build-plant, .tw-build-run { position: absolute; top: 16px; max-height: calc(100% - 32px); overflow: auto; padding: 14px 16px; }

@@ -1,4 +1,4 @@
-"""Kelas model dari paket Greenfields (LactaTwin Decision Core), disalin agar artefak joblib bisa dimuat.
+"""Kelas model dari paket LactaTwin Decision Core, disalin agar artefak joblib bisa dimuat.
 
 Atribut harus tetap sama dengan versi paket karena artefak di-pickle dengan kelas ini. Hanya inferensi
 yang dipakai di sini; pelatihan tetap di paket asal. Data: DATA SINTETIS.

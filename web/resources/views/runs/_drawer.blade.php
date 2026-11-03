@@ -4,5 +4,5 @@
         <h2>Asisten AI</h2>
         <button id="cp-close" class="tw-ico" type="button" aria-label="Tutup asisten" data-icon="x"></button>
     </div>
-    @include('runs._copilot')
+    <p class="muted" style="padding:12px">Asisten AI sedang disiapkan.</p>
 </aside>

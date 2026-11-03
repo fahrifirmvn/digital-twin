@@ -6,10 +6,6 @@ from fastapi import Depends, FastAPI, HTTPException
 
 from app.api import router
 from app.config import settings
-from app.copilot import Copilot
-from app.copilot_api import RunManagerSource
-from app.copilot_api import router as copilot_router
-from app.llm import LLMConfigError, build_provider
 from app.main_deps import require_internal_token
 from app.relay import Relay
 from app.runs import RunManager
@@ -30,11 +26,6 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.runs = RunManager(relay)
-    try:
-        app.state.copilot = Copilot(build_provider(settings), RunManagerSource(app.state.runs))
-    except LLMConfigError as exc:
-        log.warning("Copilot nonaktif: %s", exc)  # pesan tidak memuat kunci
-        app.state.copilot = None
     yield
     if relay:
         relay.close()
@@ -42,7 +33,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="LactOS Engine", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
-app.include_router(copilot_router)
 
 
 @app.get("/health")

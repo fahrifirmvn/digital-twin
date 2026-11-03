@@ -200,15 +200,14 @@ class RunController extends Controller
             'extra_bad' => ['required', 'integer', 'min:0', 'max:10'],
             'config' => ['sometimes', Rule::in(array_keys(config('twin.configs')))],
             'scenario' => ['sometimes', Rule::in(array_keys(config('twin.scenarios')))],
-            'via' => ['sometimes', Rule::in(['copilot'])],
             'go' => ['sometimes', Rule::in(['twin'])],
             'plant' => ['sometimes', 'nullable', 'array'],
         ] + $plantRules + $this->paramRules());
         $config = $data['config'] ?? 'A';
         $scenario = $data['scenario'] ?? 'normal';
-        $via = $data['via'] ?? 'form';
+        $via = 'form';
         $go = $data['go'] ?? null;
-        unset($data['config'], $data['scenario'], $data['via'], $data['go']);
+        unset($data['config'], $data['scenario'], $data['go']);
         // Pabrik bawaan tidak disimpan, supaya run lama dan baru tanpa perubahan tetap sebanding.
         $plant = array_filter($data['plant'] ?? [], fn ($n) => $n !== null);
         unset($data['plant']);

@@ -3,7 +3,6 @@
 // F3b: halaman dipisah jadi Dashboard + Twin; kode dan CSS bersama (TopBar, kartu, token) masuk chunk "shell".
 // P4: mode Simulasi (log perintah, dampak vs dasar, form cabang, lompat kejadian) menambah twin js dan css bersama.
 // P5: intervensi PPIC (usulan, keputusan, skor) menambah twin js dan css bersama.
-// P6: Agen Copilot (mandat, umpan tindakan, veto) menambah twin js dan css bersama.
 // Maps geografis: peta MapLibre + truk 3D dimuat malas hanya di halaman Maps (chunk geomap); maps.js memuat data jalur nyata.
 // Jalankan setelah `npm run build`: `npm run budget`.
 import { readdirSync, readFileSync } from 'node:fs';

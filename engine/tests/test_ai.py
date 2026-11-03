@@ -11,7 +11,7 @@ from app.ml import service
 from app.ml.service import (
     AiModels,
     AiUnavailable,
-    GreenfieldsPredictor,
+    CorePredictor,
     TruckInput,
     active_predictor,
     anomaly_signals,
@@ -74,8 +74,8 @@ def test_checksum_tidak_cocok_menolak(tmp_path):
         AiModels(tmp_path)
 
 
-def test_greenfields_predictor_antarmuka_sama(ai):
-    g = GreenfieldsPredictor(ai)
+def test_core_predictor_predictor_antarmuka_sama(ai):
+    g = CorePredictor(ai)
     specs = generate_day(1, 100)[:6]
     for target in ("eta_delay", "lab_duration"):
         fc = g.forecast(target, specs)

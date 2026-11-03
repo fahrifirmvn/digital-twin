@@ -102,11 +102,6 @@
                 </section>
             </section>
 
-            <section id="tw-agent" class="tw-card tw-agent" data-collapse="twin-agent" data-fold-default="1" aria-label="Agen Copilot">
-                <h2>Agen Copilot</h2>
-                <div id="agent-body" class="tw-agent-body"><p class="tw-hint">Memuat status agen...</p></div>
-            </section>
-
             <section id="tw-sim" class="tw-card tw-sim" data-collapse="twin-sim" aria-label="Simulasi what-if" hidden>
                 <h2>Simulasi what-if</h2>
                 <p class="tw-hint">Cabang dari run ini dengan seed yang sama. Jadwal nyata tidak berubah, dan setiap perintah tercatat.</p>

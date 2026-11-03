@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.agent.orchestrator import FALLBACK, Agent, AgentReply, ChatTurn
 from app.agent.registry import ROLES
+from app.agent.whatif import CampaignContext
 from app.contracts.result import RunResult
 from app.main_deps import require_internal_token
 from app.runs import RunManager
@@ -42,6 +43,7 @@ class TurnRequest(BaseModel):
     mode: Literal["SIMULASI", "LIVE"]
     message: str = Field(min_length=1, max_length=1000)
     run_id: int | None = Field(default=None, ge=1)
+    campaign: CampaignContext | None = None
     history: list[Turn] = Field(default_factory=list, max_length=20)
 
 
@@ -69,6 +71,7 @@ def turn(body: TurnRequest, bot: Annotated[Agent | None, Depends(agent)]) -> dic
             body.message,
             [ChatTurn(t.role, t.content) for t in body.history],
             body.run_id,
+            body.campaign,
         )
     except Exception as exc:  # noqa: BLE001 - kegagalan agen tidak boleh menjatuhkan Engine
         log.exception("agent error")

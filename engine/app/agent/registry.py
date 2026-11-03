@@ -17,6 +17,7 @@ from pydantic import (
     ValidationInfo,
 )
 
+from app.agent.whatif import CampaignContext, WhatIfStore
 from app.contracts.result import RunResult
 from app.llm import ToolSpec
 from app.plant import PlantConfig
@@ -40,6 +41,10 @@ class RunSource(Protocol):
 class ToolEnv:
     source: RunSource
     run_id: int | None = None  # run yang sedang dibuka pengguna
+    campaign: CampaignContext | None = None  # hari kampanye yang sedang disusun
+    whatifs: WhatIfStore = field(default_factory=WhatIfStore)
+    whatif_runs: int = 0  # what-if turn ini; simulasi mahal, jadi dibatasi
+    proposals: list[dict[str, Any]] = field(default_factory=list)  # usulan draf turn ini
     cited: list[dict[str, Any]] = field(default_factory=list)
 
     def result(self, run_id: int | None) -> RunResult:
@@ -57,7 +62,9 @@ class ToolEnv:
             self.cited.append(item)
 
     def asset_ids(self, run_id: int | None) -> set[str]:
-        """Kode tangki nyata di pabrik run ini; kosong bila run tidak ada."""
+        """Kode tangki nyata: pabrik kampanye bila run_id tidak disebut, selain itu pabrik run itu."""
+        if run_id is None and self.campaign:
+            return self.campaign.tank_ids()
         rid = run_id if run_id is not None else self.run_id
         res = self.source.get_result(rid) if rid is not None else None
         if res is None:

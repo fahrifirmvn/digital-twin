@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 from app.agent import Agent, ChatTurn, Policy, RateLimiter
+from app.agent.proposals import PROPOSAL_TOOLS
 from app.agent.registry import ToolEnv, execute
 from app.agent.tools import TOOLS
 from app.config import Settings, settings
@@ -207,7 +208,7 @@ def test_registry_enforces_role_and_mode():
 
 def test_no_tool_can_touch_quality_thresholds_or_qa_release():
     forbidden = ("threshold", "ambang", "sop", "holding", "release", "rilis", "approve", "apply")
-    assert not [n for n in TOOLS if any(f in n for f in forbidden)]
+    assert not [n for n in {**TOOLS, **PROPOSAL_TOOLS} if any(f in n for f in forbidden)]
 
 
 def test_rate_limiter_sliding_window():
@@ -242,7 +243,7 @@ def test_grounded_answer_with_audit_entry_per_tool_call():
     assert len(a.result_hash) == 64 and a.model_name == "mock" and a.model_version == "mock-1"
     assert a.at.endswith("+00:00")
     # LLM hanya diberi alat sesuai peran.
-    assert {s.name for s in bot.provider.calls[0][1]} == set(TOOLS)
+    assert {s.name for s in bot.provider.calls[0][1]} == set(TOOLS) | set(PROPOSAL_TOOLS)
 
 
 def test_tool_output_is_untrusted_and_injection_cannot_trigger_forbidden_tool():

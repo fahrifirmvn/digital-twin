@@ -829,6 +829,103 @@
         ],
         "title": "BatchOut"
       },
+      "CampaignContext": {
+        "properties": {
+          "campaign_id": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Campaign Id"
+          },
+          "day_no": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Day No"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed"
+          },
+          "config": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "title": "Config"
+          },
+          "scenario": {
+            "type": "string",
+            "pattern": "^(normal|truck_surge|sterilizer_down|cip_delay|out_of_spec|peak_450)$",
+            "title": "Scenario"
+          },
+          "volume_ton": {
+            "type": "number",
+            "maximum": 600.0,
+            "minimum": 50.0,
+            "title": "Volume Ton"
+          },
+          "extra_bad": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Extra Bad"
+          },
+          "plant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "existing": {
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceEntry"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Existing"
+          },
+          "planned_count": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Planned Count"
+          },
+          "max_planned": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Planned"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campaign_id",
+          "day_no",
+          "editable",
+          "seed",
+          "config",
+          "scenario",
+          "volume_ton",
+          "extra_bad",
+          "planned_count",
+          "max_planned"
+        ],
+        "title": "CampaignContext",
+        "description": "Keadaan hari kampanye yang sedang disusun. Dibangun Laravel dari database; Engine tidak\nmenerimanya dari klien browser."
+      },
       "CandidateOut": {
         "properties": {
           "label": {
@@ -1634,6 +1731,35 @@
         ],
         "title": "LineChangeover",
         "description": "Filling line berganti SKU: tidak mengisi selama `minutes`."
+      },
+      "MaintenanceEntry": {
+        "properties": {
+          "asset": {
+            "type": "string",
+            "pattern": "^TK-(RAW|STO)-\\d{1,2}$",
+            "title": "Asset"
+          },
+          "minute": {
+            "type": "number",
+            "exclusiveMaximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Minute"
+          },
+          "duration_min": {
+            "type": "number",
+            "maximum": 720.0,
+            "minimum": 15.0,
+            "title": "Duration Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset",
+          "minute",
+          "duration_min"
+        ],
+        "title": "MaintenanceEntry"
       },
       "MaintenanceIn": {
         "properties": {
@@ -3588,6 +3714,16 @@
               }
             ],
             "title": "Run Id"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CampaignContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "history": {
             "items": {

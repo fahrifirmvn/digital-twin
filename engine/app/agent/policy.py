@@ -39,10 +39,12 @@ class Policy:
     def __init__(self, limiter: RateLimiter):
         self.limiter = limiter
 
-    def check_turn(self, user_id: int, role: str, mode: str) -> None:
+    def check_turn(self, user_id: int, role: str, mode: str, campaign: bool = False) -> None:
         if role not in READ_ROLES:
             raise PolicyError("role_denied", f"peran {role} tidak boleh memakai Asisten AI")
         if mode not in MODES:
             raise PolicyError("mode_invalid", f"mode {mode!r} tidak dikenal")
+        if campaign and mode != "SIMULASI":
+            raise PolicyError("mode_invalid", "kampanye hanya tersedia pada mode SIMULASI")
         if not self.limiter.allow(str(user_id)):
             raise PolicyError("rate_limited", "terlalu banyak permintaan; coba lagi sebentar")

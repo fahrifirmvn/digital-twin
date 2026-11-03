@@ -22,6 +22,8 @@ final class Abilities
             'build-layout' => [Role::Ppic, Role::Admin],
             // Kampanye harian: buat, mulai hari, jadwalkan maintenance, pulihkan cabang. Semuanya sandbox SIMULASI.
             'manage-campaign' => [Role::Ppic, Role::Admin],
+            // Usulan Operator Agent: hanya PPIC/Admin yang dapat menyetujui atau menolak (dengan alasan). Pembuat usulan bukan syarat.
+            'approve-proposal' => [Role::Ppic, Role::Admin],
             'propose-schedule' => [Role::Ppic],
             'approve-schedule' => [Role::Ppic],
             'decide-quality-gate' => [Role::Qa],

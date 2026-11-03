@@ -257,10 +257,17 @@ class CampaignService
         }
     }
 
-    private function assertTankExists(Campaign $c, string $asset): void
+    /** @return array{'TK-RAW': int, 'TK-STO': int} */
+    public function tankLimits(Campaign $c): array
     {
         $plant = $c->params['plant'] ?? [];
-        $limits = ['TK-RAW' => $plant['n_raw_tanks'] ?? config('twin.commands.tanks.TK-RAW'), 'TK-STO' => $plant['n_storage_tanks'] ?? config('twin.commands.tanks.TK-STO')];
+
+        return ['TK-RAW' => (int) ($plant['n_raw_tanks'] ?? config('twin.commands.tanks.TK-RAW')), 'TK-STO' => (int) ($plant['n_storage_tanks'] ?? config('twin.commands.tanks.TK-STO'))];
+    }
+
+    private function assertTankExists(Campaign $c, string $asset): void
+    {
+        $limits = $this->tankLimits($c);
         $kind = substr($asset, 0, 6);
         $n = (int) substr($asset, 7);
         if (! isset($limits[$kind]) || $n < 1 || $n > $limits[$kind]) {

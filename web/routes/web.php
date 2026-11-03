@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\AgentProposalController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
@@ -42,6 +43,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
         Route::get('/campaigns/{campaign}/state', [CampaignController::class, 'state'])->whereNumber('campaign')->name('campaigns.state');
         Route::post('/agent/turn', [AgentController::class, 'turn'])->middleware('throttle:'.config('twin.agent.per_minute').',1')->name('agent.turn');
+        Route::get('/agent/proposals', [AgentProposalController::class, 'index'])->name('agent.proposals.index');
+        Route::get('/agent/proposals/{uuid}', [AgentProposalController::class, 'show'])->whereUuid('uuid')->name('agent.proposals.show');
+        Route::post('/agent/proposals/{uuid}/submit', [AgentProposalController::class, 'submit'])->middleware('throttle:20,1')->whereUuid('uuid')->name('agent.proposals.submit');
+    });
+
+    // Keputusan atas usulan Operator Agent: satu-satunya jalur yang menerapkan usulan (P2).
+    Route::middleware('can:approve-proposal')->group(function () {
+        Route::post('/agent/proposals/{uuid}/approve', [AgentProposalController::class, 'approve'])->middleware('throttle:20,1')->whereUuid('uuid')->name('agent.proposals.approve');
+        Route::post('/agent/proposals/{uuid}/reject', [AgentProposalController::class, 'reject'])->middleware('throttle:20,1')->whereUuid('uuid')->name('agent.proposals.reject');
     });
 
     // Kampanye harian: membuat, memulai hari, menjadwalkan maintenance, dan memulihkan cabang hanya PPIC dan Admin.

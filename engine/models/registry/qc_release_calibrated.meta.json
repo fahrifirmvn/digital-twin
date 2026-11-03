@@ -1,0 +1,23 @@
+{
+  "model_name": "qc_release_calibrated",
+  "created_at": "2026-11-01T16:01:18.610096",
+  "data_classification": "DATA SINTETIS",
+  "partner": "[Nama Pabrik]",
+  "seed": 42,
+  "data_hash": "6da845907a93a210",
+  "features": [
+    "farm_id",
+    "sampling_hour",
+    "day_of_week",
+    "volume_l"
+  ],
+  "metrics": {
+    "brier_baseline": 0.03223593964334706,
+    "brier_model": 0.03174434121673806,
+    "ece": 0.0052603901362205645,
+    "auc_roc": 0.6817794806300553,
+    "brier_improvement_pct": 1.5250010765870705,
+    "calibration_status": "CALIBRATED_ISOTONIC"
+  },
+  "extra": {}
+}

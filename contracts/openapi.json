@@ -1,0 +1,3912 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LactOS Engine",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/runs": {
+      "post": {
+        "summary": "Start Run",
+        "operationId": "start_run_v1_runs_post",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/predictor/metrics": {
+      "get": {
+        "summary": "Get Predictor Metrics",
+        "description": "Akurasi prediktor kuantil pada hari holdout (pinball, coverage) dibanding baseline.",
+        "operationId": "get_predictor_metrics_v1_predictor_metrics_get",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Predictor Metrics V1 Predictor Metrics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/predictor/models": {
+      "get": {
+        "summary": "Get Predictor Models",
+        "description": "Kartu model AI (metrik latih, hash data) dan prediktor aktif. Semua data SINTETIS.",
+        "operationId": "get_predictor_models_v1_predictor_models_get",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Predictor Models V1 Predictor Models Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}": {
+      "get": {
+        "summary": "Get Run",
+        "operationId": "get_run_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/result": {
+      "get": {
+        "summary": "Get Result",
+        "operationId": "get_result_v1_runs__run_id__result_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/events": {
+      "get": {
+        "summary": "Get Events",
+        "description": "Ambil ulang event (seq > after), untuk klien yang terlambat bergabung atau kehilangan siaran.",
+        "operationId": "get_events_v1_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -1,
+              "default": -1,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 500,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Events V1 Runs  Run Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/copilot/status": {
+      "get": {
+        "summary": "Status",
+        "operationId": "status_v1_copilot_status_get",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Status V1 Copilot Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/copilot/chat": {
+      "post": {
+        "summary": "Chat",
+        "operationId": "chat_v1_copilot_chat_post",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "parameters": [
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AiAnomalyOut": {
+        "properties": {
+          "risk_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Risk Score"
+          },
+          "is_anomaly": {
+            "type": "boolean",
+            "title": "Is Anomaly"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags"
+          },
+          "balance_residual_l": {
+            "type": "number",
+            "title": "Balance Residual L"
+          },
+          "batch_age_h": {
+            "type": "number",
+            "title": "Batch Age H"
+          },
+          "flow_deviation_pct": {
+            "type": "number",
+            "title": "Flow Deviation Pct"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "risk_score",
+          "is_anomaly",
+          "flags",
+          "balance_residual_l",
+          "batch_age_h",
+          "flow_deviation_pct"
+        ],
+        "title": "AiAnomalyOut"
+      },
+      "AiOut": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Selalu DATA SINTETIS"
+          },
+          "models": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Models",
+            "description": "Nama model -> hash data latih"
+          },
+          "trucks": {
+            "items": {
+              "$ref": "#/components/schemas/AiTruckOut"
+            },
+            "type": "array",
+            "title": "Trucks"
+          },
+          "anomaly": {
+            "$ref": "#/components/schemas/AiAnomalyOut"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "models",
+          "trucks",
+          "anomaly"
+        ],
+        "title": "AiOut"
+      },
+      "AiTruckOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "transit_p50_min": {
+            "type": "number",
+            "title": "Transit P50 Min",
+            "description": "Durasi transit peternakan -> gerbang"
+          },
+          "transit_p80_min": {
+            "type": "number",
+            "title": "Transit P80 Min"
+          },
+          "transit_p90_min": {
+            "type": "number",
+            "title": "Transit P90 Min"
+          },
+          "delay_p50_min": {
+            "type": "number",
+            "title": "Delay P50 Min",
+            "description": "Transit prediksi dikurangi transit tipikal peternakan"
+          },
+          "delay_p80_min": {
+            "type": "number",
+            "title": "Delay P80 Min"
+          },
+          "delay_p90_min": {
+            "type": "number",
+            "title": "Delay P90 Min"
+          },
+          "lab_p50_min": {
+            "type": "number",
+            "title": "Lab P50 Min"
+          },
+          "lab_p90_min": {
+            "type": "number",
+            "title": "Lab P90 Min"
+          },
+          "qc_release_prob": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Qc Release Prob",
+            "description": "Peluang lolos QC (terkalibrasi)"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "transit_p50_min",
+          "transit_p80_min",
+          "transit_p90_min",
+          "delay_p50_min",
+          "delay_p80_min",
+          "delay_p90_min",
+          "lab_p50_min",
+          "lab_p90_min",
+          "qc_release_prob"
+        ],
+        "title": "AiTruckOut",
+        "description": "Prediksi model AI per truk (ML hanya memprediksi; gate dan CP-SAT tetap memutuskan)."
+      },
+      "AssetLevel": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "asset.level",
+            "title": "Type",
+            "default": "asset.level"
+          },
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "level_ton": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Level Ton"
+          },
+          "capacity_ton": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Capacity Ton"
+          },
+          "lot": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot",
+            "description": "Batch tertua yang masih ada di tangki"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since",
+            "description": "Saat lot tertua masuk tangki (UTC)"
+          },
+          "fill_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fill Start",
+            "description": "Saat line mulai mengisi dari lot ini (UTC)"
+          },
+          "hold_max_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Hold Max Min",
+            "description": "Batas holding time (menit)"
+          },
+          "low": {
+            "type": "boolean",
+            "title": "Low",
+            "description": "Isi hampir habis saat line masih mengisi"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_code",
+          "level_ton",
+          "capacity_ton",
+          "hold_max_min",
+          "low"
+        ],
+        "title": "AssetLevel",
+        "description": "Isi aseptic tank: level, lot yang sedang ditahan, sejak kapan, dan kapan pengisian dimulai."
+      },
+      "AssetStatus": {
+        "type": "string",
+        "enum": [
+          "idle",
+          "in_use",
+          "filling",
+          "holding",
+          "cip",
+          "unavailable"
+        ],
+        "title": "AssetStatus"
+      },
+      "AssetStatusChanged": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "asset.status_changed",
+            "title": "Type",
+            "default": "asset.status_changed"
+          },
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssetStatus"
+          },
+          "level_ton": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Ton",
+            "description": "Hanya untuk tangki"
+          },
+          "capacity_ton": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Ton",
+            "description": "Kapasitas tangki, agar persen isi dihitung dari angka yang sama"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_code",
+          "status"
+        ],
+        "title": "AssetStatusChanged"
+      },
+      "BatchOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "volume_ton": {
+            "type": "number",
+            "title": "Volume Ton"
+          },
+          "parents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Parents"
+          },
+          "tanker_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tanker Code"
+          },
+          "sku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "type",
+          "volume_ton",
+          "parents",
+          "tanker_code",
+          "sku_code",
+          "status"
+        ],
+        "title": "BatchOut"
+      },
+      "CandidateOut": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "config": {
+            "type": "string",
+            "enum": [
+              "B",
+              "C"
+            ],
+            "title": "Config"
+          },
+          "quantile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "solve_seconds": {
+            "type": "number",
+            "title": "Solve Seconds"
+          },
+          "mean_cost": {
+            "type": "number",
+            "title": "Mean Cost"
+          },
+          "cvar80_cost": {
+            "type": "number",
+            "title": "Cvar80 Cost"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "config",
+          "quantile",
+          "status",
+          "objective",
+          "solve_seconds",
+          "mean_cost",
+          "cvar80_cost",
+          "score"
+        ],
+        "title": "CandidateOut"
+      },
+      "ChatRequest": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "ppic",
+              "qa",
+              "operator",
+              "driver",
+              "admin",
+              "observer"
+            ],
+            "title": "Role"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/Turn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "message"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "rejected",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "sources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Sources",
+            "default": []
+          },
+          "proposals": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Proposals",
+            "default": []
+          },
+          "tool_trace": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tool Trace",
+            "default": []
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": ""
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens",
+            "default": 0
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "text"
+        ],
+        "title": "ChatResponse"
+      },
+      "CipEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "cip.started",
+              "cip.finished"
+            ],
+            "title": "Type"
+          },
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "is_scheduled": {
+            "type": "boolean",
+            "title": "Is Scheduled"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "asset_code",
+          "is_scheduled"
+        ],
+        "title": "CipEvent"
+      },
+      "CipOut": {
+        "properties": {
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Finished At"
+          },
+          "is_scheduled": {
+            "type": "boolean",
+            "title": "Is Scheduled"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_code",
+          "started_at",
+          "finished_at",
+          "is_scheduled"
+        ],
+        "title": "CipOut"
+      },
+      "CommandApplied": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "command.applied",
+            "title": "Type",
+            "default": "command.applied"
+          },
+          "command_id": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Command Id",
+            "description": "Urut per run"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ster_down",
+              "tank_down",
+              "cip_delay",
+              "truck_surge",
+              "plan_approve",
+              "plan_change",
+              "plan_reject",
+              "truck_hold",
+              "truck_release"
+            ],
+            "title": "Kind"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count",
+            "description": "Sterilizer mati atau truk dadakan"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor",
+            "description": "Pengali durasi CIP"
+          },
+          "truck": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Truck",
+            "description": "Intervensi PPIC: kode truk"
+          },
+          "bay": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bay",
+            "description": "plan_change: bay pilihan"
+          },
+          "start_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Min",
+            "description": "plan_change: menit bongkar"
+          },
+          "asset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset",
+            "description": "tank_down: tangki yang di-maintenance"
+          },
+          "blocked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked",
+            "description": "Alasan intervensi ditolak sistem; kosong = berlaku"
+          },
+          "gate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GateId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Gate SOP yang dicoba dilewati (pelanggaran), bila ada"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "command_id",
+          "kind",
+          "actor",
+          "reason"
+        ],
+        "title": "CommandApplied",
+        "description": "Perintah pengguna (mode Simulasi) mulai berlaku. Dicatat di aliran event agar replay dan audit\nmemuat siapa, kapan, apa, dan alasannya."
+      },
+      "CommandIn": {
+        "properties": {
+          "minute": {
+            "type": "number",
+            "exclusiveMaximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Minute",
+            "description": "Menit sejak awal hari"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ster_down",
+              "tank_down",
+              "cip_delay",
+              "truck_surge",
+              "plan_approve",
+              "plan_change",
+              "plan_reject",
+              "truck_hold",
+              "truck_release"
+            ],
+            "title": "Kind"
+          },
+          "actor": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Actor",
+            "description": "Siapa yang memberi perintah"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Reason",
+            "description": "Alasan, dicatat di log"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 12.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count",
+            "description": "Sterilizer mati / truk"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 720.0,
+                "minimum": 15.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 5.0,
+                "minimum": 1.2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factor"
+          },
+          "truck": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}-\\d{3,}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Truck",
+            "description": "Kode truk"
+          },
+          "bay": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^BAY-\\d{1,2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bay"
+          },
+          "start_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMaximum": 2880.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Min",
+            "description": "Menit bongkar baru"
+          },
+          "asset": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^TK-(RAW|STO)-\\d{1,2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset",
+            "description": "Tangki yang di-maintenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "minute",
+          "kind",
+          "actor",
+          "reason"
+        ],
+        "title": "CommandIn",
+        "description": "Perintah mode Simulasi. Argumen yang tidak berlaku untuk jenisnya diabaikan."
+      },
+      "ExpiryReport": {
+        "properties": {
+          "shelf_life_days": {
+            "type": "number",
+            "title": "Shelf Life Days"
+          },
+          "dispatch_lead_days": {
+            "type": "number",
+            "title": "Dispatch Lead Days"
+          },
+          "min_remaining_pct": {
+            "type": "number",
+            "title": "Min Remaining Pct"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuExpiry"
+            },
+            "type": "array",
+            "title": "Skus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "shelf_life_days",
+          "dispatch_lead_days",
+          "min_remaining_pct",
+          "skus"
+        ],
+        "title": "ExpiryReport"
+      },
+      "FoulingExpiry": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "fouling.expiry",
+            "title": "Type",
+            "default": "fouling.expiry"
+          },
+          "fouling": {
+            "$ref": "#/components/schemas/FoulingReport"
+          },
+          "expiry": {
+            "$ref": "#/components/schemas/ExpiryReport"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fouling",
+          "expiry"
+        ],
+        "title": "FoulingExpiry",
+        "description": "Fouling sterilizer dan umur simpan produk, dikirim sekali di akhir hari (P9/Q6)."
+      },
+      "FoulingReport": {
+        "properties": {
+          "limit_min": {
+            "type": "number",
+            "title": "Limit Min"
+          },
+          "sterilizers": {
+            "items": {
+              "$ref": "#/components/schemas/SterilizerFouling"
+            },
+            "type": "array",
+            "title": "Sterilizers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "limit_min",
+          "sterilizers"
+        ],
+        "title": "FoulingReport"
+      },
+      "GateDecided": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "gate.decided",
+            "title": "Type",
+            "default": "gate.decided"
+          },
+          "gate": {
+            "$ref": "#/components/schemas/GateId"
+          },
+          "object_type": {
+            "type": "string",
+            "title": "Object Type"
+          },
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "hold"
+            ],
+            "title": "Decision"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "decided_by": {
+            "type": "string",
+            "title": "Decided By"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "gate",
+          "object_type",
+          "object_id",
+          "decision",
+          "decided_by"
+        ],
+        "title": "GateDecided"
+      },
+      "GateId": {
+        "type": "string",
+        "enum": [
+          "G1",
+          "G2",
+          "G3",
+          "G4",
+          "G5",
+          "G6"
+        ],
+        "title": "GateId"
+      },
+      "GateOut": {
+        "properties": {
+          "gate": {
+            "type": "string",
+            "title": "Gate"
+          },
+          "object_type": {
+            "type": "string",
+            "title": "Object Type"
+          },
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "gate",
+          "object_type",
+          "object_id",
+          "decision",
+          "reason",
+          "decided_at"
+        ],
+        "title": "GateOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Kpi": {
+        "properties": {
+          "truck_wait_min": {
+            "$ref": "#/components/schemas/Stat",
+            "description": "Tiba sampai mulai bongkar"
+          },
+          "lab_wait_min": {
+            "$ref": "#/components/schemas/Stat",
+            "description": "Tiba (sampling) sampai hasil uji dirilis"
+          },
+          "tank_dwell_min": {
+            "$ref": "#/components/schemas/Stat",
+            "description": "Selesai bongkar sampai mulai sterilisasi"
+          },
+          "unscheduled_cip": {
+            "type": "integer",
+            "title": "Unscheduled Cip"
+          },
+          "utilization_pct": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Utilization Pct",
+            "description": "Persen waktu in_use per tipe aset"
+          },
+          "packaging_reject_pct": {
+            "type": "number",
+            "title": "Packaging Reject Pct",
+            "description": "Persen batch intermediate terdampak changeover atau ditahan QA"
+          },
+          "schedule_adherence_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Adherence Pct",
+            "description": "Persen truk selesai filling dalam +-30 menit dari rencana yang berlaku saat bongkar dimulai. Null untuk baseline tanpa rencana (A)"
+          },
+          "false_accept": {
+            "type": "integer",
+            "title": "False Accept",
+            "description": "Tanker tidak layak yang lolos sampai selesai"
+          },
+          "holding_violations": {
+            "type": "integer",
+            "title": "Holding Violations",
+            "description": "Batch diproses melewati holding time"
+          },
+          "trace_coverage_pct": {
+            "type": "number",
+            "title": "Trace Coverage Pct",
+            "description": "FG lot dengan rantai lengkap sampai tanker"
+          },
+          "trucks": {
+            "type": "integer",
+            "title": "Trucks"
+          },
+          "completed": {
+            "type": "integer",
+            "title": "Completed"
+          },
+          "held_g1": {
+            "type": "integer",
+            "title": "Held G1"
+          },
+          "rejected_g2": {
+            "type": "integer",
+            "title": "Rejected G2"
+          },
+          "held_qa": {
+            "type": "integer",
+            "title": "Held Qa"
+          },
+          "raw_ton": {
+            "type": "number",
+            "title": "Raw Ton"
+          },
+          "fg_ton": {
+            "type": "number",
+            "title": "Fg Ton"
+          },
+          "changeover_count": {
+            "type": "integer",
+            "title": "Changeover Count"
+          },
+          "changeover_min": {
+            "type": "number",
+            "title": "Changeover Min"
+          },
+          "gate_holds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Gate Holds"
+          },
+          "makespan_min": {
+            "type": "number",
+            "title": "Makespan Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "truck_wait_min",
+          "lab_wait_min",
+          "tank_dwell_min",
+          "unscheduled_cip",
+          "utilization_pct",
+          "packaging_reject_pct",
+          "false_accept",
+          "holding_violations",
+          "trace_coverage_pct",
+          "trucks",
+          "completed",
+          "held_g1",
+          "rejected_g2",
+          "held_qa",
+          "raw_ton",
+          "fg_ton",
+          "changeover_count",
+          "changeover_min",
+          "gate_holds",
+          "makespan_min"
+        ],
+        "title": "Kpi",
+        "description": "Definisi KPI mengikuti PRD 3.1. Satuan menit kecuali dinyatakan lain."
+      },
+      "LineChangeover": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "line.changeover",
+            "title": "Type",
+            "default": "line.changeover"
+          },
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "from_sku": {
+            "type": "string",
+            "title": "From Sku"
+          },
+          "to_sku": {
+            "type": "string",
+            "title": "To Sku"
+          },
+          "minutes": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_code",
+          "from_sku",
+          "to_sku",
+          "minutes"
+        ],
+        "title": "LineChangeover",
+        "description": "Filling line berganti SKU: tidak mengisi selama `minutes`."
+      },
+      "MaintenanceIn": {
+        "properties": {
+          "asset": {
+            "type": "string",
+            "pattern": "^STE-[1-8]$",
+            "title": "Asset",
+            "description": "Sterilizer yang dimaintenance"
+          },
+          "start_min": {
+            "type": "number",
+            "exclusiveMaximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Start Min",
+            "description": "Menit mulai sejak awal hari"
+          },
+          "duration_min": {
+            "type": "number",
+            "maximum": 480.0,
+            "minimum": 15.0,
+            "title": "Duration Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset",
+          "start_min",
+          "duration_min"
+        ],
+        "title": "MaintenanceIn"
+      },
+      "MonteCarloOut": {
+        "properties": {
+          "samples": {
+            "type": "integer",
+            "title": "Samples"
+          },
+          "chosen": {
+            "type": "string",
+            "title": "Chosen"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateOut"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "kpi_predicted": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Kpi Predicted",
+            "description": "mean, p10, p90 per metrik"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "samples",
+          "chosen",
+          "candidates",
+          "kpi_predicted"
+        ],
+        "title": "MonteCarloOut",
+        "description": "Seleksi rencana D: kandidat dievaluasi pada sampel skenario, prediksi KPI dari kandidat terpilih."
+      },
+      "OrderCause": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "gate",
+              "qa",
+              "unfinished",
+              "supply"
+            ],
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "milk_ton": {
+            "type": "number",
+            "title": "Milk Ton"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "label",
+          "milk_ton"
+        ],
+        "title": "OrderCause"
+      },
+      "OrderIn": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "enum": [
+              "UHT-FULL-1000",
+              "UHT-LOW-1000",
+              "UHT-FULL-200",
+              "UHT-CHOC-200"
+            ],
+            "title": "Sku"
+          },
+          "ton": {
+            "type": "number",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Ton",
+            "description": "Ton produk jadi"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "ton"
+        ],
+        "title": "OrderIn"
+      },
+      "OrderResult": {
+        "properties": {
+          "order": {
+            "type": "string",
+            "title": "Order"
+          },
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "ordered_ton": {
+            "type": "number",
+            "title": "Ordered Ton"
+          },
+          "milk_needed_ton": {
+            "type": "number",
+            "title": "Milk Needed Ton"
+          },
+          "milk_used_ton": {
+            "type": "number",
+            "title": "Milk Used Ton"
+          },
+          "fulfilled_ton": {
+            "type": "number",
+            "title": "Fulfilled Ton"
+          },
+          "shortfall_ton": {
+            "type": "number",
+            "title": "Shortfall Ton"
+          },
+          "feasible": {
+            "type": "boolean",
+            "title": "Feasible"
+          },
+          "causes": {
+            "items": {
+              "$ref": "#/components/schemas/OrderCause"
+            },
+            "type": "array",
+            "title": "Causes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order",
+          "sku",
+          "ordered_ton",
+          "milk_needed_ton",
+          "milk_used_ton",
+          "fulfilled_ton",
+          "shortfall_ton",
+          "feasible",
+          "causes"
+        ],
+        "title": "OrderResult"
+      },
+      "OrdersEvaluated": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "orders.evaluated",
+            "title": "Type",
+            "default": "orders.evaluated"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "planned"
+            ],
+            "title": "Source"
+          },
+          "milk_use_full_pct": {
+            "type": "number",
+            "title": "Milk Use Full Pct"
+          },
+          "milk_use_flavour_pct": {
+            "type": "number",
+            "title": "Milk Use Flavour Pct"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/OrderResult"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "milk_use_full_pct",
+          "milk_use_flavour_pct",
+          "orders"
+        ],
+        "title": "OrdersEvaluated",
+        "description": "Order produksi dan kelayakannya, dikirim sekali di akhir hari (P9/Q4)."
+      },
+      "ParamsRequest": {
+        "properties": {
+          "bay_flow_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 80.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bay Flow Tph",
+            "description": "Aliran bongkar per bay (t/jam)"
+          },
+          "degassing_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 20.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degassing Tph",
+            "description": "Aliran degassing (t/jam)"
+          },
+          "thermal_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 80.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thermal Tph",
+            "description": "Aliran thermalisasi (t/jam)"
+          },
+          "separator_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 80.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Separator Tph",
+            "description": "Aliran separator (t/jam)"
+          },
+          "sterilizer_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 40.0,
+                "minimum": 5.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sterilizer Tph",
+            "description": "Aliran sterilizer (t/jam)"
+          },
+          "filling_tph": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 20.0,
+                "minimum": 4.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filling Tph",
+            "description": "Aliran filling per line (t/jam)"
+          },
+          "cip_min_minutes": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 30.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cip Min Minutes",
+            "description": "Durasi CIP minimum (menit)"
+          },
+          "cip_max_minutes": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": 30.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cip Max Minutes",
+            "description": "Durasi CIP maksimum (menit)"
+          },
+          "holding_max_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 480.0,
+                "minimum": 60.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holding Max Min",
+            "description": "Holding time maksimum (menit)"
+          },
+          "changeover_size_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changeover Size Min",
+            "description": "Changeover beda ukuran"
+          },
+          "changeover_flavor_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changeover Flavor Min",
+            "description": "Changeover beda rasa"
+          },
+          "slot_tolerance_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 5.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Tolerance Min",
+            "description": "Toleransi slot (menit)"
+          },
+          "milk_use_full_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 50.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milk Use Full Pct",
+            "description": "Susu per ton produk full cream (%)"
+          },
+          "milk_use_flavour_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 50.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milk Use Flavour Pct",
+            "description": "Susu per ton produk rasa (%)"
+          },
+          "opening_stock_ton": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 500.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Stock Ton",
+            "description": "Stok awal tangki (ton)"
+          },
+          "fouling_max_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 720.0,
+                "minimum": 60.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fouling Max Min",
+            "description": "Batas menit sterilisasi sejak CIP terakhir"
+          },
+          "shelf_life_days": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 365.0,
+                "minimum": 30.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shelf Life Days",
+            "description": "Umur simpan produk (hari)"
+          },
+          "dispatch_lead_days": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatch Lead Days",
+            "description": "Hari dari pengisian sampai tiba di pelanggan"
+          },
+          "sku_policy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "free",
+                  "dedicated"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Policy",
+            "description": "Izin SKU per line: free (bawaan) atau dedicated (demo)"
+          },
+          "maintenance": {
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceIn"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Maintenance"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/OrderIn"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Orders",
+            "description": "Order produksi; kosong = otomatis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ParamsRequest",
+        "description": "Parameter operasional (nilai demo, bukan SOP); yang tidak diisi memakai nilai bawaan."
+      },
+      "PlanOut": {
+        "properties": {
+          "config": {
+            "type": "string",
+            "enum": [
+              "B",
+              "C",
+              "D"
+            ],
+            "title": "Config"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "optimal, feasible, atau heuristic (fallback tanpa solver)"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "solve_seconds": {
+            "type": "number",
+            "title": "Solve Seconds"
+          },
+          "quantile": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile",
+            "description": "Kuantil durasi yang dipakai; null = rata-rata"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "trucks": {
+            "items": {
+              "$ref": "#/components/schemas/TruckPlanOut"
+            },
+            "type": "array",
+            "title": "Trucks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "config",
+          "status",
+          "objective",
+          "solve_seconds",
+          "quantile",
+          "weights",
+          "trucks"
+        ],
+        "title": "PlanOut",
+        "description": "Jadwal yang dihitung scheduler (konfigurasi B, C, atau D)."
+      },
+      "PlantRequest": {
+        "properties": {
+          "n_bays": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Bays",
+            "description": "Bay penerimaan"
+          },
+          "n_analysts": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Analysts",
+            "description": "Analis lab"
+          },
+          "n_raw_tanks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 15.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Raw Tanks",
+            "description": "Tangki susu mentah"
+          },
+          "n_degassing": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Degassing"
+          },
+          "n_thermal": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Thermal"
+          },
+          "n_separators": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Separators"
+          },
+          "n_storage_tanks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Storage Tanks"
+          },
+          "n_sterilizers": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Sterilizers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PlantRequest",
+        "description": "Jumlah modul pabrik; yang tidak diisi memakai nilai bawaan. Mengubah pabrik berarti run baru."
+      },
+      "PlantRoute": {
+        "properties": {
+          "sterilizer": {
+            "type": "string",
+            "title": "Sterilizer"
+          },
+          "aseptic": {
+            "type": "string",
+            "title": "Aseptic"
+          },
+          "line": {
+            "type": "string",
+            "title": "Line"
+          },
+          "usable": {
+            "type": "boolean",
+            "title": "Usable"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Alasan line tidak dapat dipakai sama sekali"
+          },
+          "allowed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed",
+            "description": "Kode SKU yang boleh diisi di line ini"
+          },
+          "blocked": {
+            "items": {
+              "$ref": "#/components/schemas/RouteBlock"
+            },
+            "type": "array",
+            "title": "Blocked",
+            "description": "SKU yang ditolak di line ini, beserta alasan"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sterilizer",
+          "aseptic",
+          "line",
+          "usable",
+          "allowed",
+          "blocked"
+        ],
+        "title": "PlantRoute"
+      },
+      "PlantRoutes": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "plant.routes",
+            "title": "Type",
+            "default": "plant.routes"
+          },
+          "policy": {
+            "type": "string",
+            "title": "Policy"
+          },
+          "skus": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skus"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/PlantRoute"
+            },
+            "type": "array",
+            "title": "Routes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy",
+          "skus",
+          "routes"
+        ],
+        "title": "PlantRoutes",
+        "description": "Peta rute sterilizer -> aseptic -> line dan izin SKU; dikirim sekali di awal run."
+      },
+      "ReplanOut": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 2.0,
+            "title": "Version"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "optimal, feasible, atau failed (rencana lama dipertahankan)"
+          },
+          "trucks": {
+            "type": "integer",
+            "title": "Trucks"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "solve_seconds": {
+            "type": "number",
+            "title": "Solve Seconds"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "at",
+          "trigger",
+          "status",
+          "trucks",
+          "objective",
+          "solve_seconds",
+          "plan"
+        ],
+        "title": "ReplanOut",
+        "description": "Satu kali re-optimization bergulir (konfigurasi D). `plan` hanya berisi truk yang direncanakan ulang."
+      },
+      "RouteBlock": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "reason"
+        ],
+        "title": "RouteBlock"
+      },
+      "RunInfo": {
+        "properties": {
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "last_seq": {
+            "type": "integer",
+            "title": "Last Seq"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "last_seq"
+        ],
+        "title": "RunInfo"
+      },
+      "RunRequest": {
+        "properties": {
+          "run_id": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Run Id",
+            "description": "Dialokasikan Laravel (sim_runs.id)"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed",
+            "default": 1
+          },
+          "volume_ton": {
+            "type": "number",
+            "maximum": 600.0,
+            "minimum": 50.0,
+            "title": "Volume Ton",
+            "default": 320.0
+          },
+          "extra_bad": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Extra Bad",
+            "default": 0
+          },
+          "config": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "title": "Config",
+            "description": "A=FIFO, B=CP-SAT rata-rata, C=CP-SAT P80, D=C + seleksi Monte Carlo + replan bergulir",
+            "default": "A"
+          },
+          "scenario": {
+            "type": "string",
+            "pattern": "^(normal|truck_surge|sterilizer_down|cip_delay|out_of_spec|peak_450)$",
+            "title": "Scenario",
+            "description": "Skenario uji PRD 10.7",
+            "default": "normal"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 600.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed",
+            "description": "Menit simulasi per detik"
+          },
+          "plant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Jumlah modul; kosong = pabrik bawaan"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParamsRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Parameter operasional; kosong = nilai bawaan"
+          },
+          "commands": {
+            "items": {
+              "$ref": "#/components/schemas/CommandIn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Commands",
+            "description": "Perintah mode Simulasi; kosong = hari dasar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "RunRequest"
+      },
+      "RunResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "finished",
+            "title": "Status",
+            "default": "finished"
+          },
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "config": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "title": "Config",
+            "default": "A"
+          },
+          "scenario": {
+            "type": "string",
+            "title": "Scenario",
+            "default": "normal"
+          },
+          "params": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Params"
+          },
+          "sim_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sim Start"
+          },
+          "sim_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sim End"
+          },
+          "kpi": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rencana awal (versi 1)"
+          },
+          "replans": {
+            "items": {
+              "$ref": "#/components/schemas/ReplanOut"
+            },
+            "type": "array",
+            "title": "Replans"
+          },
+          "monte_carlo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MonteCarloOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ai": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Prediksi model AI; null bila model tidak dimuat"
+          },
+          "tankers": {
+            "items": {
+              "$ref": "#/components/schemas/TankerOut"
+            },
+            "type": "array",
+            "title": "Tankers"
+          },
+          "batches": {
+            "items": {
+              "$ref": "#/components/schemas/BatchOut"
+            },
+            "type": "array",
+            "title": "Batches"
+          },
+          "transfers": {
+            "items": {
+              "$ref": "#/components/schemas/TransferOut"
+            },
+            "type": "array",
+            "title": "Transfers"
+          },
+          "gates": {
+            "items": {
+              "$ref": "#/components/schemas/GateOut"
+            },
+            "type": "array",
+            "title": "Gates"
+          },
+          "cips": {
+            "items": {
+              "$ref": "#/components/schemas/CipOut"
+            },
+            "type": "array",
+            "title": "Cips"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/TwinEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "seed",
+          "params",
+          "sim_start",
+          "sim_end",
+          "kpi",
+          "tankers",
+          "batches",
+          "transfers",
+          "gates",
+          "cips",
+          "events"
+        ],
+        "title": "RunResult"
+      },
+      "ScheduleReplanned": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "schedule.replanned",
+            "title": "Type",
+            "default": "schedule.replanned"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 2.0,
+            "title": "Version"
+          },
+          "trigger": {
+            "type": "string",
+            "title": "Trigger"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "trucks": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Trucks",
+            "description": "Jumlah truk yang direncanakan ulang"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "trigger",
+          "status",
+          "trucks"
+        ],
+        "title": "ScheduleReplanned",
+        "description": "Rencana disusun ulang saat berjalan (re-optimization bergulir). Usulan, bukan keputusan."
+      },
+      "SimClock": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sim.clock",
+            "title": "Type",
+            "default": "sim.clock"
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Speed",
+            "description": "Menit simulasi per detik nyata, 0 = secepat mungkin"
+          },
+          "paused": {
+            "type": "boolean",
+            "title": "Paused"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speed",
+          "paused"
+        ],
+        "title": "SimClock"
+      },
+      "SkuExpiry": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "lots": {
+            "type": "integer",
+            "title": "Lots"
+          },
+          "volume_ton": {
+            "type": "number",
+            "title": "Volume Ton"
+          },
+          "produced_on": {
+            "type": "string",
+            "title": "Produced On",
+            "description": "Tanggal isi pertama, YYYY-MM-DD"
+          },
+          "expires_on": {
+            "type": "string",
+            "title": "Expires On",
+            "description": "Tanggal kedaluwarsa lot pertama, YYYY-MM-DD"
+          },
+          "remaining_pct": {
+            "type": "number",
+            "title": "Remaining Pct",
+            "description": "Sisa umur simpan saat tiba di pelanggan"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "short"
+            ],
+            "title": "State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "lots",
+          "volume_ton",
+          "produced_on",
+          "expires_on",
+          "remaining_pct",
+          "state"
+        ],
+        "title": "SkuExpiry"
+      },
+      "Stat": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "p90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "n"
+        ],
+        "title": "Stat"
+      },
+      "SterilizerFouling": {
+        "properties": {
+          "asset_code": {
+            "type": "string",
+            "title": "Asset Code"
+          },
+          "run_min": {
+            "type": "number",
+            "title": "Run Min",
+            "description": "Menit sterilisasi sejak CIP terakhir, akhir hari"
+          },
+          "peak_min": {
+            "type": "number",
+            "title": "Peak Min",
+            "description": "Terpanjang sejak CIP selama hari itu"
+          },
+          "cip_count": {
+            "type": "integer",
+            "title": "Cip Count"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "near",
+              "over"
+            ],
+            "title": "State"
+          },
+          "reached_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reached At",
+            "description": "Saat batas fouling tercapai"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_code",
+          "run_min",
+          "peak_min",
+          "cip_count",
+          "state"
+        ],
+        "title": "SterilizerFouling"
+      },
+      "TankerOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "farm_code": {
+            "type": "string",
+            "title": "Farm Code"
+          },
+          "volume_ton": {
+            "type": "number",
+            "title": "Volume Ton"
+          },
+          "temp_c": {
+            "type": "number",
+            "title": "Temp C"
+          },
+          "scheduled_eta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled Eta"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          },
+          "arrived_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived At"
+          },
+          "lab_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lab Start"
+          },
+          "lab_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lab End"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "unload_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unload Start"
+          },
+          "unload_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unload End"
+          },
+          "analyst": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analyst"
+          },
+          "lab_results": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Lab Results"
+          },
+          "eta_p50": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta P50",
+            "description": "Prediksi kedatangan (kuantil)"
+          },
+          "eta_p80": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta P80"
+          },
+          "eta_p90": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta P90"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "farm_code",
+          "volume_ton",
+          "temp_c",
+          "scheduled_eta",
+          "status",
+          "outcome",
+          "arrived_at",
+          "lab_start",
+          "lab_end",
+          "released_at",
+          "unload_start",
+          "unload_end",
+          "analyst",
+          "lab_results"
+        ],
+        "title": "TankerOut"
+      },
+      "TankerStatus": {
+        "type": "string",
+        "enum": [
+          "on_the_way",
+          "queued",
+          "sampling",
+          "lab_test",
+          "released",
+          "rejected",
+          "unloading",
+          "stored"
+        ],
+        "title": "TankerStatus"
+      },
+      "TankerStatusChanged": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tanker.status_changed",
+            "title": "Type",
+            "default": "tanker.status_changed"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TankerStatus"
+          },
+          "bay_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bay Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "status"
+        ],
+        "title": "TankerStatusChanged"
+      },
+      "TransferCompleted": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "transfer.completed",
+            "title": "Type",
+            "default": "transfer.completed"
+          },
+          "from_asset": {
+            "type": "string",
+            "title": "From Asset"
+          },
+          "to_asset": {
+            "type": "string",
+            "title": "To Asset"
+          },
+          "batch_code": {
+            "type": "string",
+            "title": "Batch Code"
+          },
+          "volume_ton": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume Ton"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "from_asset",
+          "to_asset",
+          "batch_code",
+          "volume_ton"
+        ],
+        "title": "TransferCompleted"
+      },
+      "TransferOut": {
+        "properties": {
+          "from_asset": {
+            "type": "string",
+            "title": "From Asset"
+          },
+          "to_asset": {
+            "type": "string",
+            "title": "To Asset"
+          },
+          "batch_code": {
+            "type": "string",
+            "title": "Batch Code"
+          },
+          "volume_ton": {
+            "type": "number",
+            "title": "Volume Ton"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "from_asset",
+          "to_asset",
+          "batch_code",
+          "volume_ton",
+          "occurred_at"
+        ],
+        "title": "TransferOut"
+      },
+      "TruckArrived": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "truck.arrived",
+            "title": "Type",
+            "default": "truck.arrived"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "farm_code": {
+            "type": "string",
+            "title": "Farm Code"
+          },
+          "volume_ton": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume Ton"
+          },
+          "temp_c": {
+            "type": "number",
+            "title": "Temp C"
+          },
+          "plate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plate",
+            "description": "Plat nomor; kosong pada run lama"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "farm_code",
+          "volume_ton",
+          "temp_c"
+        ],
+        "title": "TruckArrived"
+      },
+      "TruckDispatched": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "truck.dispatched",
+            "title": "Type",
+            "default": "truck.dispatched"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "farm_code": {
+            "type": "string",
+            "title": "Farm Code"
+          },
+          "plate": {
+            "type": "string",
+            "title": "Plate"
+          },
+          "route": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Route",
+            "description": "Indeks rute pendekatan menuju gerbang"
+          },
+          "eta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Eta",
+            "description": "Perkiraan tiba di gerbang (UTC)"
+          },
+          "window_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Window Min",
+            "description": "Lama pendekatan dari awal jendela sampai tiba"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "farm_code",
+          "plate",
+          "route",
+          "eta",
+          "window_min"
+        ],
+        "title": "TruckDispatched",
+        "description": "Truk memasuki jendela pendekatan menuju gerbang (masih di luar pabrik, tampil di Maps)."
+      },
+      "TruckPlanOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "analyst": {
+            "type": "string",
+            "title": "Analyst"
+          },
+          "lab_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Lab Start"
+          },
+          "bay": {
+            "type": "string",
+            "title": "Bay"
+          },
+          "unload_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Unload Start"
+          },
+          "sterilizer": {
+            "type": "integer",
+            "title": "Sterilizer"
+          },
+          "ster_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ster Start"
+          },
+          "line": {
+            "type": "string",
+            "title": "Line"
+          },
+          "fill_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fill Start"
+          },
+          "fill_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fill End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "analyst",
+          "lab_start",
+          "bay",
+          "unload_start",
+          "sterilizer",
+          "ster_start",
+          "line",
+          "fill_start",
+          "fill_end"
+        ],
+        "title": "TruckPlanOut"
+      },
+      "Turn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Turn"
+      },
+      "TwinEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Seq",
+            "description": "Urut per run, tanpa celah"
+          },
+          "sim_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sim Time",
+            "description": "Waktu simulasi (UTC)"
+          },
+          "payload": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SimClock"
+              },
+              {
+                "$ref": "#/components/schemas/TruckDispatched"
+              },
+              {
+                "$ref": "#/components/schemas/TruckArrived"
+              },
+              {
+                "$ref": "#/components/schemas/TankerStatusChanged"
+              },
+              {
+                "$ref": "#/components/schemas/UnloadFinished"
+              },
+              {
+                "$ref": "#/components/schemas/TransferCompleted"
+              },
+              {
+                "$ref": "#/components/schemas/AssetStatusChanged"
+              },
+              {
+                "$ref": "#/components/schemas/AssetLevel"
+              },
+              {
+                "$ref": "#/components/schemas/LineChangeover"
+              },
+              {
+                "$ref": "#/components/schemas/PlantRoutes"
+              },
+              {
+                "$ref": "#/components/schemas/OrdersEvaluated"
+              },
+              {
+                "$ref": "#/components/schemas/VolumeBalance"
+              },
+              {
+                "$ref": "#/components/schemas/FoulingExpiry"
+              },
+              {
+                "$ref": "#/components/schemas/CipEvent"
+              },
+              {
+                "$ref": "#/components/schemas/GateDecided"
+              },
+              {
+                "$ref": "#/components/schemas/ScheduleReplanned"
+              },
+              {
+                "$ref": "#/components/schemas/CommandApplied"
+              }
+            ],
+            "title": "Payload",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "asset.level": "#/components/schemas/AssetLevel",
+                "asset.status_changed": "#/components/schemas/AssetStatusChanged",
+                "cip.finished": "#/components/schemas/CipEvent",
+                "cip.started": "#/components/schemas/CipEvent",
+                "command.applied": "#/components/schemas/CommandApplied",
+                "fouling.expiry": "#/components/schemas/FoulingExpiry",
+                "gate.decided": "#/components/schemas/GateDecided",
+                "line.changeover": "#/components/schemas/LineChangeover",
+                "orders.evaluated": "#/components/schemas/OrdersEvaluated",
+                "plant.routes": "#/components/schemas/PlantRoutes",
+                "schedule.replanned": "#/components/schemas/ScheduleReplanned",
+                "sim.clock": "#/components/schemas/SimClock",
+                "tanker.status_changed": "#/components/schemas/TankerStatusChanged",
+                "transfer.completed": "#/components/schemas/TransferCompleted",
+                "truck.arrived": "#/components/schemas/TruckArrived",
+                "truck.dispatched": "#/components/schemas/TruckDispatched",
+                "unload.finished": "#/components/schemas/UnloadFinished",
+                "volume.balance": "#/components/schemas/VolumeBalance"
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "run_id",
+          "seq",
+          "sim_time",
+          "payload"
+        ],
+        "title": "TwinEvent",
+        "description": "Amplop yang disiarkan Engine lalu dirilis Laravel ke browser lewat Reverb."
+      },
+      "UnloadFinished": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "unload.finished",
+            "title": "Type",
+            "default": "unload.finished"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "bay_code": {
+            "type": "string",
+            "title": "Bay Code"
+          },
+          "tank_code": {
+            "type": "string",
+            "title": "Tank Code"
+          },
+          "batch_code": {
+            "type": "string",
+            "title": "Batch Code"
+          },
+          "volume_ton": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume Ton"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "bay_code",
+          "tank_code",
+          "batch_code",
+          "volume_ton"
+        ],
+        "title": "UnloadFinished"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VolumeBalance": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "volume.balance",
+            "title": "Type",
+            "default": "volume.balance"
+          },
+          "opening_stock_ton": {
+            "type": "number",
+            "title": "Opening Stock Ton"
+          },
+          "received_ton": {
+            "type": "number",
+            "title": "Received Ton"
+          },
+          "fg_ton": {
+            "type": "number",
+            "title": "Fg Ton"
+          },
+          "loss_ton": {
+            "type": "number",
+            "title": "Loss Ton"
+          },
+          "qa_hold_ton": {
+            "type": "number",
+            "title": "Qa Hold Ton"
+          },
+          "tank_end_ton": {
+            "type": "number",
+            "title": "Tank End Ton"
+          },
+          "in_process_ton": {
+            "type": "number",
+            "title": "In Process Ton"
+          },
+          "not_received_ton": {
+            "type": "number",
+            "title": "Not Received Ton"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "opening_stock_ton",
+          "received_ton",
+          "fg_ton",
+          "loss_ton",
+          "qa_hold_ton",
+          "tank_end_ton",
+          "in_process_ton",
+          "not_received_ton"
+        ],
+        "title": "VolumeBalance",
+        "description": "Neraca volume akhir hari dalam ton (P9/Q5): masuk = stok awal + diterima; keluar = FG + susut + QA + sisa."
+      }
+    }
+  }
+}

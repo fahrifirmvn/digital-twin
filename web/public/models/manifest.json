@@ -1,0 +1,21 @@
+{
+  "truck": {
+    "file": "truck.glb"
+  },
+  "silo": {
+    "file": "silo.glb",
+    "rotationY": -1.5707963267948966
+  },
+  "DEG": {
+    "file": "DEG.glb"
+  },
+  "THM": {
+    "file": "THM.glb"
+  },
+  "STE": {
+    "file": "STE.glb"
+  },
+  "LINE": {
+    "file": "LINE.glb"
+  }
+}

@@ -1,0 +1,2558 @@
+{
+  "oneOf": [
+    {
+      "$defs": {
+        "AiAnomalyOut": {
+          "additionalProperties": false,
+          "properties": {
+            "risk_score": {
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Risk Score",
+              "type": "number"
+            },
+            "is_anomaly": {
+              "title": "Is Anomaly",
+              "type": "boolean"
+            },
+            "flags": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Flags",
+              "type": "array"
+            },
+            "balance_residual_l": {
+              "title": "Balance Residual L",
+              "type": "number"
+            },
+            "batch_age_h": {
+              "title": "Batch Age H",
+              "type": "number"
+            },
+            "flow_deviation_pct": {
+              "title": "Flow Deviation Pct",
+              "type": "number"
+            }
+          },
+          "required": [
+            "risk_score",
+            "is_anomaly",
+            "flags",
+            "balance_residual_l",
+            "batch_age_h",
+            "flow_deviation_pct"
+          ],
+          "title": "AiAnomalyOut",
+          "type": "object"
+        },
+        "AiOut": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "description": "Selalu DATA SINTETIS",
+              "title": "Label",
+              "type": "string"
+            },
+            "models": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Nama model -> hash data latih",
+              "title": "Models",
+              "type": "object"
+            },
+            "trucks": {
+              "items": {
+                "$ref": "#/$defs/AiTruckOut"
+              },
+              "title": "Trucks",
+              "type": "array"
+            },
+            "anomaly": {
+              "$ref": "#/$defs/AiAnomalyOut"
+            }
+          },
+          "required": [
+            "label",
+            "models",
+            "trucks",
+            "anomaly"
+          ],
+          "title": "AiOut",
+          "type": "object"
+        },
+        "AiTruckOut": {
+          "additionalProperties": false,
+          "description": "Prediksi model AI per truk (ML hanya memprediksi; gate dan CP-SAT tetap memutuskan).",
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "transit_p50_min": {
+              "description": "Durasi transit peternakan -> gerbang",
+              "title": "Transit P50 Min",
+              "type": "number"
+            },
+            "transit_p80_min": {
+              "title": "Transit P80 Min",
+              "type": "number"
+            },
+            "transit_p90_min": {
+              "title": "Transit P90 Min",
+              "type": "number"
+            },
+            "delay_p50_min": {
+              "description": "Transit prediksi dikurangi transit tipikal peternakan",
+              "title": "Delay P50 Min",
+              "type": "number"
+            },
+            "delay_p80_min": {
+              "title": "Delay P80 Min",
+              "type": "number"
+            },
+            "delay_p90_min": {
+              "title": "Delay P90 Min",
+              "type": "number"
+            },
+            "lab_p50_min": {
+              "title": "Lab P50 Min",
+              "type": "number"
+            },
+            "lab_p90_min": {
+              "title": "Lab P90 Min",
+              "type": "number"
+            },
+            "qc_release_prob": {
+              "description": "Peluang lolos QC (terkalibrasi)",
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Qc Release Prob",
+              "type": "number"
+            }
+          },
+          "required": [
+            "code",
+            "transit_p50_min",
+            "transit_p80_min",
+            "transit_p90_min",
+            "delay_p50_min",
+            "delay_p80_min",
+            "delay_p90_min",
+            "lab_p50_min",
+            "lab_p90_min",
+            "qc_release_prob"
+          ],
+          "title": "AiTruckOut",
+          "type": "object"
+        },
+        "AssetLevel": {
+          "additionalProperties": false,
+          "description": "Isi aseptic tank: level, lot yang sedang ditahan, sejak kapan, dan kapan pengisian dimulai.",
+          "properties": {
+            "type": {
+              "const": "asset.level",
+              "default": "asset.level",
+              "title": "Type",
+              "type": "string"
+            },
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "level_ton": {
+              "minimum": 0,
+              "title": "Level Ton",
+              "type": "number"
+            },
+            "capacity_ton": {
+              "exclusiveMinimum": 0,
+              "title": "Capacity Ton",
+              "type": "number"
+            },
+            "lot": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Batch tertua yang masih ada di tangki",
+              "title": "Lot"
+            },
+            "since": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Saat lot tertua masuk tangki (UTC)",
+              "title": "Since"
+            },
+            "fill_start": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Saat line mulai mengisi dari lot ini (UTC)",
+              "title": "Fill Start"
+            },
+            "hold_max_min": {
+              "description": "Batas holding time (menit)",
+              "exclusiveMinimum": 0,
+              "title": "Hold Max Min",
+              "type": "number"
+            },
+            "low": {
+              "description": "Isi hampir habis saat line masih mengisi",
+              "title": "Low",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "asset_code",
+            "level_ton",
+            "capacity_ton",
+            "hold_max_min",
+            "low"
+          ],
+          "title": "AssetLevel",
+          "type": "object"
+        },
+        "AssetStatus": {
+          "enum": [
+            "idle",
+            "in_use",
+            "filling",
+            "holding",
+            "cip",
+            "unavailable"
+          ],
+          "title": "AssetStatus",
+          "type": "string"
+        },
+        "AssetStatusChanged": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "asset.status_changed",
+              "default": "asset.status_changed",
+              "title": "Type",
+              "type": "string"
+            },
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/AssetStatus"
+            },
+            "level_ton": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Hanya untuk tangki",
+              "title": "Level Ton"
+            },
+            "capacity_ton": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Kapasitas tangki, agar persen isi dihitung dari angka yang sama",
+              "title": "Capacity Ton"
+            }
+          },
+          "required": [
+            "asset_code",
+            "status"
+          ],
+          "title": "AssetStatusChanged",
+          "type": "object"
+        },
+        "BatchOut": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "type": {
+              "title": "Type",
+              "type": "string"
+            },
+            "volume_ton": {
+              "title": "Volume Ton",
+              "type": "number"
+            },
+            "parents": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Parents",
+              "type": "array"
+            },
+            "tanker_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tanker Code"
+            },
+            "sku_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sku Code"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "type",
+            "volume_ton",
+            "parents",
+            "tanker_code",
+            "sku_code",
+            "status"
+          ],
+          "title": "BatchOut",
+          "type": "object"
+        },
+        "CandidateOut": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "title": "Label",
+              "type": "string"
+            },
+            "config": {
+              "enum": [
+                "B",
+                "C"
+              ],
+              "title": "Config",
+              "type": "string"
+            },
+            "quantile": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quantile"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "objective": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Objective"
+            },
+            "solve_seconds": {
+              "title": "Solve Seconds",
+              "type": "number"
+            },
+            "mean_cost": {
+              "title": "Mean Cost",
+              "type": "number"
+            },
+            "cvar80_cost": {
+              "title": "Cvar80 Cost",
+              "type": "number"
+            },
+            "score": {
+              "title": "Score",
+              "type": "number"
+            }
+          },
+          "required": [
+            "label",
+            "config",
+            "quantile",
+            "status",
+            "objective",
+            "solve_seconds",
+            "mean_cost",
+            "cvar80_cost",
+            "score"
+          ],
+          "title": "CandidateOut",
+          "type": "object"
+        },
+        "CipEvent": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": [
+                "cip.started",
+                "cip.finished"
+              ],
+              "title": "Type",
+              "type": "string"
+            },
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "is_scheduled": {
+              "title": "Is Scheduled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "asset_code",
+            "is_scheduled"
+          ],
+          "title": "CipEvent",
+          "type": "object"
+        },
+        "CipOut": {
+          "additionalProperties": false,
+          "properties": {
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "started_at": {
+              "format": "date-time",
+              "title": "Started At",
+              "type": "string"
+            },
+            "finished_at": {
+              "format": "date-time",
+              "title": "Finished At",
+              "type": "string"
+            },
+            "is_scheduled": {
+              "title": "Is Scheduled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "asset_code",
+            "started_at",
+            "finished_at",
+            "is_scheduled"
+          ],
+          "title": "CipOut",
+          "type": "object"
+        },
+        "CommandApplied": {
+          "additionalProperties": false,
+          "description": "Perintah pengguna (mode Simulasi) mulai berlaku. Dicatat di aliran event agar replay dan audit\nmemuat siapa, kapan, apa, dan alasannya.",
+          "properties": {
+            "type": {
+              "const": "command.applied",
+              "default": "command.applied",
+              "title": "Type",
+              "type": "string"
+            },
+            "command_id": {
+              "description": "Urut per run",
+              "minimum": 1,
+              "title": "Command Id",
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "ster_down",
+                "tank_down",
+                "cip_delay",
+                "truck_surge",
+                "plan_approve",
+                "plan_change",
+                "plan_reject",
+                "truck_hold",
+                "truck_release"
+              ],
+              "title": "Kind",
+              "type": "string"
+            },
+            "actor": {
+              "title": "Actor",
+              "type": "string"
+            },
+            "reason": {
+              "title": "Reason",
+              "type": "string"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Sterilizer mati atau truk dadakan",
+              "title": "Count"
+            },
+            "duration_min": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Duration Min"
+            },
+            "factor": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Pengali durasi CIP",
+              "title": "Factor"
+            },
+            "truck": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Intervensi PPIC: kode truk",
+              "title": "Truck"
+            },
+            "bay": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "plan_change: bay pilihan",
+              "title": "Bay"
+            },
+            "start_min": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "plan_change: menit bongkar",
+              "title": "Start Min"
+            },
+            "asset": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "tank_down: tangki yang di-maintenance",
+              "title": "Asset"
+            },
+            "blocked": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Alasan intervensi ditolak sistem; kosong = berlaku",
+              "title": "Blocked"
+            },
+            "gate": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GateId"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Gate SOP yang dicoba dilewati (pelanggaran), bila ada"
+            }
+          },
+          "required": [
+            "command_id",
+            "kind",
+            "actor",
+            "reason"
+          ],
+          "title": "CommandApplied",
+          "type": "object"
+        },
+        "ExpiryReport": {
+          "additionalProperties": false,
+          "properties": {
+            "shelf_life_days": {
+              "title": "Shelf Life Days",
+              "type": "number"
+            },
+            "dispatch_lead_days": {
+              "title": "Dispatch Lead Days",
+              "type": "number"
+            },
+            "min_remaining_pct": {
+              "title": "Min Remaining Pct",
+              "type": "number"
+            },
+            "skus": {
+              "items": {
+                "$ref": "#/$defs/SkuExpiry"
+              },
+              "title": "Skus",
+              "type": "array"
+            }
+          },
+          "required": [
+            "shelf_life_days",
+            "dispatch_lead_days",
+            "min_remaining_pct",
+            "skus"
+          ],
+          "title": "ExpiryReport",
+          "type": "object"
+        },
+        "FoulingExpiry": {
+          "additionalProperties": false,
+          "description": "Fouling sterilizer dan umur simpan produk, dikirim sekali di akhir hari (P9/Q6).",
+          "properties": {
+            "type": {
+              "const": "fouling.expiry",
+              "default": "fouling.expiry",
+              "title": "Type",
+              "type": "string"
+            },
+            "fouling": {
+              "$ref": "#/$defs/FoulingReport"
+            },
+            "expiry": {
+              "$ref": "#/$defs/ExpiryReport"
+            }
+          },
+          "required": [
+            "fouling",
+            "expiry"
+          ],
+          "title": "FoulingExpiry",
+          "type": "object"
+        },
+        "FoulingReport": {
+          "additionalProperties": false,
+          "properties": {
+            "limit_min": {
+              "title": "Limit Min",
+              "type": "number"
+            },
+            "sterilizers": {
+              "items": {
+                "$ref": "#/$defs/SterilizerFouling"
+              },
+              "title": "Sterilizers",
+              "type": "array"
+            }
+          },
+          "required": [
+            "limit_min",
+            "sterilizers"
+          ],
+          "title": "FoulingReport",
+          "type": "object"
+        },
+        "GateDecided": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "gate.decided",
+              "default": "gate.decided",
+              "title": "Type",
+              "type": "string"
+            },
+            "gate": {
+              "$ref": "#/$defs/GateId"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "decision": {
+              "enum": [
+                "pass",
+                "hold"
+              ],
+              "title": "Decision",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            "decided_by": {
+              "title": "Decided By",
+              "type": "string"
+            }
+          },
+          "required": [
+            "gate",
+            "object_type",
+            "object_id",
+            "decision",
+            "decided_by"
+          ],
+          "title": "GateDecided",
+          "type": "object"
+        },
+        "GateId": {
+          "enum": [
+            "G1",
+            "G2",
+            "G3",
+            "G4",
+            "G5",
+            "G6"
+          ],
+          "title": "GateId",
+          "type": "string"
+        },
+        "GateOut": {
+          "additionalProperties": false,
+          "properties": {
+            "gate": {
+              "title": "Gate",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "decision": {
+              "title": "Decision",
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reason"
+            },
+            "decided_at": {
+              "format": "date-time",
+              "title": "Decided At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "gate",
+            "object_type",
+            "object_id",
+            "decision",
+            "reason",
+            "decided_at"
+          ],
+          "title": "GateOut",
+          "type": "object"
+        },
+        "Kpi": {
+          "additionalProperties": false,
+          "description": "Definisi KPI mengikuti PRD 3.1. Satuan menit kecuali dinyatakan lain.",
+          "properties": {
+            "truck_wait_min": {
+              "$ref": "#/$defs/Stat",
+              "description": "Tiba sampai mulai bongkar"
+            },
+            "lab_wait_min": {
+              "$ref": "#/$defs/Stat",
+              "description": "Tiba (sampling) sampai hasil uji dirilis"
+            },
+            "tank_dwell_min": {
+              "$ref": "#/$defs/Stat",
+              "description": "Selesai bongkar sampai mulai sterilisasi"
+            },
+            "unscheduled_cip": {
+              "title": "Unscheduled Cip",
+              "type": "integer"
+            },
+            "utilization_pct": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "description": "Persen waktu in_use per tipe aset",
+              "title": "Utilization Pct",
+              "type": "object"
+            },
+            "packaging_reject_pct": {
+              "description": "Persen batch intermediate terdampak changeover atau ditahan QA",
+              "title": "Packaging Reject Pct",
+              "type": "number"
+            },
+            "schedule_adherence_pct": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Persen truk selesai filling dalam +-30 menit dari rencana yang berlaku saat bongkar dimulai. Null untuk baseline tanpa rencana (A)",
+              "title": "Schedule Adherence Pct"
+            },
+            "false_accept": {
+              "description": "Tanker tidak layak yang lolos sampai selesai",
+              "title": "False Accept",
+              "type": "integer"
+            },
+            "holding_violations": {
+              "description": "Batch diproses melewati holding time",
+              "title": "Holding Violations",
+              "type": "integer"
+            },
+            "trace_coverage_pct": {
+              "description": "FG lot dengan rantai lengkap sampai tanker",
+              "title": "Trace Coverage Pct",
+              "type": "number"
+            },
+            "trucks": {
+              "title": "Trucks",
+              "type": "integer"
+            },
+            "completed": {
+              "title": "Completed",
+              "type": "integer"
+            },
+            "held_g1": {
+              "title": "Held G1",
+              "type": "integer"
+            },
+            "rejected_g2": {
+              "title": "Rejected G2",
+              "type": "integer"
+            },
+            "held_qa": {
+              "title": "Held Qa",
+              "type": "integer"
+            },
+            "raw_ton": {
+              "title": "Raw Ton",
+              "type": "number"
+            },
+            "fg_ton": {
+              "title": "Fg Ton",
+              "type": "number"
+            },
+            "changeover_count": {
+              "title": "Changeover Count",
+              "type": "integer"
+            },
+            "changeover_min": {
+              "title": "Changeover Min",
+              "type": "number"
+            },
+            "gate_holds": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "title": "Gate Holds",
+              "type": "object"
+            },
+            "makespan_min": {
+              "title": "Makespan Min",
+              "type": "number"
+            }
+          },
+          "required": [
+            "truck_wait_min",
+            "lab_wait_min",
+            "tank_dwell_min",
+            "unscheduled_cip",
+            "utilization_pct",
+            "packaging_reject_pct",
+            "false_accept",
+            "holding_violations",
+            "trace_coverage_pct",
+            "trucks",
+            "completed",
+            "held_g1",
+            "rejected_g2",
+            "held_qa",
+            "raw_ton",
+            "fg_ton",
+            "changeover_count",
+            "changeover_min",
+            "gate_holds",
+            "makespan_min"
+          ],
+          "title": "Kpi",
+          "type": "object"
+        },
+        "LineChangeover": {
+          "additionalProperties": false,
+          "description": "Filling line berganti SKU: tidak mengisi selama `minutes`.",
+          "properties": {
+            "type": {
+              "const": "line.changeover",
+              "default": "line.changeover",
+              "title": "Type",
+              "type": "string"
+            },
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "from_sku": {
+              "title": "From Sku",
+              "type": "string"
+            },
+            "to_sku": {
+              "title": "To Sku",
+              "type": "string"
+            },
+            "minutes": {
+              "exclusiveMinimum": 0,
+              "title": "Minutes",
+              "type": "number"
+            }
+          },
+          "required": [
+            "asset_code",
+            "from_sku",
+            "to_sku",
+            "minutes"
+          ],
+          "title": "LineChangeover",
+          "type": "object"
+        },
+        "MonteCarloOut": {
+          "additionalProperties": false,
+          "description": "Seleksi rencana D: kandidat dievaluasi pada sampel skenario, prediksi KPI dari kandidat terpilih.",
+          "properties": {
+            "samples": {
+              "title": "Samples",
+              "type": "integer"
+            },
+            "chosen": {
+              "title": "Chosen",
+              "type": "string"
+            },
+            "candidates": {
+              "items": {
+                "$ref": "#/$defs/CandidateOut"
+              },
+              "title": "Candidates",
+              "type": "array"
+            },
+            "kpi_predicted": {
+              "additionalProperties": {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              "description": "mean, p10, p90 per metrik",
+              "title": "Kpi Predicted",
+              "type": "object"
+            }
+          },
+          "required": [
+            "samples",
+            "chosen",
+            "candidates",
+            "kpi_predicted"
+          ],
+          "title": "MonteCarloOut",
+          "type": "object"
+        },
+        "OrderCause": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "enum": [
+                "gate",
+                "qa",
+                "unfinished",
+                "supply"
+              ],
+              "title": "Code",
+              "type": "string"
+            },
+            "label": {
+              "title": "Label",
+              "type": "string"
+            },
+            "milk_ton": {
+              "title": "Milk Ton",
+              "type": "number"
+            }
+          },
+          "required": [
+            "code",
+            "label",
+            "milk_ton"
+          ],
+          "title": "OrderCause",
+          "type": "object"
+        },
+        "OrderResult": {
+          "additionalProperties": false,
+          "properties": {
+            "order": {
+              "title": "Order",
+              "type": "string"
+            },
+            "sku": {
+              "title": "Sku",
+              "type": "string"
+            },
+            "ordered_ton": {
+              "title": "Ordered Ton",
+              "type": "number"
+            },
+            "milk_needed_ton": {
+              "title": "Milk Needed Ton",
+              "type": "number"
+            },
+            "milk_used_ton": {
+              "title": "Milk Used Ton",
+              "type": "number"
+            },
+            "fulfilled_ton": {
+              "title": "Fulfilled Ton",
+              "type": "number"
+            },
+            "shortfall_ton": {
+              "title": "Shortfall Ton",
+              "type": "number"
+            },
+            "feasible": {
+              "title": "Feasible",
+              "type": "boolean"
+            },
+            "causes": {
+              "items": {
+                "$ref": "#/$defs/OrderCause"
+              },
+              "title": "Causes",
+              "type": "array"
+            }
+          },
+          "required": [
+            "order",
+            "sku",
+            "ordered_ton",
+            "milk_needed_ton",
+            "milk_used_ton",
+            "fulfilled_ton",
+            "shortfall_ton",
+            "feasible",
+            "causes"
+          ],
+          "title": "OrderResult",
+          "type": "object"
+        },
+        "OrdersEvaluated": {
+          "additionalProperties": false,
+          "description": "Order produksi dan kelayakannya, dikirim sekali di akhir hari (P9/Q4).",
+          "properties": {
+            "type": {
+              "const": "orders.evaluated",
+              "default": "orders.evaluated",
+              "title": "Type",
+              "type": "string"
+            },
+            "source": {
+              "enum": [
+                "manual",
+                "planned"
+              ],
+              "title": "Source",
+              "type": "string"
+            },
+            "milk_use_full_pct": {
+              "title": "Milk Use Full Pct",
+              "type": "number"
+            },
+            "milk_use_flavour_pct": {
+              "title": "Milk Use Flavour Pct",
+              "type": "number"
+            },
+            "orders": {
+              "items": {
+                "$ref": "#/$defs/OrderResult"
+              },
+              "title": "Orders",
+              "type": "array"
+            }
+          },
+          "required": [
+            "source",
+            "milk_use_full_pct",
+            "milk_use_flavour_pct",
+            "orders"
+          ],
+          "title": "OrdersEvaluated",
+          "type": "object"
+        },
+        "PlanOut": {
+          "additionalProperties": false,
+          "description": "Jadwal yang dihitung scheduler (konfigurasi B, C, atau D).",
+          "properties": {
+            "config": {
+              "enum": [
+                "B",
+                "C",
+                "D"
+              ],
+              "title": "Config",
+              "type": "string"
+            },
+            "status": {
+              "description": "optimal, feasible, atau heuristic (fallback tanpa solver)",
+              "title": "Status",
+              "type": "string"
+            },
+            "objective": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Objective"
+            },
+            "solve_seconds": {
+              "title": "Solve Seconds",
+              "type": "number"
+            },
+            "quantile": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Kuantil durasi yang dipakai; null = rata-rata",
+              "title": "Quantile"
+            },
+            "weights": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "title": "Weights",
+              "type": "object"
+            },
+            "trucks": {
+              "items": {
+                "$ref": "#/$defs/TruckPlanOut"
+              },
+              "title": "Trucks",
+              "type": "array"
+            }
+          },
+          "required": [
+            "config",
+            "status",
+            "objective",
+            "solve_seconds",
+            "quantile",
+            "weights",
+            "trucks"
+          ],
+          "title": "PlanOut",
+          "type": "object"
+        },
+        "PlantRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "sterilizer": {
+              "title": "Sterilizer",
+              "type": "string"
+            },
+            "aseptic": {
+              "title": "Aseptic",
+              "type": "string"
+            },
+            "line": {
+              "title": "Line",
+              "type": "string"
+            },
+            "usable": {
+              "title": "Usable",
+              "type": "boolean"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Alasan line tidak dapat dipakai sama sekali",
+              "title": "Reason"
+            },
+            "allowed": {
+              "description": "Kode SKU yang boleh diisi di line ini",
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed",
+              "type": "array"
+            },
+            "blocked": {
+              "description": "SKU yang ditolak di line ini, beserta alasan",
+              "items": {
+                "$ref": "#/$defs/RouteBlock"
+              },
+              "title": "Blocked",
+              "type": "array"
+            }
+          },
+          "required": [
+            "sterilizer",
+            "aseptic",
+            "line",
+            "usable",
+            "allowed",
+            "blocked"
+          ],
+          "title": "PlantRoute",
+          "type": "object"
+        },
+        "PlantRoutes": {
+          "additionalProperties": false,
+          "description": "Peta rute sterilizer -> aseptic -> line dan izin SKU; dikirim sekali di awal run.",
+          "properties": {
+            "type": {
+              "const": "plant.routes",
+              "default": "plant.routes",
+              "title": "Type",
+              "type": "string"
+            },
+            "policy": {
+              "title": "Policy",
+              "type": "string"
+            },
+            "skus": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Skus",
+              "type": "array"
+            },
+            "routes": {
+              "items": {
+                "$ref": "#/$defs/PlantRoute"
+              },
+              "title": "Routes",
+              "type": "array"
+            }
+          },
+          "required": [
+            "policy",
+            "skus",
+            "routes"
+          ],
+          "title": "PlantRoutes",
+          "type": "object"
+        },
+        "ReplanOut": {
+          "additionalProperties": false,
+          "description": "Satu kali re-optimization bergulir (konfigurasi D). `plan` hanya berisi truk yang direncanakan ulang.",
+          "properties": {
+            "version": {
+              "minimum": 2,
+              "title": "Version",
+              "type": "integer"
+            },
+            "at": {
+              "format": "date-time",
+              "title": "At",
+              "type": "string"
+            },
+            "trigger": {
+              "title": "Trigger",
+              "type": "string"
+            },
+            "status": {
+              "description": "optimal, feasible, atau failed (rencana lama dipertahankan)",
+              "title": "Status",
+              "type": "string"
+            },
+            "trucks": {
+              "title": "Trucks",
+              "type": "integer"
+            },
+            "objective": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Objective"
+            },
+            "solve_seconds": {
+              "title": "Solve Seconds",
+              "type": "number"
+            },
+            "plan": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PlanOut"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "version",
+            "at",
+            "trigger",
+            "status",
+            "trucks",
+            "objective",
+            "solve_seconds",
+            "plan"
+          ],
+          "title": "ReplanOut",
+          "type": "object"
+        },
+        "RouteBlock": {
+          "additionalProperties": false,
+          "properties": {
+            "sku": {
+              "title": "Sku",
+              "type": "string"
+            },
+            "reason": {
+              "title": "Reason",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sku",
+            "reason"
+          ],
+          "title": "RouteBlock",
+          "type": "object"
+        },
+        "ScheduleReplanned": {
+          "additionalProperties": false,
+          "description": "Rencana disusun ulang saat berjalan (re-optimization bergulir). Usulan, bukan keputusan.",
+          "properties": {
+            "type": {
+              "const": "schedule.replanned",
+              "default": "schedule.replanned",
+              "title": "Type",
+              "type": "string"
+            },
+            "version": {
+              "minimum": 2,
+              "title": "Version",
+              "type": "integer"
+            },
+            "trigger": {
+              "title": "Trigger",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "objective": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Objective"
+            },
+            "trucks": {
+              "description": "Jumlah truk yang direncanakan ulang",
+              "minimum": 0,
+              "title": "Trucks",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "version",
+            "trigger",
+            "status",
+            "trucks"
+          ],
+          "title": "ScheduleReplanned",
+          "type": "object"
+        },
+        "SimClock": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "sim.clock",
+              "default": "sim.clock",
+              "title": "Type",
+              "type": "string"
+            },
+            "speed": {
+              "description": "Menit simulasi per detik nyata, 0 = secepat mungkin",
+              "minimum": 0,
+              "title": "Speed",
+              "type": "number"
+            },
+            "paused": {
+              "title": "Paused",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "speed",
+            "paused"
+          ],
+          "title": "SimClock",
+          "type": "object"
+        },
+        "SkuExpiry": {
+          "additionalProperties": false,
+          "properties": {
+            "sku": {
+              "title": "Sku",
+              "type": "string"
+            },
+            "lots": {
+              "title": "Lots",
+              "type": "integer"
+            },
+            "volume_ton": {
+              "title": "Volume Ton",
+              "type": "number"
+            },
+            "produced_on": {
+              "description": "Tanggal isi pertama, YYYY-MM-DD",
+              "title": "Produced On",
+              "type": "string"
+            },
+            "expires_on": {
+              "description": "Tanggal kedaluwarsa lot pertama, YYYY-MM-DD",
+              "title": "Expires On",
+              "type": "string"
+            },
+            "remaining_pct": {
+              "description": "Sisa umur simpan saat tiba di pelanggan",
+              "title": "Remaining Pct",
+              "type": "number"
+            },
+            "state": {
+              "enum": [
+                "ok",
+                "short"
+              ],
+              "title": "State",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sku",
+            "lots",
+            "volume_ton",
+            "produced_on",
+            "expires_on",
+            "remaining_pct",
+            "state"
+          ],
+          "title": "SkuExpiry",
+          "type": "object"
+        },
+        "Stat": {
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "title": "N",
+              "type": "integer"
+            },
+            "mean": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Mean"
+            },
+            "p90": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "P90"
+            },
+            "max": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max"
+            }
+          },
+          "required": [
+            "n"
+          ],
+          "title": "Stat",
+          "type": "object"
+        },
+        "SterilizerFouling": {
+          "additionalProperties": false,
+          "properties": {
+            "asset_code": {
+              "title": "Asset Code",
+              "type": "string"
+            },
+            "run_min": {
+              "description": "Menit sterilisasi sejak CIP terakhir, akhir hari",
+              "title": "Run Min",
+              "type": "number"
+            },
+            "peak_min": {
+              "description": "Terpanjang sejak CIP selama hari itu",
+              "title": "Peak Min",
+              "type": "number"
+            },
+            "cip_count": {
+              "title": "Cip Count",
+              "type": "integer"
+            },
+            "state": {
+              "enum": [
+                "ok",
+                "near",
+                "over"
+              ],
+              "title": "State",
+              "type": "string"
+            },
+            "reached_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Saat batas fouling tercapai",
+              "title": "Reached At"
+            }
+          },
+          "required": [
+            "asset_code",
+            "run_min",
+            "peak_min",
+            "cip_count",
+            "state"
+          ],
+          "title": "SterilizerFouling",
+          "type": "object"
+        },
+        "TankerOut": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "farm_code": {
+              "title": "Farm Code",
+              "type": "string"
+            },
+            "volume_ton": {
+              "title": "Volume Ton",
+              "type": "number"
+            },
+            "temp_c": {
+              "title": "Temp C",
+              "type": "number"
+            },
+            "scheduled_eta": {
+              "format": "date-time",
+              "title": "Scheduled Eta",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "outcome": {
+              "title": "Outcome",
+              "type": "string"
+            },
+            "arrived_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Arrived At"
+            },
+            "lab_start": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lab Start"
+            },
+            "lab_end": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lab End"
+            },
+            "released_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Released At"
+            },
+            "unload_start": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unload Start"
+            },
+            "unload_end": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unload End"
+            },
+            "analyst": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Analyst"
+            },
+            "lab_results": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "title": "Lab Results",
+              "type": "object"
+            },
+            "eta_p50": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Prediksi kedatangan (kuantil)",
+              "title": "Eta P50"
+            },
+            "eta_p80": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Eta P80"
+            },
+            "eta_p90": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Eta P90"
+            }
+          },
+          "required": [
+            "code",
+            "farm_code",
+            "volume_ton",
+            "temp_c",
+            "scheduled_eta",
+            "status",
+            "outcome",
+            "arrived_at",
+            "lab_start",
+            "lab_end",
+            "released_at",
+            "unload_start",
+            "unload_end",
+            "analyst",
+            "lab_results"
+          ],
+          "title": "TankerOut",
+          "type": "object"
+        },
+        "TankerStatus": {
+          "enum": [
+            "on_the_way",
+            "queued",
+            "sampling",
+            "lab_test",
+            "released",
+            "rejected",
+            "unloading",
+            "stored"
+          ],
+          "title": "TankerStatus",
+          "type": "string"
+        },
+        "TankerStatusChanged": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "tanker.status_changed",
+              "default": "tanker.status_changed",
+              "title": "Type",
+              "type": "string"
+            },
+            "tanker_code": {
+              "title": "Tanker Code",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/TankerStatus"
+            },
+            "bay_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Bay Code"
+            }
+          },
+          "required": [
+            "tanker_code",
+            "status"
+          ],
+          "title": "TankerStatusChanged",
+          "type": "object"
+        },
+        "TransferCompleted": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "transfer.completed",
+              "default": "transfer.completed",
+              "title": "Type",
+              "type": "string"
+            },
+            "from_asset": {
+              "title": "From Asset",
+              "type": "string"
+            },
+            "to_asset": {
+              "title": "To Asset",
+              "type": "string"
+            },
+            "batch_code": {
+              "title": "Batch Code",
+              "type": "string"
+            },
+            "volume_ton": {
+              "exclusiveMinimum": 0,
+              "title": "Volume Ton",
+              "type": "number"
+            }
+          },
+          "required": [
+            "from_asset",
+            "to_asset",
+            "batch_code",
+            "volume_ton"
+          ],
+          "title": "TransferCompleted",
+          "type": "object"
+        },
+        "TransferOut": {
+          "additionalProperties": false,
+          "properties": {
+            "from_asset": {
+              "title": "From Asset",
+              "type": "string"
+            },
+            "to_asset": {
+              "title": "To Asset",
+              "type": "string"
+            },
+            "batch_code": {
+              "title": "Batch Code",
+              "type": "string"
+            },
+            "volume_ton": {
+              "title": "Volume Ton",
+              "type": "number"
+            },
+            "occurred_at": {
+              "format": "date-time",
+              "title": "Occurred At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "from_asset",
+            "to_asset",
+            "batch_code",
+            "volume_ton",
+            "occurred_at"
+          ],
+          "title": "TransferOut",
+          "type": "object"
+        },
+        "TruckArrived": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "truck.arrived",
+              "default": "truck.arrived",
+              "title": "Type",
+              "type": "string"
+            },
+            "tanker_code": {
+              "title": "Tanker Code",
+              "type": "string"
+            },
+            "farm_code": {
+              "title": "Farm Code",
+              "type": "string"
+            },
+            "volume_ton": {
+              "exclusiveMinimum": 0,
+              "title": "Volume Ton",
+              "type": "number"
+            },
+            "temp_c": {
+              "title": "Temp C",
+              "type": "number"
+            },
+            "plate": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Plat nomor; kosong pada run lama",
+              "title": "Plate"
+            }
+          },
+          "required": [
+            "tanker_code",
+            "farm_code",
+            "volume_ton",
+            "temp_c"
+          ],
+          "title": "TruckArrived",
+          "type": "object"
+        },
+        "TruckDispatched": {
+          "additionalProperties": false,
+          "description": "Truk memasuki jendela pendekatan menuju gerbang (masih di luar pabrik, tampil di Maps).",
+          "properties": {
+            "type": {
+              "const": "truck.dispatched",
+              "default": "truck.dispatched",
+              "title": "Type",
+              "type": "string"
+            },
+            "tanker_code": {
+              "title": "Tanker Code",
+              "type": "string"
+            },
+            "farm_code": {
+              "title": "Farm Code",
+              "type": "string"
+            },
+            "plate": {
+              "title": "Plate",
+              "type": "string"
+            },
+            "route": {
+              "description": "Indeks rute pendekatan menuju gerbang",
+              "minimum": 0,
+              "title": "Route",
+              "type": "integer"
+            },
+            "eta": {
+              "description": "Perkiraan tiba di gerbang (UTC)",
+              "format": "date-time",
+              "title": "Eta",
+              "type": "string"
+            },
+            "window_min": {
+              "description": "Lama pendekatan dari awal jendela sampai tiba",
+              "exclusiveMinimum": 0,
+              "title": "Window Min",
+              "type": "number"
+            }
+          },
+          "required": [
+            "tanker_code",
+            "farm_code",
+            "plate",
+            "route",
+            "eta",
+            "window_min"
+          ],
+          "title": "TruckDispatched",
+          "type": "object"
+        },
+        "TruckPlanOut": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "analyst": {
+              "title": "Analyst",
+              "type": "string"
+            },
+            "lab_start": {
+              "format": "date-time",
+              "title": "Lab Start",
+              "type": "string"
+            },
+            "bay": {
+              "title": "Bay",
+              "type": "string"
+            },
+            "unload_start": {
+              "format": "date-time",
+              "title": "Unload Start",
+              "type": "string"
+            },
+            "sterilizer": {
+              "title": "Sterilizer",
+              "type": "integer"
+            },
+            "ster_start": {
+              "format": "date-time",
+              "title": "Ster Start",
+              "type": "string"
+            },
+            "line": {
+              "title": "Line",
+              "type": "string"
+            },
+            "fill_start": {
+              "format": "date-time",
+              "title": "Fill Start",
+              "type": "string"
+            },
+            "fill_end": {
+              "format": "date-time",
+              "title": "Fill End",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "analyst",
+            "lab_start",
+            "bay",
+            "unload_start",
+            "sterilizer",
+            "ster_start",
+            "line",
+            "fill_start",
+            "fill_end"
+          ],
+          "title": "TruckPlanOut",
+          "type": "object"
+        },
+        "TwinEvent": {
+          "additionalProperties": false,
+          "description": "Amplop yang disiarkan Engine lalu dirilis Laravel ke browser lewat Reverb.",
+          "properties": {
+            "event_id": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            },
+            "run_id": {
+              "title": "Run Id",
+              "type": "integer"
+            },
+            "seq": {
+              "description": "Urut per run, tanpa celah",
+              "minimum": 0,
+              "title": "Seq",
+              "type": "integer"
+            },
+            "sim_time": {
+              "description": "Waktu simulasi (UTC)",
+              "format": "date-time",
+              "title": "Sim Time",
+              "type": "string"
+            },
+            "payload": {
+              "discriminator": {
+                "mapping": {
+                  "asset.level": "#/$defs/AssetLevel",
+                  "asset.status_changed": "#/$defs/AssetStatusChanged",
+                  "cip.finished": "#/$defs/CipEvent",
+                  "cip.started": "#/$defs/CipEvent",
+                  "command.applied": "#/$defs/CommandApplied",
+                  "fouling.expiry": "#/$defs/FoulingExpiry",
+                  "gate.decided": "#/$defs/GateDecided",
+                  "line.changeover": "#/$defs/LineChangeover",
+                  "orders.evaluated": "#/$defs/OrdersEvaluated",
+                  "plant.routes": "#/$defs/PlantRoutes",
+                  "schedule.replanned": "#/$defs/ScheduleReplanned",
+                  "sim.clock": "#/$defs/SimClock",
+                  "tanker.status_changed": "#/$defs/TankerStatusChanged",
+                  "transfer.completed": "#/$defs/TransferCompleted",
+                  "truck.arrived": "#/$defs/TruckArrived",
+                  "truck.dispatched": "#/$defs/TruckDispatched",
+                  "unload.finished": "#/$defs/UnloadFinished",
+                  "volume.balance": "#/$defs/VolumeBalance"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/SimClock"
+                },
+                {
+                  "$ref": "#/$defs/TruckDispatched"
+                },
+                {
+                  "$ref": "#/$defs/TruckArrived"
+                },
+                {
+                  "$ref": "#/$defs/TankerStatusChanged"
+                },
+                {
+                  "$ref": "#/$defs/UnloadFinished"
+                },
+                {
+                  "$ref": "#/$defs/TransferCompleted"
+                },
+                {
+                  "$ref": "#/$defs/AssetStatusChanged"
+                },
+                {
+                  "$ref": "#/$defs/AssetLevel"
+                },
+                {
+                  "$ref": "#/$defs/LineChangeover"
+                },
+                {
+                  "$ref": "#/$defs/PlantRoutes"
+                },
+                {
+                  "$ref": "#/$defs/OrdersEvaluated"
+                },
+                {
+                  "$ref": "#/$defs/VolumeBalance"
+                },
+                {
+                  "$ref": "#/$defs/FoulingExpiry"
+                },
+                {
+                  "$ref": "#/$defs/CipEvent"
+                },
+                {
+                  "$ref": "#/$defs/GateDecided"
+                },
+                {
+                  "$ref": "#/$defs/ScheduleReplanned"
+                },
+                {
+                  "$ref": "#/$defs/CommandApplied"
+                }
+              ],
+              "title": "Payload"
+            }
+          },
+          "required": [
+            "event_id",
+            "run_id",
+            "seq",
+            "sim_time",
+            "payload"
+          ],
+          "title": "TwinEvent",
+          "type": "object"
+        },
+        "UnloadFinished": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "unload.finished",
+              "default": "unload.finished",
+              "title": "Type",
+              "type": "string"
+            },
+            "tanker_code": {
+              "title": "Tanker Code",
+              "type": "string"
+            },
+            "bay_code": {
+              "title": "Bay Code",
+              "type": "string"
+            },
+            "tank_code": {
+              "title": "Tank Code",
+              "type": "string"
+            },
+            "batch_code": {
+              "title": "Batch Code",
+              "type": "string"
+            },
+            "volume_ton": {
+              "exclusiveMinimum": 0,
+              "title": "Volume Ton",
+              "type": "number"
+            }
+          },
+          "required": [
+            "tanker_code",
+            "bay_code",
+            "tank_code",
+            "batch_code",
+            "volume_ton"
+          ],
+          "title": "UnloadFinished",
+          "type": "object"
+        },
+        "VolumeBalance": {
+          "additionalProperties": false,
+          "description": "Neraca volume akhir hari dalam ton (P9/Q5): masuk = stok awal + diterima; keluar = FG + susut + QA + sisa.",
+          "properties": {
+            "type": {
+              "const": "volume.balance",
+              "default": "volume.balance",
+              "title": "Type",
+              "type": "string"
+            },
+            "opening_stock_ton": {
+              "title": "Opening Stock Ton",
+              "type": "number"
+            },
+            "received_ton": {
+              "title": "Received Ton",
+              "type": "number"
+            },
+            "fg_ton": {
+              "title": "Fg Ton",
+              "type": "number"
+            },
+            "loss_ton": {
+              "title": "Loss Ton",
+              "type": "number"
+            },
+            "qa_hold_ton": {
+              "title": "Qa Hold Ton",
+              "type": "number"
+            },
+            "tank_end_ton": {
+              "title": "Tank End Ton",
+              "type": "number"
+            },
+            "in_process_ton": {
+              "title": "In Process Ton",
+              "type": "number"
+            },
+            "not_received_ton": {
+              "title": "Not Received Ton",
+              "type": "number"
+            }
+          },
+          "required": [
+            "opening_stock_ton",
+            "received_ton",
+            "fg_ton",
+            "loss_ton",
+            "qa_hold_ton",
+            "tank_end_ton",
+            "in_process_ton",
+            "not_received_ton"
+          ],
+          "title": "VolumeBalance",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "finished",
+          "default": "finished",
+          "title": "Status",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "integer"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "config": {
+          "default": "A",
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "title": "Config",
+          "type": "string"
+        },
+        "scenario": {
+          "default": "normal",
+          "title": "Scenario",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "sim_start": {
+          "format": "date-time",
+          "title": "Sim Start",
+          "type": "string"
+        },
+        "sim_end": {
+          "format": "date-time",
+          "title": "Sim End",
+          "type": "string"
+        },
+        "kpi": {
+          "$ref": "#/$defs/Kpi"
+        },
+        "plan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanOut"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rencana awal (versi 1)"
+        },
+        "replans": {
+          "items": {
+            "$ref": "#/$defs/ReplanOut"
+          },
+          "title": "Replans",
+          "type": "array"
+        },
+        "monte_carlo": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonteCarloOut"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ai": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AiOut"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Prediksi model AI; null bila model tidak dimuat"
+        },
+        "tankers": {
+          "items": {
+            "$ref": "#/$defs/TankerOut"
+          },
+          "title": "Tankers",
+          "type": "array"
+        },
+        "batches": {
+          "items": {
+            "$ref": "#/$defs/BatchOut"
+          },
+          "title": "Batches",
+          "type": "array"
+        },
+        "transfers": {
+          "items": {
+            "$ref": "#/$defs/TransferOut"
+          },
+          "title": "Transfers",
+          "type": "array"
+        },
+        "gates": {
+          "items": {
+            "$ref": "#/$defs/GateOut"
+          },
+          "title": "Gates",
+          "type": "array"
+        },
+        "cips": {
+          "items": {
+            "$ref": "#/$defs/CipOut"
+          },
+          "title": "Cips",
+          "type": "array"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/TwinEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "seed",
+        "params",
+        "sim_start",
+        "sim_end",
+        "kpi",
+        "tankers",
+        "batches",
+        "transfers",
+        "gates",
+        "cips",
+        "events"
+      ],
+      "title": "RunResult",
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "failed",
+          "default": "failed",
+          "title": "Status",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "integer"
+        },
+        "error": {
+          "title": "Error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "error"
+      ],
+      "title": "RunFailure",
+      "type": "object"
+    }
+  ]
+}

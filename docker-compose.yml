@@ -1,0 +1,91 @@
+# Semua kredensial dibaca dari .env di root (salin dari .env.example).
+x-web: &web
+  build:
+    context: ./web
+    args:
+      VITE_REVERB_APP_KEY: ${REVERB_APP_KEY}
+      VITE_REVERB_HOST: ${REVERB_PUBLIC_HOST:-localhost}
+      VITE_REVERB_PORT: ${REVERB_PORT:-8080}
+      VITE_REVERB_SCHEME: http
+  environment: &web-env
+    APP_NAME: LactOS
+    APP_ENV: ${APP_ENV:-local}
+    APP_KEY: ${APP_KEY}
+    APP_URL: http://localhost:8000
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_DATABASE: ${POSTGRES_DB:-lactos}
+    DB_USERNAME: ${POSTGRES_USER:-lactos}
+    DB_PASSWORD: ${POSTGRES_PASSWORD}
+    SESSION_DRIVER: database
+    QUEUE_CONNECTION: database
+    CACHE_STORE: database
+    BROADCAST_CONNECTION: reverb
+    REVERB_APP_ID: ${REVERB_APP_ID}
+    REVERB_APP_KEY: ${REVERB_APP_KEY}
+    REVERB_APP_SECRET: ${REVERB_APP_SECRET}
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    ENGINE_URL: http://engine:8000
+    ENGINE_INTERNAL_TOKEN: ${ENGINE_INTERNAL_TOKEN}
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lactos}
+      POSTGRES_USER: ${POSTGRES_USER:-lactos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lactos} -d ${POSTGRES_DB:-lactos}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    <<: *web
+    command: sh -c "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - "8000:8000"
+
+  reverb:
+    <<: *web
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - web
+
+  queue:
+    <<: *web
+    command: php artisan queue:work --tries=3
+    depends_on:
+      - web
+
+  engine:
+    build: ./engine
+    environment:
+      ENGINE_DATABASE_URL: postgresql://${POSTGRES_USER:-lactos}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-lactos}
+      ENGINE_WEB_URL: http://web:8000
+      ENGINE_INTERNAL_TOKEN: ${ENGINE_INTERNAL_TOKEN}
+      ENGINE_LLM_PROVIDER: ${ENGINE_LLM_PROVIDER:-mock}
+      ENGINE_LLM_BASE_URL: ${ENGINE_LLM_BASE_URL:-}
+      ENGINE_LLM_API_KEY: ${ENGINE_LLM_API_KEY:-}
+      ENGINE_LLM_MODEL: ${ENGINE_LLM_MODEL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8001:8000"
+
+volumes:
+  pgdata:

@@ -1,0 +1,33 @@
+{
+  "model_name": "lab_lgbm_quantile",
+  "created_at": "2026-11-01T16:01:18.320337",
+  "data_classification": "DATA SINTETIS",
+  "partner": "[Nama Pabrik]",
+  "seed": 42,
+  "data_hash": "6da845907a93a210",
+  "features": [
+    "farm_id",
+    "sampling_hour",
+    "is_shift_boundary",
+    "day_of_week"
+  ],
+  "metrics": {
+    "baseline_mae": 2.6203703703703702,
+    "lgbm_p50_mae": 2.5078423184954866,
+    "pinball_0.5": 1.2539211592477433,
+    "pinball_0.8": 0.9576557557647548,
+    "pinball_0.9": 0.6386806343510142,
+    "coverage_p80": 0.7981481481481482,
+    "coverage_p90": 0.8666666666666667,
+    "coverage_p80_target_met": true,
+    "coverage_p90_target_met": true,
+    "bootstrap_improvement": {
+      "mean_improvement": 0.11123094499519533,
+      "ci_lower_95": -0.02195472969618921,
+      "ci_upper_95": 0.25141198463878933,
+      "significantly_better": false
+    },
+    "lgbm_beats_baseline": true
+  },
+  "extra": {}
+}

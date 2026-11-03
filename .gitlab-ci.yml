@@ -1,0 +1,60 @@
+# Belum pernah dijalankan di runner (repo belum punya commit); sintaks diperiksa manual.
+stages: [test]
+
+variables:
+  UV_LINK_MODE: copy
+
+engine:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install --no-cache-dir uv
+    - cd engine && uv sync --frozen
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+    - uv run pytest -q
+  cache:
+    key: engine-$CI_COMMIT_REF_SLUG
+    paths: [engine/.venv/]
+
+# Kontrak dibangkitkan dari kode Engine; selisih dengan contracts/ berarti lupa `make contracts`.
+contracts:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install --no-cache-dir uv
+    - cd engine && uv sync --frozen
+  script:
+    - uv run python -m scripts.export_contracts
+    - git diff --exit-code -- ../contracts
+
+web:
+  stage: test
+  image: php:8.4-cli
+  services:
+    - name: postgres:16
+      alias: db
+  variables:
+    POSTGRES_DB: lactos
+    POSTGRES_USER: lactos
+    POSTGRES_PASSWORD: ci-only
+    # Menjalankan seluruh suite di PostgreSQL agar tes audit log (trigger, hash-chain) tidak dilewati.
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_DATABASE: lactos
+    DB_USERNAME: lactos
+    DB_PASSWORD: ci-only
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libpq-dev libzip-dev libicu-dev unzip git curl ca-certificates
+    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
+    - docker-php-ext-install pdo_pgsql bcmath intl zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - cd web && composer install --prefer-dist --no-interaction
+    - npm ci
+  script:
+    - ./vendor/bin/pint --test
+    - npm test
+    - npm run build
+    - npm run budget
+    - php artisan test

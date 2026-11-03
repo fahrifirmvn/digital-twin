@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     llm_api_key: SecretStr = SecretStr("")
     llm_model: str = ""
     llm_timeout: float = 60.0
-    llm_max_tokens: int = 1024
+    llm_max_tokens: int = 2048
+    # Hanya Gemini. None = otomatis (0 untuk model flash, bawaan model lain).
+    llm_thinking_budget: int | None = None
     # Suhu rendah: jawaban agen harus stabil dan berbasis alat. None = tidak dikirim (sebagian model penalaran menolak).
     llm_temperature: float | None = 0.2
     llm_retries: int = 2

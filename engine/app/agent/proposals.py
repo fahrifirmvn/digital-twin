@@ -46,7 +46,7 @@ class CreateProposalArgs(Args):
         min_length=10, max_length=400, description="Alasan singkat yang hanya memakai hasil alat"
     )
     supersedes: str | None = Field(
-        default=None, pattern=UUID_PATTERN, description="id usulan draf yang direvisi"
+        default=None, pattern=UUID_PATTERN, description="id usulan di open_proposals yang direvisi"
     )
 
 
@@ -95,6 +95,7 @@ def campaign_state(env: ToolEnv, a: NoArgs) -> dict[str, Any]:
         "maintenance_today": [e.model_dump() for e in ctx.existing],
         "planned_count": ctx.planned_count,
         "max_planned": ctx.max_planned,
+        "open_proposals": [p.model_dump() for p in ctx.open_proposals],
     }
 
 
@@ -174,6 +175,8 @@ def create_proposal(env: ToolEnv, a: CreateProposalArgs) -> dict[str, Any]:
         raise ToolError("what-if dibuat untuk keadaan hari yang berbeda; jalankan run_whatif lagi")
     if any(p["evidence"]["whatif_id"] == item.id for p in env.proposals):
         raise ToolError("what-if ini sudah dipakai untuk satu usulan")
+    if a.supersedes and a.supersedes not in {p.id for p in ctx.open_proposals}:
+        raise ToolError("usulan yang direvisi tidak ada di open_proposals (campaign_state)")
     # Aturan keras diperiksa lagi terhadap keadaan sekarang (P3).
     now = check_window(
         ctx, item.window["asset"], item.window["minute"], item.window["duration_min"]

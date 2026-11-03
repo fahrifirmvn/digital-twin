@@ -61,3 +61,12 @@ Semua data adalah DATA SINTETIS. Diganti saat data nyata tersedia.
 - Label "DATA SINTETIS | mode X" tampil di drawer dan diganti dengan label dari server setiap balasan. Badge DEMO diganti "DATA SINTETIS" di semua halaman, termasuk layar sempit.
 - Halaman kampanye memuat ulang otomatis 4 detik saat hari berjalan, sehingga percakapan di drawer hilang pada saat itu. Setelah persetujuan, halaman dimuat ulang agar jadwal tampil.
 - Nama produk: LactaTwin (judul halaman, topbar, login, manifest PWA, judul API Engine). Nama pabrik asli tidak dipakai.
+
+## Operator Agent: percakapan (Fase 4b-4e)
+
+- **Pengetikan setelah validasi, bukan streaming token.** Jawaban baru ditampilkan setelah lolos validator grounding (setiap angka harus ada di hasil alat). Streaming token akan menampilkan teks yang belum divalidasi, melanggar P4. Karena itu antarmuka mengetik balasan bertahap SETELAH jawaban final diterima (batas 70 tik, klik melewati animasi, nonaktif pada `prefers-reduced-motion`, `aria-busy` selama animasi).
+- **Usulan terbuka (`open_proposals`).** Konteks kampanye membawa draf/usulan menunggu milik PENGGUNA YANG SEDANG BERCAKAP pada hari berjalan (maks. 10), diisi Laravel dari database, bukan dari klien. Isinya hanya jendela dan metrik what-if; nama metrik dibatasi `[a-z0-9_]` agar tidak bisa disisipi teks bebas. `open_proposals` tidak ikut kunci cache what-if. `create_proposal` dengan `supersedes` menolak id yang tidak ada di daftar ini; keputusan tetap di PPIC dan versi lama hanya menjadi "Digantikan versi baru" lewat alur yang sama seperti sebelumnya.
+- **Gaya bicara.** Aturan prompt 7-10: boleh obrolan ringan tanpa alat, tanya balik bila permintaan ambigu, dan revisi usulan terbuka dibuat sebagai versi baru. Jawaban teks kosong dari model kini menjadi galat `empty_reply`, bukan jawaban kosong berstatus ok.
+- **Gemini.** `thinkingBudget` dikirim bila diatur (`ENGINE_LLM_THINKING_BUDGET`); bawaan 0 untuk model "flash" agar token keluaran tidak habis oleh berpikir. `llm_max_tokens` 2048. Adaptor belum diverifikasi ke API sungguhan di repo ini: jalankan `uv run python -m scripts.smoke_llm` dari `engine/` dengan kunci di `engine/.env` (tidak pernah dicetak).
+- **Penyimpanan percakapan.** Hanya `sessionStorage` per pengguna dan konteks (kampanye/run), teks polos maks. 40 pesan, dipulihkan dengan validasi (data rusak diabaikan). Tidak ada percakapan di server selain audit append-only.
+- **Revisi lewat kartu.** Tombol "Tanya atau revisi lewat chat" mengisi awalan pesan; kartu versi lama dimuat ulang setelah versi baru dibuat.

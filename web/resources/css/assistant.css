@@ -48,3 +48,9 @@
 .as-plain .tw-drawer-head { display: flex; justify-content: space-between; align-items: center; }
 .as-plain .tw-drawer-head h2 { margin: 0; font-size: 18px; }
 .as-plain .tw-ico { width: 40px; height: 40px; border: 1px solid #7a889f; border-radius: 999px; background: transparent; cursor: pointer; font-size: 18px; }
+.tw-drawer-head { gap: 8px; }
+.tw-drawer-head h2 { margin-right: auto; }
+.as-drawer button.as-new:not(.tw-ico) { min-height: 36px; padding: 0 12px; font-size: 13px; }
+.as-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.as-chips:empty { display: none; }
+.as-drawer button.as-suggest:not(.tw-ico) { padding: 6px 12px; font-size: 13px; font-weight: 600; text-align: left; border-radius: 12px; }

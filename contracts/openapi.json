@@ -907,6 +907,14 @@
             "maximum": 20.0,
             "minimum": 1.0,
             "title": "Max Planned"
+          },
+          "open_proposals": {
+            "items": {
+              "$ref": "#/components/schemas/OpenProposal"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Open Proposals"
           }
         },
         "additionalProperties": false,
@@ -1831,6 +1839,79 @@
         ],
         "title": "MonteCarloOut",
         "description": "Seleksi rencana D: kandidat dievaluasi pada sampel skenario, prediksi KPI dari kandidat terpilih."
+      },
+      "OpenChange": {
+        "properties": {
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          },
+          "candidate": {
+            "type": "number",
+            "title": "Candidate"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          },
+          "better": {
+            "type": "boolean",
+            "title": "Better"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "candidate",
+          "change",
+          "better"
+        ],
+        "title": "OpenChange"
+      },
+      "OpenProposal": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "pending"
+            ],
+            "title": "Status"
+          },
+          "window": {
+            "$ref": "#/components/schemas/MaintenanceEntry"
+          },
+          "changes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OpenChange"
+            },
+            "type": "object",
+            "maxProperties": 16,
+            "title": "Changes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "status",
+          "window"
+        ],
+        "title": "OpenProposal",
+        "description": "Draf atau usulan yang menunggu keputusan milik pengguna ini pada hari yang sedang disusun.\nDibangun Laravel dari database; dipakai untuk menjawab tanggapan dan sebagai satu-satunya id\nyang boleh direvisi."
       },
       "OrderCause": {
         "properties": {

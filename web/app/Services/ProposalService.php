@@ -20,7 +20,7 @@ class ProposalService
     public function __construct(private CampaignService $campaigns, private AuditLogger $audit) {}
 
     /** Keadaan hari kampanye untuk what-if engine, dibaca dari database (bukan dari klien). @return array<string, mixed> */
-    public function context(Campaign $c): array
+    public function context(Campaign $c, ?User $user = null): array
     {
         $day = $this->campaigns->currentDay($c);
         [$commands] = $this->campaigns->segments($day);
@@ -33,7 +33,26 @@ class ProposalService
             'plant' => ($c->params['plant'] ?? null) ?: null,
             'existing' => array_slice($existing, 0, 20), 'planned_count' => count($day->plan),
             'max_planned' => (int) config('twin.campaign.max_planned'),
+            'open_proposals' => $user ? $this->openProposals($c, $day->day_no, $user) : [],
         ];
+    }
+
+    /** Draf dan usulan menunggu milik pengguna pada hari ini; satu-satunya yang boleh direvisi lewat percakapan. @return list<array<string, mixed>> */
+    private function openProposals(Campaign $c, int $dayNo, User $user): array
+    {
+        return AgentProposal::where('campaign_id', $c->id)->where('day_no', $dayNo)->where('created_by', $user->id)
+            ->whereIn('status', ['draft', 'pending'])->latest('id')->limit(10)->get()->map(function (AgentProposal $p) {
+                $changes = [];
+                foreach (array_slice($p->evidence['changes'] ?? [], 0, 16, true) as $metric => $v) {
+                    if (is_string($metric) && preg_match('/^[a-z0-9_]{1,40}$/', $metric) && is_array($v)) {
+                        $changes[$metric] = ['baseline' => (float) ($v['baseline'] ?? 0), 'candidate' => (float) ($v['candidate'] ?? 0), 'change' => (float) ($v['change'] ?? 0), 'better' => (bool) ($v['better'] ?? false)];
+                    }
+                }
+
+                return ['id' => $p->uuid, 'version' => $p->version, 'status' => $p->status, 'window' => [
+                    'asset' => $p->payload['asset'], 'minute' => (float) $p->payload['minute'], 'duration_min' => (float) $p->payload['duration_min'],
+                ], 'changes' => $changes];
+            })->all();
     }
 
     /**

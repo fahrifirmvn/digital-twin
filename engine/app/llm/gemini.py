@@ -86,12 +86,16 @@ def _contents(messages: list[Message]) -> list[dict[str, Any]]:
 
 class GeminiProvider(HttpProvider):
     name = "gemini"
+    # Token berpikir 2.5-flash memakan jatah maxOutputTokens; 0 mematikannya agar jawaban tidak kosong.
+    thinking_budget: int | None = None
 
     def chat(self, messages: list[Message], tools: tuple[ToolSpec, ...] = ()) -> LLMResponse:
         system = "\n\n".join(m.content for m in messages if m.role == "system")
         config: dict[str, Any] = {"maxOutputTokens": self.max_tokens}
         if self.temperature is not None:
             config["temperature"] = self.temperature
+        if self.thinking_budget is not None:
+            config["thinkingConfig"] = {"thinkingBudget": self.thinking_budget}
         payload: dict[str, Any] = {
             "contents": _contents(messages),
             "generationConfig": config,

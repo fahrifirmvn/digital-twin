@@ -106,3 +106,79 @@ export function httpError(status, body) {
     if (body?.errors) return Object.values(body.errors).flat()[0] ?? `Gagal (HTTP ${status}).`;
     return body?.message || `Gagal (HTTP ${status}).`;
 }
+
+// --- percakapan: simpan sementara, saran, revisi, pengetikan ---------------------------------
+
+export const MAX_STORED = 40;
+const MAX_STORED_TEXT = 2000;
+
+/** Kunci sessionStorage per pengguna dan konteks, supaya percakapan tidak bocor antar akun/halaman. */
+export function storageKey({ userId, campaignId, runId }) {
+    const scope = campaignId ? `c${campaignId}` : runId ? `r${runId}` : 'x';
+    return `lactatwin.chat.u${userId}.${scope}`;
+}
+
+/** Hanya teks polos dan bendera galat; tidak ada HTML, sumber, atau usulan. */
+export function serializeChat({ conversationId, history, messages }) {
+    return JSON.stringify({
+        v: 1,
+        conversationId: conversationId || null,
+        history: history.slice(-MAX_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, MAX_STORED_TEXT) })),
+        messages: messages.slice(-MAX_STORED).map((m) => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            text: String(m.text).slice(0, MAX_STORED_TEXT),
+            meta: m.meta ? String(m.meta).slice(0, 300) : '',
+            error: Boolean(m.error),
+        })),
+    });
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Pulihkan percakapan; data rusak atau berbeda versi diabaikan (null), bukan dipercaya. */
+export function restoreChat(raw) {
+    let o;
+    try {
+        o = JSON.parse(raw);
+    } catch {
+        return null;
+    }
+    if (!o || o.v !== 1 || !Array.isArray(o.messages) || !Array.isArray(o.history)) return null;
+    const ok = (m, k) => m && (m.role === 'user' || m.role === 'assistant') && typeof m[k] === 'string';
+    return {
+        conversationId: typeof o.conversationId === 'string' && UUID.test(o.conversationId) ? o.conversationId : null,
+        history: o.history.filter((m) => ok(m, 'content')).slice(-MAX_HISTORY).map((m) => ({ role: m.role, content: m.content.slice(0, MAX_STORED_TEXT) })),
+        messages: o.messages.filter((m) => ok(m, 'text')).slice(-MAX_STORED).map((m) => ({
+            role: m.role,
+            text: m.text.slice(0, MAX_STORED_TEXT),
+            meta: typeof m.meta === 'string' ? m.meta.slice(0, 300) : '',
+            error: m.error === true,
+        })),
+    };
+}
+
+/** Chip pertanyaan awal. Sengaja tanpa angka: semua angka harus datang dari alat, bukan dari kami. */
+export function suggestions({ campaignId, runId, canApprove }) {
+    const out = [];
+    if (campaignId) {
+        out.push('Bagaimana kondisi pabrik pada hari ini?');
+        out.push('Usulkan jadwal maintenance tangki yang paling aman.');
+        if (canApprove) out.push('Apa saja usulan yang menunggu persetujuan saya?');
+    } else if (runId) {
+        out.push('Ringkas hasil run ini.');
+        out.push('Apa penyebab utama truk menunggu?');
+    } else {
+        out.push('Apa yang bisa kamu bantu?');
+    }
+    return out;
+}
+
+/** Awalan pesan untuk membahas/merevisi satu usulan lewat chat; pengguna melanjutkan mengetik. */
+export function revisePrompt(p) {
+    return `Usulan ${describeWindow(p.payload)} (versi ${p.version}): `;
+}
+
+/** Banyak karakter per tik agar pengetikan selesai dalam batas tik tetap (balasan panjang tidak lambat). */
+export function revealStep(total, maxTicks = 70) {
+    return Math.max(2, Math.ceil(total / maxTicks));
+}

@@ -65,3 +65,53 @@ test('replyNote dan httpError', () => {
     assert.equal(statusLabel('pending'), 'Menunggu persetujuan');
     assert.equal(statusLabel('lain'), 'lain');
 });
+
+test('storageKey memisahkan pengguna dan konteks', async () => {
+    const { storageKey } = await import('./assistant-model.js');
+    const a = storageKey({ userId: 1, campaignId: 5, runId: '' });
+    assert.notEqual(a, storageKey({ userId: 2, campaignId: 5, runId: '' }));
+    assert.notEqual(a, storageKey({ userId: 1, campaignId: '', runId: 5 }));
+    assert.notEqual(a, storageKey({ userId: 1, campaignId: 6, runId: '' }));
+});
+
+test('serializeChat dan restoreChat bolak-balik dengan batas', async () => {
+    const { serializeChat, restoreChat, MAX_STORED } = await import('./assistant-model.js');
+    const messages = Array.from({ length: 60 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', text: `m${i}`, meta: '', error: i === 59 }));
+    const id = '11111111-2222-4333-8444-555555555555';
+    const back = restoreChat(serializeChat({ conversationId: id, history: [{ role: 'user', content: 'x' }], messages }));
+    assert.equal(back.conversationId, id);
+    assert.equal(back.messages.length, MAX_STORED);
+    assert.equal(back.messages.at(-1).error, true);
+    assert.equal(back.history.length, 1);
+});
+
+test('restoreChat menolak data rusak, versi lain, dan id bukan uuid', async () => {
+    const { restoreChat } = await import('./assistant-model.js');
+    assert.equal(restoreChat('{bukan json'), null);
+    assert.equal(restoreChat(JSON.stringify({ v: 2, messages: [], history: [] })), null);
+    assert.equal(restoreChat(JSON.stringify({ v: 1, messages: 'x', history: [] })), null);
+    const r = restoreChat(JSON.stringify({
+        v: 1, conversationId: '../../etc', history: [{ role: 'system', content: 'x' }, { role: 'user', content: 'ok' }],
+        messages: [{ role: 'system', text: 'x' }, { role: 'user', text: 'halo' }, { role: 'user', text: 5 }],
+    }));
+    assert.equal(r.conversationId, null);
+    assert.deepEqual(r.history, [{ role: 'user', content: 'ok' }]);
+    assert.equal(r.messages.length, 1);
+});
+
+test('suggestions tanpa angka dan sesuai konteks serta izin', async () => {
+    const { suggestions } = await import('./assistant-model.js');
+    const camp = suggestions({ campaignId: 3, runId: '', canApprove: true });
+    assert.ok(camp.length >= 3);
+    assert.ok(suggestions({ campaignId: 3, runId: '', canApprove: false }).length < camp.length);
+    for (const s of [...camp, ...suggestions({ campaignId: '', runId: 4, canApprove: false }), ...suggestions({})]) assert.ok(!/\d/.test(s));
+});
+
+test('revisePrompt menyebut jendela dan versi; revealStep terbatas', async () => {
+    const { revisePrompt, revealStep } = await import('./assistant-model.js');
+    const p = revisePrompt({ version: 2, payload: { asset: 'TK-RAW-1', minute: 360, duration_min: 180 } });
+    assert.match(p, /TK-RAW-1/);
+    assert.match(p, /versi 2/);
+    assert.equal(revealStep(10), 2);
+    assert.ok(Math.ceil(1500 / revealStep(1500)) <= 70);
+});

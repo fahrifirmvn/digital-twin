@@ -41,7 +41,7 @@ class AgentController extends Controller
             $reply = $engine->agentTurn([
                 'conversation_id' => $conversation, 'user_id' => $user->id, 'role' => $user->role->value, 'mode' => $mode,
                 'message' => $data['message'], 'run_id' => $run?->id, 'history' => $data['history'] ?? [],
-                'campaign' => $campaign ? $proposals->context($campaign) : null,
+                'campaign' => $campaign ? $proposals->context($campaign, $user) : null,
             ]);
         } catch (RuntimeException) {
             $reply = ['status' => 'unavailable', 'text' => self::FALLBACK, 'mode' => $mode, 'label' => "DATA SINTETIS | mode {$mode}",

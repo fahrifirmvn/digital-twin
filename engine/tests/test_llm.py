@@ -266,3 +266,20 @@ def test_mock_provider_scripts_and_echo():
     assert m.chat([Message("user", "x")], (TOOL,)).tool_calls[0].name == "get_state"
     assert m.chat([Message("user", "halo")]).text == "[mock] halo"
     assert len(m.calls) == 2
+
+
+def test_gemini_thinking_budget_defaults_to_zero_for_flash_only():
+    flash = build_provider(cfg(llm_provider="gemini", llm_api_key="k"))
+    pro = build_provider(cfg(llm_provider="gemini", llm_api_key="k", llm_model="gemini-2.5-pro"))
+    custom = build_provider(cfg(llm_provider="gemini", llm_api_key="k", llm_thinking_budget=256))
+    assert (flash.thinking_budget, pro.thinking_budget, custom.thinking_budget) == (0, None, 256)
+
+    seen: list[httpx.Request] = []
+    body = {"candidates": [{"content": {"parts": [{"text": "hai"}]}}]}
+    flash.client = client(lambda r: httpx.Response(200, json=body), seen)
+    flash.chat([Message("user", "hai")])
+    sent = json.loads(seen[0].content)["generationConfig"]
+    assert sent["thinkingConfig"] == {"thinkingBudget": 0}
+    pro.client = client(lambda r: httpx.Response(200, json=body), seen)
+    pro.chat([Message("user", "hai")])
+    assert "thinkingConfig" not in json.loads(seen[1].content)["generationConfig"]

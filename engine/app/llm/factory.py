@@ -41,7 +41,7 @@ def build_provider(cfg: Settings | None = None, client: httpx.Client | None = No
         "anthropic": AnthropicProvider,
         "local": LocalProvider,
     }[kind]
-    return cls(
+    provider = cls(
         base,
         key,
         model,
@@ -51,3 +51,9 @@ def build_provider(cfg: Settings | None = None, client: httpx.Client | None = No
         retries=cfg.llm_retries,
         client=client,
     )
+    if isinstance(provider, GeminiProvider):
+        budget = cfg.llm_thinking_budget
+        if budget is None and "flash" in model:
+            budget = 0
+        provider.thinking_budget = budget
+    return provider

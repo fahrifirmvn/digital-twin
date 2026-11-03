@@ -12,6 +12,7 @@
     @isset($campaign) data-campaign-id="{{ $campaign->id }}" data-reload-on-approve="1" @endisset>
     <div class="tw-drawer-head">
         <h2>Asisten AI</h2>
+        <button id="cp-new" class="as-new as-secondary" type="button">Percakapan baru</button>
         <button id="cp-close" class="tw-ico" type="button" aria-label="Tutup asisten" data-icon="x"></button>
     </div>
     <p id="cp-label" class="as-label">DATA SINTETIS | mode {{ $asMode }}</p>
@@ -26,6 +27,7 @@
     <div id="cp-empty" hidden></div><div id="cp-plist" hidden></div>
     @endisset
     <div id="cp-log" class="as-log" role="log" aria-live="polite"></div>
+    <div id="cp-chips" class="as-chips" aria-label="Contoh pertanyaan"></div>
     <form id="cp-form" class="as-form">
         <label for="cp-input" class="sr-only">Pertanyaan untuk asisten</label>
         <textarea id="cp-input" rows="2" placeholder="Tanyakan hasil run atau minta usulan..." required></textarea>

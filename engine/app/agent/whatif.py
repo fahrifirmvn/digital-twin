@@ -4,6 +4,7 @@ memeriksa ulang saat persetujuan."""
 
 import hashlib
 import json
+import re
 import threading
 import uuid
 from collections import OrderedDict
@@ -11,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api import PlantRequest
 from app.commands import Command
@@ -37,6 +38,36 @@ class MaintenanceEntry(BaseModel):
     duration_min: float = Field(ge=MIN_DURATION, le=MAX_DURATION)
 
 
+class OpenChange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    baseline: float
+    candidate: float
+    change: float
+    better: bool
+
+
+class OpenProposal(BaseModel):
+    """Draf atau usulan yang menunggu keputusan milik pengguna ini pada hari yang sedang disusun.
+    Dibangun Laravel dari database; dipakai untuk menjawab tanggapan dan sebagai satu-satunya id
+    yang boleh direvisi."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    version: int = Field(ge=1, le=99)
+    status: Literal["draft", "pending"]
+    window: MaintenanceEntry
+    changes: dict[str, OpenChange] = Field(default_factory=dict, max_length=16)
+
+    @field_validator("changes")
+    @classmethod
+    def _metric_keys(cls, v: dict[str, OpenChange]) -> dict[str, OpenChange]:
+        if any(not re.fullmatch(r"[a-z0-9_]{1,40}", k) for k in v):
+            raise ValueError("nama metrik tidak valid")
+        return v
+
+
 class CampaignContext(BaseModel):
     """Keadaan hari kampanye yang sedang disusun. Dibangun Laravel dari database; Engine tidak
     menerimanya dari klien browser."""
@@ -55,6 +86,7 @@ class CampaignContext(BaseModel):
     existing: list[MaintenanceEntry] = Field(default_factory=list, max_length=20)
     planned_count: int = Field(ge=0, le=20)  # yang diputuskan manusia hari ini (tanpa carry-in)
     max_planned: int = Field(ge=1, le=20)
+    open_proposals: list[OpenProposal] = Field(default_factory=list, max_length=10)
 
     def plant_config(self) -> PlantConfig:
         return self.plant.to_config() if self.plant else PlantConfig()
@@ -67,7 +99,9 @@ class CampaignContext(BaseModel):
         return {f"{kind}-{i}" for kind, n in self.tank_counts().items() for i in range(1, n + 1)}
 
     def key(self) -> str:
-        return hashlib.sha256(self.model_dump_json().encode()).hexdigest()[:16]
+        # Usulan terbuka tidak memengaruhi simulasi, jadi tidak boleh membatalkan cache what-if.
+        payload = self.model_dump_json(exclude={"open_proposals"})
+        return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
 @dataclass(frozen=True)

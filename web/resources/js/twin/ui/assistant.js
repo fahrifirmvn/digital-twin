@@ -91,6 +91,14 @@ export function initAssistant(root) {
     }
     openBtn.addEventListener('click', () => setOpen(drawer.hidden));
     $('#cp-close').addEventListener('click', () => setOpen(false));
+    // Zona Proses hanya menyiapkan pertanyaan: kolom diisi, tidak dikirim otomatis.
+    document.addEventListener('assistant:ask', (e) => {
+        const text = String(e.detail?.text ?? '').slice(0, input.maxLength > 0 ? input.maxLength : 600);
+        if (!text || busy) return;
+        setOpen(true);
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     root.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !drawer.hidden && !document.querySelector('dialog[open]')) {
             e.stopPropagation();

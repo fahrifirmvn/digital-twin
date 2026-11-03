@@ -32,6 +32,7 @@ const shell = initShell(root, { onTheme: (t) => scene3d?.setTheme(t) });
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open], :popover-open')) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (root.dataset.view === 'process') return;
     if (scene3d?.inside) {
         scene3d.setZone('all');
         markZone('all');
@@ -39,6 +40,29 @@ document.addEventListener('keydown', (e) => {
     }
     $('tw-minimize').click();
 });
+
+// Zona Proses: skema 2D contoh, dimuat malas saat tombol "Proses" dipakai pertama kali.
+let proc = null;
+async function setSurface(next) {
+    const wantProc = next === 'proc';
+    if (wantProc && !proc) {
+        try {
+            const { mountProcess } = await import('./twin/process/zona-proses.js');
+            proc = mountProcess($('tw-proc'));
+        } catch {
+            $('view-msg').textContent = 'Zona Proses tidak dapat dimuat.';
+            return;
+        }
+    }
+    root.dataset.view = wantProc ? 'process' : 'recv';
+    $('view-recv').setAttribute('aria-pressed', String(!wantProc));
+    $('view-proc').setAttribute('aria-pressed', String(wantProc));
+    if (wantProc) proc.show();
+    else proc?.hide();
+}
+$('view-recv').addEventListener('click', () => setSurface('recv'));
+$('view-proc').addEventListener('click', () => setSurface('proc'));
+if (new URLSearchParams(location.search).get('zona') === 'proses') setSurface('proc');
 
 function markZone(zone) {
     document.querySelectorAll('.tw-seg-z button').forEach((o) => o.setAttribute('aria-pressed', String(o.dataset.zone === zone)));

@@ -48,6 +48,12 @@
         <canvas id="twin" class="tw-view" aria-label="Twin Canvas pabrik" hidden></canvas>
         <div id="tw-pins" class="tw-pins"></div>
 
+        <div class="tw-seg tw-mode" role="group" aria-label="Tampilan pabrik">
+            <button id="view-recv" type="button" aria-pressed="true">Penerimaan 3D</button>
+            <button id="view-proc" type="button" aria-pressed="false">Proses</button>
+        </div>
+        <div id="tw-proc" class="px" hidden aria-label="Zona Proses"></div>
+
         <p id="tw-loading" class="tw-loading" role="status"><span id="run-msg">Memuat simulasi...</span></p>
 
         <section class="tw-card tw-stats" data-collapse="twin-stats" aria-label="Statistik langsung">

@@ -4,6 +4,7 @@
 // P4: mode Simulasi (log perintah, dampak vs dasar, form cabang, lompat kejadian) menambah twin js dan css bersama.
 // P5: intervensi PPIC (usulan, keputusan, skor) menambah twin js dan css bersama.
 // Maps geografis: peta MapLibre + truk 3D dimuat malas hanya di halaman Maps (chunk geomap); maps.js memuat data jalur nyata.
+// Zona Proses: skema 2D contoh dimuat malas (chunk zona-proses).
 // Jalankan setelah `npm run build`: `npm run budget`.
 import { readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
@@ -13,6 +14,8 @@ const DIR = new URL('../public/build/assets/', import.meta.url).pathname;
 const BUDGET = [
     { name: 'scene3d', ext: '.js', raw: 700, gz: 190 },
     { name: 'twin', ext: '.js', raw: 30, gz: 12 },
+    { name: 'zona-proses', ext: '.js', raw: 40, gz: 14 },
+    { name: 'zona-proses', ext: '.css', raw: 12, gz: 3.5 },
     { name: 'dashboard', ext: '.js', raw: 10, gz: 4.5 },
     { name: 'maps', ext: '.js', raw: 10, gz: 4.2 },
     { name: 'geomap', ext: '.js', raw: 1120, gz: 305 },

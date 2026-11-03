@@ -232,6 +232,15 @@ class DashboardPagesTest extends TestCase
         $this->get('/dashboard?run=3')->assertOk()->assertDontSee('id="mini-twin"', false);
     }
 
+    public function test_twin_has_process_zone_toggle_and_host(): void
+    {
+        $this->finishedRun(1);
+
+        $this->as(Role::Ppic)->get('/twin')->assertOk()
+            ->assertSee('id="view-proc"', false)->assertSee('id="tw-proc"', false)
+            ->assertSee('Penerimaan 3D');
+    }
+
     public function test_twin_has_minimize_back_to_dashboard_and_roles_are_enforced(): void
     {
         $this->finishedRun(1);

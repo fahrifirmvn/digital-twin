@@ -119,7 +119,7 @@ export function httpError(status, body) {
 export const MAX_STORED = 40;
 const MAX_STORED_TEXT = 2000;
 
-/** Kunci sessionStorage per pengguna dan konteks, supaya percakapan tidak bocor antar akun/halaman. */
+/** Kunci localStorage per pengguna dan konteks, supaya percakapan tidak bocor antar akun/halaman. */
 export function storageKey({ userId, campaignId, runId }) {
     const scope = campaignId ? `c${campaignId}` : runId ? `r${runId}` : 'x';
     return `lactatwin.chat.u${userId}.${scope}`;

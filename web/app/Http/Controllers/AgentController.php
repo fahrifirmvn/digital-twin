@@ -43,7 +43,8 @@ class AgentController extends Controller
                 'message' => $data['message'], 'run_id' => $run?->id, 'history' => $data['history'] ?? [],
                 'campaign' => $campaign ? $proposals->context($campaign, $user) : null,
             ]);
-        } catch (RuntimeException) {
+        } catch (RuntimeException $e) {
+            \Illuminate\Support\Facades\Log::warning('Engine agent tidak terjangkau', ['pesan' => $e->getMessage()]);
             $reply = ['status' => 'unavailable', 'text' => self::FALLBACK, 'mode' => $mode, 'label' => "DATA SINTETIS | mode {$mode}",
                 'error' => ['code' => 'engine_unreachable', 'message' => self::FALLBACK], 'sources' => [], 'audit' => []];
         }

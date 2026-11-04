@@ -35,14 +35,18 @@ export function initAssistant(root) {
     let loaded = false;
     let busy = false;
     let skipReveal = false;
+    let controller = null;
     const cards = new Map();
+    /** Gulir otomatis hanya bila pengguna memang sedang di dasar log (tidak melompat saat membaca ke atas). */
+    const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+    const toBottom = () => { log.scrollTop = log.scrollHeight; };
     const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const key = storageKey(cfg);
 
-    // Percakapan hanya bertahan selama tab terbuka (sessionStorage), per pengguna dan konteks.
+    // Percakapan tersimpan di peramban (localStorage), per pengguna dan konteks, dan dibagikan antar tab.
     function persist() {
         try {
-            sessionStorage.setItem(key, serializeChat({ conversationId, history, messages }));
+            localStorage.setItem(key, serializeChat({ conversationId, history, messages }));
         } catch { /* penyimpanan penuh atau dinonaktifkan: percakapan tetap berjalan */ }
     }
 
@@ -63,7 +67,7 @@ export function initAssistant(root) {
         history = [];
         messages = [];
         log.replaceChildren();
-        try { sessionStorage.removeItem(key); } catch { /* abaikan */ }
+        try { localStorage.removeItem(key); } catch { /* abaikan */ }
         renderChips();
         input.focus({ preventScroll: true });
     }
@@ -118,8 +122,9 @@ export function initAssistant(root) {
         const step = revealStep(text.length);
         log.setAttribute('aria-busy', 'true');
         for (let i = step; i < text.length && !skipReveal; i += step) {
+            const follow = atBottom();
             el.textContent = text.slice(0, i);
-            log.scrollTop = log.scrollHeight;
+            if (follow) toBottom();
             await new Promise((r) => setTimeout(r, 18));
         }
         el.textContent = text;
@@ -128,12 +133,13 @@ export function initAssistant(root) {
     log.addEventListener('click', () => { skipReveal = true; });
 
     function addMessage(role, text, meta) {
+        const follow = role === 'user' || atBottom();
         const msg = h('div', { class: `as-msg as-${role}` },
             h('div', { class: 'as-who' }, role === 'user' ? 'Anda' : 'Asisten'),
             h('div', { class: 'as-text' }, text));
         if (meta) msg.append(h('div', { class: 'as-meta' }, meta));
         log.append(msg);
-        log.scrollTop = log.scrollHeight;
+        if (follow) toBottom();
         return msg;
     }
 
@@ -147,7 +153,9 @@ export function initAssistant(root) {
         const text = input.value.trim();
         if (!text || busy) return;
         busy = true;
-        send.disabled = true;
+        controller = new AbortController();
+        send.textContent = 'Berhenti';
+        send.dataset.stop = '1';
         input.value = '';
         chips.replaceChildren();
         addMessage('user', text);
@@ -158,6 +166,7 @@ export function initAssistant(root) {
         try {
             const reply = await call(cfg.turnUrl, {
                 method: 'POST',
+                signal: controller.signal,
                 body: JSON.stringify(buildTurn({ message: text, conversationId, runId: cfg.runId, campaignId: cfg.campaignId, history })),
             });
             conversationId = reply.conversation_id ?? conversationId;
@@ -175,23 +184,48 @@ export function initAssistant(root) {
             drafts.forEach(renderProposal);
             drafts.filter((p) => p.supersedes && cards.has(p.supersedes)).forEach((p) => refreshCard(p.supersedes));
         } catch (err) {
-            wait.querySelector('.as-text').textContent = err.message;
+            const stopped = err.name === 'AbortError';
+            const msg = stopped ? 'Dihentikan. Pertanyaan Anda dikembalikan ke kolom input.' : err.message;
+            wait.querySelector('.as-text').textContent = msg;
             wait.classList.add('as-error');
-            shown = { role: 'assistant', text: err.message, error: true };
+            shown = { role: 'assistant', text: msg, error: true };
+            // pertanyaan tidak hilang bila gagal atau dihentikan
+            if (!input.value) input.value = text;
         } finally {
             wait.removeAttribute('aria-busy');
             log.removeAttribute('aria-busy');
             if (shown) messages.push(shown);
             persist();
             busy = false;
-            send.disabled = false;
+            controller = null;
+            send.textContent = 'Kirim';
+            delete send.dataset.stop;
             input.focus({ preventScroll: true });
         }
     });
+    send.addEventListener('click', (e) => {
+        if (!busy) return;
+        e.preventDefault();
+        controller?.abort();
+    });
     $('#cp-new').addEventListener('click', () => { if (!busy) resetChat(); });
+    // tab lain menyimpan percakapan baru: ikuti hanya bila tab ini sedang tidak mengirim
+    window.addEventListener('storage', (e) => {
+        if (e.key !== key || busy) return;
+        const next = restoreChat(e.newValue);
+        log.replaceChildren();
+        cards.clear();
+        ({ conversationId, history, messages } = next ?? { conversationId: null, history: [], messages: [] });
+        messages.forEach((m) => {
+            const el = addMessage(m.role, m.text, m.meta);
+            if (m.error) el.classList.add('as-error');
+        });
+        renderChips();
+        if (cfg.live && cfg.campaignId) loadProposals();
+    });
 
     const saved = (() => {
-        try { return restoreChat(sessionStorage.getItem(key)); } catch { return null; }
+        try { return restoreChat(localStorage.getItem(key)); } catch { return null; }
     })();
     if (saved) {
         ({ conversationId, history, messages } = saved);
@@ -342,8 +376,9 @@ export function initAssistant(root) {
         if (old) old.replaceWith(card);
         else if (cfg.live) {
             // Operasi: kartu muncul di percakapan tepat setelah jawaban asisten.
+            const follow = atBottom();
             log.append(card);
-            log.scrollTop = log.scrollHeight;
+            if (follow) toBottom();
         } else plist.prepend(card);
         cards.set(p.id, card);
     }

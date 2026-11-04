@@ -283,3 +283,28 @@ def test_gemini_thinking_budget_defaults_to_zero_for_flash_only():
     pro.client = client(lambda r: httpx.Response(200, json=body), seen)
     pro.chat([Message("user", "hai")])
     assert "thinkingConfig" not in json.loads(seen[1].content)["generationConfig"]
+
+
+def test_gemini_vertex_endpoint_paths():
+    body = {"candidates": [{"content": {"parts": [{"text": "hai"}]}}]}
+    for extra, path in (
+        ({}, "/v1/publishers/google/models/gemini-3.8-flash:generateContent"),
+        (
+            {"llm_vertex_project": "p1", "llm_vertex_location": "us-central1"},
+            "/v1/projects/p1/locations/us-central1/publishers/google/models/gemini-3.8-flash:generateContent",
+        ),
+    ):
+        p = build_provider(
+            cfg(
+                llm_provider="gemini",
+                llm_api_key="k",
+                llm_base_url="https://aiplatform.googleapis.com",
+                **extra,
+            )
+        )
+        seen: list[httpx.Request] = []
+        p.client = client(lambda r: httpx.Response(200, json=body), seen)
+        p.chat([Message("user", "hai")])
+        assert seen[0].url.host == "aiplatform.googleapis.com"
+        assert seen[0].url.path == path
+        assert seen[0].headers["x-goog-api-key"] == "k"

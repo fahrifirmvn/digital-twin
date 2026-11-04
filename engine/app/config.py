@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     llm_base_url: str = ""
     llm_api_key: SecretStr = SecretStr("")
     llm_model: str = ""
+    llm_vertex_project: str = ""
+    llm_vertex_location: str = "global"
     llm_timeout: float = 60.0
     llm_max_tokens: int = 2048
     # Hanya Gemini. None = otomatis (0 untuk model flash, bawaan model lain).

@@ -168,7 +168,7 @@ def test_gemini_schema_inlines_refs_and_strips_unsupported_keys():
 def test_factory_builds_gemini_with_default_model_and_needs_key():
     cfg = Settings(_env_file=None, llm_provider="gemini", llm_api_key="k")
     p = build_provider(cfg)
-    assert isinstance(p, GeminiProvider) and p.model == "gemini-2.5-flash" and p.temperature == 0.2
+    assert isinstance(p, GeminiProvider) and p.model == "gemini-3.8-flash" and p.temperature == 0.2
     with pytest.raises(LLMConfigError):
         build_provider(Settings(_env_file=None, llm_provider="gemini"))
 

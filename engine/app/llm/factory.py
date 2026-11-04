@@ -12,7 +12,7 @@ DEFAULT_BASE_URL = {
     "openai": "https://api.openai.com/v1",
     "anthropic": "https://api.anthropic.com",
 }
-DEFAULT_MODEL = {"gemini": "gemini-2.5-flash"}
+DEFAULT_MODEL = {"gemini": "gemini-3.8-flash"}
 
 
 def build_provider(cfg: Settings | None = None, client: httpx.Client | None = None) -> Provider:
@@ -56,4 +56,6 @@ def build_provider(cfg: Settings | None = None, client: httpx.Client | None = No
         if budget is None and "flash" in model:
             budget = 0
         provider.thinking_budget = budget
+        provider.vertex_project = cfg.llm_vertex_project
+        provider.vertex_location = cfg.llm_vertex_location
     return provider

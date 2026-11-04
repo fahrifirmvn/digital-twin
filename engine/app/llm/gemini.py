@@ -88,6 +88,19 @@ class GeminiProvider(HttpProvider):
     name = "gemini"
     # Token berpikir 2.5-flash memakan jatah maxOutputTokens; 0 mematikannya agar jawaban tidak kosong.
     thinking_budget: int | None = None
+    # Vertex AI (Agent Platform) memakai path berbeda dari Gemini API; project/lokasi hanya untuk key terikat project.
+    vertex_project: str = ""
+    vertex_location: str = "global"
+
+    def _url(self) -> str:
+        if "aiplatform.googleapis.com" not in self.base_url:
+            return f"{self.base_url}/v1beta/models/{self.model}:generateContent"
+        scope = (
+            f"projects/{self.vertex_project}/locations/{self.vertex_location}/"
+            if self.vertex_project
+            else ""
+        )
+        return f"{self.base_url}/v1/{scope}publishers/google/models/{self.model}:generateContent"
 
     def chat(self, messages: list[Message], tools: tuple[ToolSpec, ...] = ()) -> LLMResponse:
         system = "\n\n".join(m.content for m in messages if m.role == "system")
@@ -115,8 +128,7 @@ class GeminiProvider(HttpProvider):
                     ]
                 }
             ]
-        url = f"{self.base_url}/v1beta/models/{self.model}:generateContent"
-        data = self._post(url, payload, {"x-goog-api-key": self.api_key})
+        data = self._post(self._url(), payload, {"x-goog-api-key": self.api_key})
         try:
             return self._parse(data)
         except (KeyError, IndexError, TypeError, AttributeError) as exc:

@@ -17,6 +17,7 @@ dependencies = [
     "scikit-learn==1.9.1",
     "joblib>=1.5",
     "pandas>=3.0",
+    "google-auth[requests]>=2.35",
 ]
 
 [dependency-groups]

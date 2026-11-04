@@ -308,3 +308,26 @@ def test_gemini_vertex_endpoint_paths():
         assert seen[0].url.host == "aiplatform.googleapis.com"
         assert seen[0].url.path == path
         assert seen[0].headers["x-goog-api-key"] == "k"
+
+
+def test_gemini_vertex_uses_adc_bearer_without_api_key(monkeypatch):
+    import google.auth
+
+    class Creds:
+        valid = True
+        token = "tok-adc"
+
+    monkeypatch.setattr(google.auth, "default", lambda scopes=None: (Creds(), "p1"))
+    p = build_provider(
+        cfg(
+            llm_provider="gemini",
+            llm_base_url="https://aiplatform.googleapis.com",
+            llm_vertex_project="p1",
+        )
+    )
+    seen: list[httpx.Request] = []
+    body = {"candidates": [{"content": {"parts": [{"text": "hai"}]}}]}
+    p.client = client(lambda r: httpx.Response(200, json=body), seen)
+    p.chat([Message("user", "hai")])
+    assert seen[0].headers["authorization"] == "Bearer tok-adc"
+    assert "x-goog-api-key" not in seen[0].headers

@@ -30,7 +30,7 @@ def build_provider(cfg: Settings | None = None, client: httpx.Client | None = No
         problems.append("ENGINE_LLM_BASE_URL")
     if not model:
         problems.append("ENGINE_LLM_MODEL")
-    if kind in DEFAULT_BASE_URL and not key:
+    if kind in DEFAULT_BASE_URL and not key and not (kind == "gemini" and cfg.llm_vertex_project):
         problems.append("ENGINE_LLM_API_KEY")
     if problems:
         raise LLMConfigError(f"provider '{kind}' butuh: {', '.join(problems)}")

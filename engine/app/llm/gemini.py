@@ -92,6 +92,23 @@ class GeminiProvider(HttpProvider):
     vertex_project: str = ""
     vertex_location: str = "global"
 
+    _adc: Any = None
+
+    def _auth_headers(self) -> dict[str, str]:
+        if self.api_key:
+            return {"x-goog-api-key": self.api_key}
+        # Vertex terikat project tidak menerima API key; pakai Application Default Credentials.
+        import google.auth
+        from google.auth.transport.requests import Request
+
+        if self._adc is None:
+            self._adc, _ = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+        if not self._adc.valid:
+            self._adc.refresh(Request())
+        return {"Authorization": f"Bearer {self._adc.token}"}
+
     def _url(self) -> str:
         if "aiplatform.googleapis.com" not in self.base_url:
             return f"{self.base_url}/v1beta/models/{self.model}:generateContent"
@@ -128,7 +145,7 @@ class GeminiProvider(HttpProvider):
                     ]
                 }
             ]
-        data = self._post(self._url(), payload, {"x-goog-api-key": self.api_key})
+        data = self._post(self._url(), payload, self._auth_headers())
         try:
             return self._parse(data)
         except (KeyError, IndexError, TypeError, AttributeError) as exc:

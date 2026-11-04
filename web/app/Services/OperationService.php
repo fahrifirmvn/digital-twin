@@ -95,12 +95,33 @@ class OperationService
 
         return [
             'exists' => true,
+            'campaign_id' => $c->id,
             'watch_day' => $watch,
             'target_day' => $watch + 1,
             'target_status' => $target?->status,
             'target_error' => $target?->status === 'failed' ? $target->error : null,
             'days' => $this->history($c),
             'integrity' => $this->campaigns->verify($c),
+            'maintenance' => $this->maintenance($c),
+        ];
+    }
+
+    /**
+     * Keadaan maintenance untuk hari yang akan datang: meter servis tangki dan jadwal yang sudah ada.
+     *
+     * @return array<string, mixed>
+     */
+    private function maintenance(Campaign $c): array
+    {
+        $day = $this->campaigns->targetDay($c);
+        $busy = in_array($day->status, ['running'], true);
+
+        return [
+            'day' => $day->day_no, 'date' => $c->dateOf($day->day_no), 'status' => $day->status,
+            'open' => ! $busy && $this->campaigns->canChange($c, $day),
+            'tanks' => $this->campaigns->tankService($c),
+            'planned' => array_map(fn ($e) => ['asset' => $e['asset'], 'minute' => (float) $e['minute'], 'duration_min' => (float) $e['duration_min']], $day->plan),
+            'limits' => ['minute' => [0, CampaignService::DAY_MIN - 1], 'duration_min' => config('twin.campaign.maintenance_minutes')],
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use App\Services\CampaignService;
+use App\Services\OperationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -78,14 +79,20 @@ class CampaignController extends Controller
             'duration_min' => ['required', 'numeric', "min:$min", "max:$max"],
             'reason' => ['required', 'string', 'min:5', 'max:200'],
         ]);
-        $campaigns->planMaintenance($campaign, $request->user(), $data['asset'], (float) $data['start_min'], (float) $data['duration_min'], $data['reason']);
+        $day = $campaigns->planMaintenance($campaign, $request->user(), $data['asset'], (float) $data['start_min'], (float) $data['duration_min'], $data['reason']);
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true, 'day' => $day->day_no] + app(OperationService::class)->state($campaign->refresh()), 201);
+        }
 
         return redirect()->route('campaigns.show', $campaign);
     }
 
     public function cancel(Request $request, Campaign $campaign, int $index, CampaignService $campaigns)
     {
-        $campaigns->cancelMaintenance($campaign, $request->user(), $index);
+        $day = $campaigns->cancelMaintenance($campaign, $request->user(), $index);
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true, 'day' => $day->day_no] + app(OperationService::class)->state($campaign->refresh()));
+        }
 
         return redirect()->route('campaigns.show', $campaign);
     }

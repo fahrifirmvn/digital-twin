@@ -3,7 +3,7 @@ import '../../../css/assistant.css';
 import { h } from './dom.js';
 import { hydrateIcons } from './icons.js';
 import {
-    MAX_MESSAGE, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, pushHistory, reasonError, replyNote, restoreChat,
+    MAX_MESSAGE, allowReason, buildTurn, canDecide, canSubmit, changeRows, describeWindow, dueNotice, httpError, pushHistory, reasonError, replyNote, restoreChat,
     modelNote, revealStep, revisePrompt, serializeChat, statusLabel, storageKey, suggestions,
 } from './assistant-model.js';
 
@@ -19,6 +19,7 @@ export function initAssistant(root) {
     const cfg = {
         runId: d.runId || '', campaignId: d.campaignId || '', userId: Number(d.userId), canApprove: d.canApprove === '1',
         turnUrl: d.turnUrl, proposalsUrl: d.proposalsUrl, reloadOnApprove: d.reloadOnApprove === '1',
+        live: d.live === '1', opStateUrl: d.opStateUrl || '',
     };
     const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
     const $ = (sel) => drawer.querySelector(sel);
@@ -87,6 +88,7 @@ export function initAssistant(root) {
                 loaded = true;
                 loadProposals();
             }
+            if (cfg.live) showNotice();
         } else openBtn.focus({ preventScroll: true });
     }
     openBtn.addEventListener('click', () => setOpen(drawer.hidden));
@@ -214,12 +216,34 @@ export function initAssistant(root) {
             const body = await call(`${cfg.proposalsUrl}?campaign_id=${encodeURIComponent(cfg.campaignId)}`);
             plist.replaceChildren();
             cards.clear();
-            [...body.proposals].reverse().forEach(renderProposal);
-            $('#cp-empty').hidden = body.proposals.length > 0;
+            // Operasi: hanya usulan terbuka milik pengguna yang ditampilkan lagi di percakapan.
+            const list = cfg.live ? body.proposals.filter((p) => ['draft', 'pending'].includes(p.status) && p.created_by === cfg.userId) : body.proposals;
+            [...list].reverse().forEach(renderProposal);
+            $('#cp-empty').hidden = list.length > 0;
         } catch (err) {
             $('#cp-empty').hidden = false;
             $('#cp-empty').textContent = err.message;
         }
+    }
+
+    /** Pemberitahuan tangki yang perlu servis; asisten baru bekerja setelah tombolnya ditekan (izin pengguna). */
+    async function showNotice() {
+        drawer.querySelector('.as-notice')?.remove();
+        if (!cfg.opStateUrl || !cfg.canApprove) return;
+        let notice;
+        try {
+            notice = dueNotice(await call(cfg.opStateUrl));
+        } catch { return; }
+        if (!notice || drawer.querySelector('.as-notice')) return;
+        log.before(h('div', { class: 'as-notice', role: 'status' },
+            h('strong', {}, 'Perlu perhatian'),
+            h('p', {}, notice.text),
+            h('button', { type: 'button', onclick: (e) => {
+                if (busy) return;
+                e.currentTarget.closest('.as-notice').remove();
+                input.value = notice.prompt;
+                form.requestSubmit();
+            } }, 'Susun usulan maintenance')));
     }
 
     /** Perbarui kartu lama (mis. menjadi "Digantikan versi baru") setelah revisi lewat chat. */
@@ -229,14 +253,17 @@ export function initAssistant(root) {
         } catch { /* kartu tetap; status benar akan tampil saat daftar dimuat ulang */ }
     }
 
-    async function act(p, action, payload, card) {
+    async function act(p, steps, card) {
         const err = card.querySelector('.as-err');
         err.textContent = '';
         card.querySelectorAll('button').forEach((b) => { b.disabled = true; });
         try {
-            const { proposal } = await call(`${cfg.proposalsUrl}/${p.id}/${action}`, { method: 'POST', body: JSON.stringify(payload ?? {}) });
-            renderProposal(proposal);
-            if (action === 'approve' && cfg.reloadOnApprove) setTimeout(() => window.location.reload(), 900);
+            let last = null;
+            for (const [action, payload] of steps) {
+                last = (await call(`${cfg.proposalsUrl}/${p.id}/${action}`, { method: 'POST', body: JSON.stringify(payload ?? {}) })).proposal;
+            }
+            renderProposal(last);
+            if (last.status === 'approved' && cfg.reloadOnApprove) setTimeout(() => window.location.reload(), 900);
         } catch (e) {
             // status bisa berubah di server (mis. kedaluwarsa); tampilkan keadaan terbaru bersama pesannya
             try {
@@ -262,13 +289,27 @@ export function initAssistant(root) {
                     rows.map((r) => h('li', { dataset: { tone: r.tone } }, `${r.label}: ${r.text}, `, h('b', {}, r.verdict))))
                 : h('p', { class: 'as-meta' }, 'What-if tidak menunjukkan perubahan KPI.'));
         if (p.decision_reason) card.append(h('p', { class: 'as-meta' }, `Alasan keputusan: ${p.decision_reason}`));
+        if (cfg.live && p.status === 'approved') {
+            card.append(h('p', { class: 'as-meta' }, `Diterapkan: berlaku mulai Hari ${p.day_no}. Hari yang sedang ditonton tidak berubah; engine menghitung ulang Hari ${p.day_no}.`));
+        }
         card.append(h('p', { class: 'as-err err', role: 'alert' }, error));
 
-        if (canSubmit(p, cfg.userId, cfg.canApprove)) {
+        if (cfg.live && cfg.canApprove && ['draft', 'pending'].includes(p.status)) {
+            // Operasi: satu izin dari pengguna berwenang mengajukan dan menerapkan; asisten tidak menerapkan apa pun sendiri.
+            const note = h('input', { id: `n-${p.id}`, type: 'text', maxlength: 500, placeholder: 'Catatan (opsional)' });
+            const steps = (action) => [...(p.status === 'draft' ? [['submit', null]] : []), [action, { reason: allowReason(note.value) }]];
+            card.append(
+                h('label', { class: 'as-meta', for: `n-${p.id}` }, 'Catatan untuk audit log'),
+                note,
+                h('p', { class: 'as-meta' }, `Izinkan menjadwalkan maintenance ini mulai Hari ${p.day_no}. Aturan keras diperiksa ulang dan keputusan dicatat ke audit log.`),
+                h('div', { class: 'as-actions' },
+                    h('button', { type: 'button', onclick: () => act(p, steps('approve'), card) }, 'Izinkan dan terapkan'),
+                    h('button', { type: 'button', class: 'as-secondary', onclick: () => act(p, p.status === 'draft' ? [['submit', null], ['reject', { reason: allowReason(note.value) }]] : [['reject', { reason: allowReason(note.value) }]], card) }, 'Tolak')));
+        } else if (canSubmit(p, cfg.userId, cfg.canApprove)) {
             card.append(h('div', { class: 'as-actions' },
-                h('button', { type: 'button', onclick: () => act(p, 'submit', null, card) }, 'Ajukan ke PPIC')));
+                h('button', { type: 'button', onclick: () => act(p, [['submit', null]], card) }, 'Ajukan ke PPIC')));
         }
-        if (canDecide(p, cfg.canApprove)) {
+        if (!cfg.live && canDecide(p, cfg.canApprove)) {
             const reason = h('textarea', { id: `r-${p.id}`, rows: 2, maxlength: 500, required: true });
             const decide = (action) => {
                 const msg = reasonError(reason.value);
@@ -277,7 +318,7 @@ export function initAssistant(root) {
                     reason.focus();
                     return;
                 }
-                act(p, action, { reason: reason.value.trim() }, card);
+                act(p, [[action, { reason: reason.value.trim() }]], card);
             };
             card.append(
                 h('label', { for: `r-${p.id}` }, 'Alasan keputusan (wajib, min. 5 karakter)'),
@@ -299,7 +340,11 @@ export function initAssistant(root) {
 
         const old = cards.get(p.id);
         if (old) old.replaceWith(card);
-        else plist.prepend(card);
+        else if (cfg.live) {
+            // Operasi: kartu muncul di percakapan tepat setelah jawaban asisten.
+            log.append(card);
+            log.scrollTop = log.scrollHeight;
+        } else plist.prepend(card);
         cards.set(p.id, card);
     }
 }

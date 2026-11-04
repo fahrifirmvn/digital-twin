@@ -16,6 +16,7 @@ import { deltaText, impactRows } from './twin/ui/impact.js';
 import { assetRows, layoutCodes, liveStats, trackerSteps } from './twin/ui/live.js';
 import { initShell, setStatus } from './twin/ui/shell.js';
 import { createStage } from './twin/ui/stage.js';
+import { createMaintenance } from './twin/ui/maintenance.js';
 import { truckStatus } from './twin/ui/status.js';
 
 const root = document.getElementById('tw');
@@ -73,7 +74,8 @@ function start(data) {
     const total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
     const replay = new Replay(model);
     const twin = new TwinCanvas($('twin'));
-    const stage = createStage(root, { onSelect: () => renderTrack(replay.state), anomaly: JSON.parse(root.dataset.anomaly || 'null') });
+    const maint = createMaintenance(root);
+    const stage = createStage(root, { onSelect: (code) => { renderTrack(replay.state); maint.show(code); }, anomaly: JSON.parse(root.dataset.anomaly || 'null') });
     let view = '2d';
     let speed = Number($('speed').value);
     let playing = true;

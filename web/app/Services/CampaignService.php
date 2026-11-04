@@ -41,10 +41,41 @@ class CampaignService
         return $c->days()->where('day_no', $c->current_day)->firstOrFail();
     }
 
+    public function isOperation(Campaign $c): bool
+    {
+        return $c->name === config('twin.operation.name') && $c->parent_campaign_id === null;
+    }
+
+    /**
+     * Hari yang menerima keputusan maintenance. Kampanye biasa: hari yang sedang disusun. Operasi pabrik: hari
+     * berikutnya setelah yang ditonton (hari itu sudah dihitung di depan, tetapi belum dilihat siapa pun).
+     */
+    public function targetDay(Campaign $c): CampaignDay
+    {
+        if ($this->isOperation($c)) {
+            $day = $c->days()->where('day_no', (int) ($c->watch_day ?? 0) + 1)->first();
+            if ($day) {
+                return $day;
+            }
+        }
+
+        return $this->currentDay($c);
+    }
+
+    /** Hari target masih bisa diubah: belum dihitung, gagal, atau (operasi) sudah dihitung di depan tetapi belum ditonton. */
+    public function canChange(Campaign $c, CampaignDay $day): bool
+    {
+        if (in_array($day->status, ['planned', 'failed'], true)) {
+            return true;
+        }
+
+        return $day->status === 'closed' && $this->isOperation($c) && $day->day_no > (int) ($c->watch_day ?? 0);
+    }
+
     public function planMaintenance(Campaign $c, User $user, string $asset, float $startMin, float $duration, string $reason): CampaignDay
     {
-        $day = $this->currentDay($c);
-        $this->assertEditable($day);
+        $day = $this->targetDay($c);
+        $this->assertChangeable($c, $day);
         $this->assertTankExists($c, $asset);
         $taken = array_column([...$day->carry_in, ...$day->plan], 'asset');
         if (in_array($asset, $taken, true)) {
@@ -57,7 +88,7 @@ class CampaignService
             'kind' => 'tank_down', 'asset' => $asset, 'minute' => round($startMin, 1), 'duration_min' => round($duration, 1),
             'reason' => trim($reason), 'actor_id' => $user->id, 'actor_label' => Str::limit($user->role->label().': '.$user->name, 80, ''),
         ];
-        $day->update(['plan' => [...$day->plan, $entry]]);
+        $day = $this->savePlan($c, $user, $day, [...$day->plan, $entry], 'planned: '.$asset);
         $this->audit->record('user', (string) $user->id, 'campaign.maintenance_planned', ['campaign_id' => $c->id, 'day' => $day->day_no] + $entry);
 
         return $day;
@@ -65,18 +96,94 @@ class CampaignService
 
     public function cancelMaintenance(Campaign $c, User $user, int $index): CampaignDay
     {
-        $day = $this->currentDay($c);
-        $this->assertEditable($day);
+        $day = $this->targetDay($c);
+        $this->assertChangeable($c, $day);
         $plan = $day->plan;
         if (! isset($plan[$index])) {
             throw ValidationException::withMessages(['index' => 'Jadwal maintenance tidak ditemukan.']);
         }
         $removed = $plan[$index];
         array_splice($plan, $index, 1);
-        $day->update(['plan' => array_values($plan)]);
+        $day = $this->savePlan($c, $user, $day, array_values($plan), 'cancelled: '.$removed['asset']);
         $this->audit->record('user', (string) $user->id, 'campaign.maintenance_cancelled', ['campaign_id' => $c->id, 'day' => $day->day_no, 'asset' => $removed['asset']]);
 
         return $day;
+    }
+
+    /** Simpan rencana hari target; hari operasi yang sudah dihitung di depan direvisi dan dihitung ulang. */
+    private function savePlan(Campaign $c, User $user, CampaignDay $day, array $plan, string $why): CampaignDay
+    {
+        if (in_array($day->status, ['planned', 'failed'], true)) {
+            $day->update(['plan' => $plan]);
+
+            return $day;
+        }
+
+        return $this->reviseAhead($c, $user, $day, $plan, $why);
+    }
+
+    /**
+     * Hari operasi yang sudah ditutup di depan hari yang ditonton belum pernah dilihat pengguna, jadi boleh dihitung
+     * ulang dengan rencana baru. Hari yang sudah ditonton tidak pernah berubah. Lewat jalur query langsung karena
+     * model menolak mengubah hari tertutup; jejaknya (hash lama, run lama) masuk audit log.
+     */
+    private function reviseAhead(Campaign $c, User $user, CampaignDay $day, array $plan, string $why): CampaignDay
+    {
+        DB::transaction(function () use ($c, $day, $plan) {
+            $fresh = Campaign::whereKey($c->id)->lockForUpdate()->firstOrFail();
+            if (! $this->canChange($fresh, $day)) {
+                throw ValidationException::withMessages(['day' => 'Hari ini baru saja ditonton; maintenance berlaku dari hari berikutnya.']);
+            }
+            $oldRun = $day->run_id ? SimRun::find($day->run_id) : null;
+            $after = $c->days()->where('day_no', '>', $day->day_no)->get();
+            if ($after->contains(fn (CampaignDay $d) => $d->status !== 'planned')) {
+                throw ValidationException::withMessages(['day' => 'Hari berikutnya sudah berjalan; maintenance tidak dapat diubah.']);
+            }
+            DB::table('campaign_days')->where('id', $day->id)->update([
+                'status' => 'planned', 'run_id' => null, 'checkpoint' => null, 'prev_hash' => '', 'hash' => null, 'closed_at' => null,
+                'error' => null, 'plan' => json_encode($plan, JSON_UNESCAPED_UNICODE), 'updated_at' => now(),
+            ]);
+            DB::table('campaign_days')->where('campaign_id', $c->id)->where('day_no', '>', $day->day_no)->where('status', 'planned')->delete();
+            DB::table('campaigns')->where('id', $c->id)->update(['current_day' => $day->day_no, 'updated_at' => now()]);
+            if ($oldRun) {
+                $snap = $oldRun->config_snapshot ?? [];
+                DB::table('sim_runs')->where('id', $oldRun->id)->update(['config_snapshot' => json_encode($snap + ['superseded' => true], JSON_UNESCAPED_UNICODE)]);
+            }
+        });
+        $this->audit->record('user', (string) $user->id, 'campaign.day_revised', [
+            'campaign_id' => $c->id, 'day' => $day->day_no, 'old_run_id' => $day->run_id, 'old_hash' => $day->hash, 'change' => $why,
+        ]);
+
+        return $this->startDay($c->refresh(), $user);
+    }
+
+    /**
+     * Meter servis tiap tangki pada awal hari target: siklus CIP sejak maintenance terakhir (dari carry hari sebelumnya)
+     * terhadap batas servis. Hasilnya bahan usulan maintenance, bukan perintah.
+     *
+     * @return list<array{asset:string, cycles:int, limit:int, state:string, planned:bool}>
+     */
+    public function tankService(Campaign $c): array
+    {
+        $day = $this->targetDay($c);
+        $prev = $c->days()->where('day_no', $day->day_no - 1)->where('status', 'closed')->first();
+        $cycles = $prev?->snapshot()['state']['engine_carry']['tank_cycles'] ?? [];
+        $limit = max(1, (int) config('twin.tanks.service_cycles'));
+        $planned = array_column([...$day->carry_in, ...$day->plan], 'asset');
+        $out = [];
+        foreach ($this->tankLimits($c) as $prefix => $n) {
+            for ($k = 1; $k <= $n; $k++) {
+                $asset = "{$prefix}-{$k}";
+                $used = (int) ($cycles[$asset] ?? 0);
+                $out[] = [
+                    'asset' => $asset, 'cycles' => $used, 'limit' => $limit,
+                    'state' => $used >= $limit ? 'due' : ($used >= (int) ceil($limit * 0.8) ? 'near' : 'ok'),
+                    'planned' => in_array($asset, $planned, true),
+                ];
+            }
+        }
+
+        return $out;
     }
 
     public function setAutoplay(Campaign $c, User $user, bool $on): void
@@ -262,6 +369,16 @@ class CampaignService
     {
         if (! in_array($day->status, ['planned', 'failed'], true)) {
             throw ValidationException::withMessages(['day' => 'Hari ini sedang berjalan atau sudah ditutup.']);
+        }
+    }
+
+    private function assertChangeable(Campaign $c, CampaignDay $day): void
+    {
+        if ($day->status === 'running') {
+            throw ValidationException::withMessages(['day' => 'Hari berikutnya sedang dihitung engine. Coba lagi beberapa detik.']);
+        }
+        if (! $this->canChange($c, $day)) {
+            throw ValidationException::withMessages(['day' => 'Hari ini sudah ditonton atau ditutup; maintenance berlaku dari hari berikutnya.']);
         }
     }
 

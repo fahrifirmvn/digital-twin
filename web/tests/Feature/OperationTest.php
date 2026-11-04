@@ -129,4 +129,94 @@ class OperationTest extends TestCase
         $this->get('/twin')->assertOk()->assertDontSee('data-run-id', false);
         $this->get('/runs')->assertOk()->assertDontSee("/runs/{$old->id}\"", false);
     }
+
+    /** Hari 1 ditonton, hari 2 sudah dihitung di depan (belum ditonton), hari 3 direncanakan. */
+    private function operationWithDayAhead(): Campaign
+    {
+        $this->as(Role::Ppic);
+        $this->postJson('/operasi/lanjut');
+        $c = Campaign::firstOrFail();
+        $this->finish($this->runOfDay($c, 1), 1);
+        $this->postJson('/operasi/lanjut');
+        $this->finish($this->runOfDay($c, 2), 2);
+
+        return $c->refresh();
+    }
+
+    private function livePlan(Campaign $c, array $over = [])
+    {
+        return $this->postJson("/campaigns/{$c->id}/maintenance", $over + ['asset' => 'TK-RAW-2', 'start_min' => 600, 'duration_min' => 120, 'reason' => 'Servis berkala']);
+    }
+
+    public function test_maintenance_revises_the_unwatched_day_ahead_and_keeps_the_hash_chain_valid(): void
+    {
+        $c = $this->operationWithDayAhead();
+        $this->assertSame(3, $c->current_day);
+        $oldRun = $this->runOfDay($c, 2);
+        $oldHash = $c->days()->where('day_no', 2)->value('hash');
+
+        $this->livePlan($c)->assertCreated()->assertJsonPath('day', 2)->assertJsonPath('maintenance.status', 'running')
+            ->assertJsonPath('maintenance.planned.0.asset', 'TK-RAW-2');
+
+        $c->refresh();
+        $day2 = $c->days()->where('day_no', 2)->firstOrFail();
+        $this->assertSame('running', $day2->status);
+        $this->assertNotSame($oldRun, $day2->run_id);
+        $this->assertNull($day2->hash);
+        $this->assertSame(2, $c->current_day);
+        $this->assertSame(0, $c->days()->where('day_no', 3)->count());
+        $this->assertSame(1, \App\Models\SimCommand::where('run_id', $day2->run_id)->where('kind', 'tank_down')->count());
+        $this->assertSame(1, $c->watch_day);
+        $this->assertTrue(SimRun::findOrFail($oldRun)->config_snapshot['superseded']);
+
+        $this->finish($day2->run_id, 2);
+        $c->refresh();
+        $this->assertSame('closed', $c->days()->where('day_no', 2)->value('status'));
+        $this->assertNotSame($oldHash, $c->days()->where('day_no', 2)->value('hash'));
+        $this->assertSame(3, $c->current_day);
+        $this->getJson('/operasi/state')->assertOk()->assertJsonPath('integrity.ok', true)->assertJsonPath('maintenance.planned.0.asset', 'TK-RAW-2');
+    }
+
+    public function test_maintenance_is_refused_while_the_ahead_day_is_computing_and_for_non_managers(): void
+    {
+        $c = $this->operationWithDayAhead();
+        $this->livePlan($c)->assertCreated();
+        $this->livePlan($c, ['asset' => 'TK-RAW-3'])->assertStatus(422);
+        $this->assertSame(1, count($c->days()->where('day_no', 2)->firstOrFail()->plan));
+
+        $this->as(Role::Operator);
+        $this->livePlan($c, ['asset' => 'TK-RAW-4'])->assertForbidden();
+    }
+
+    public function test_cancelling_a_live_maintenance_recomputes_the_day_without_it(): void
+    {
+        $c = $this->operationWithDayAhead();
+        $this->livePlan($c)->assertCreated();
+        $this->finish($this->runOfDay($c, 2), 2);
+
+        $this->deleteJson("/campaigns/{$c->id}/maintenance/0")->assertOk()->assertJsonPath('maintenance.status', 'running');
+        $this->assertSame([], $c->days()->where('day_no', 2)->firstOrFail()->plan);
+        $this->assertSame(0, \App\Models\SimCommand::where('run_id', $this->runOfDay($c, 2))->count());
+    }
+
+    public function test_state_exposes_tank_service_meter_from_the_previous_day_carry(): void
+    {
+        $this->as(Role::Ppic);
+        $this->postJson('/operasi/lanjut');
+        $c = Campaign::firstOrFail();
+        $runId = $this->runOfDay($c, 1);
+        $r = json_decode(file_get_contents(base_path('../contracts/run-result.sample.json')), true, flags: JSON_THROW_ON_ERROR);
+        $r['run_id'] = $runId;
+        $r['day'] = 1;
+        $r['day_summary'] = ['day' => 1, 'date' => '2026-11-03', 'received' => 12, 'rejected' => 1, 'released' => 9];
+        $r['carry_out'] = ['line_sku' => 'UHT', 'fouling_min' => 120.0, 'fg_stock_ton' => 40.0, 'tank_cycles' => ['TK-RAW-2' => 10, 'TK-STO-1' => 8, 'TK-RAW-3' => 2]];
+        $this->postJson("/internal/runs/{$runId}/result", $r, ['X-Internal-Token' => 'secret'])->assertOk();
+        $this->postJson('/operasi/lanjut');
+
+        $tanks = collect($this->getJson('/operasi/state')->assertOk()->json('maintenance.tanks'))->keyBy('asset');
+        $this->assertSame(['cycles' => 10, 'state' => 'due'], ['cycles' => $tanks['TK-RAW-2']['cycles'], 'state' => $tanks['TK-RAW-2']['state']]);
+        $this->assertSame('near', $tanks['TK-STO-1']['state']);
+        $this->assertSame('ok', $tanks['TK-RAW-3']['state']);
+        $this->assertSame('ok', $tanks['TK-RAW-1']['state']);
+    }
 }

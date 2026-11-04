@@ -97,6 +97,9 @@ def campaign_state(env: ToolEnv, a: NoArgs) -> dict[str, Any]:
         "planned_count": ctx.planned_count,
         "max_planned": ctx.max_planned,
         "open_proposals": [p.model_dump() for p in ctx.open_proposals],
+        "service_limit_cycles": ctx.service_limit,
+        "tank_service": [t.model_dump() for t in ctx.tank_service],
+        "tanks_due": [t.model_dump() for t in ctx.tanks_due],
     }
 
 
@@ -227,7 +230,7 @@ def create_proposal(env: ToolEnv, a: CreateProposalArgs) -> dict[str, Any]:
 PROPOSAL_TOOLS: dict[str, Tool] = {
     t.name: t
     for t in (
-        Tool("campaign_state", "Hari kampanye yang sedang disusun: tangki yang ada, maintenance yang sudah dijadwalkan, dan batasnya.", NoArgs, READ_ROLES, campaign_state, SIMULASI),
+        Tool("campaign_state", "Hari kampanye yang sedang disusun: tangki yang ada, maintenance yang sudah dijadwalkan, batasnya, serta meter servis tiap tangki (siklus CIP sejak maintenance terakhir; tanks_due = tangki yang sudah dekat atau melewati batas servis dan belum dijadwalkan).", NoArgs, READ_ROLES, campaign_state, SIMULASI),
         Tool("run_whatif", "Simulasikan maintenance satu tangki pada hari kampanye ini dan bandingkan KPI dengan hari tanpa maintenance itu; validator aturan keras ikut memeriksa. Hanya menghitung, tidak mengubah apa pun.", WhatIfArgs, READ_ROLES, run_whatif, SIMULASI),
         Tool("create_proposal", "Buat DRAF usulan dari satu what-if yang tidak diblokir. Draf tidak menerapkan apa pun; manusia harus mengajukan dan PPIC menyetujui.", CreateProposalArgs, READ_ROLES, create_proposal, SIMULASI),
     )

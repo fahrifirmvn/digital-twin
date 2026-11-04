@@ -39,7 +39,7 @@
 @endpush
 
 @section('content')
-<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-op-state-url="{{ route('operation.state') }}" data-op-advance-url="{{ route('operation.advance') }}" data-twin-url="{{ route('twin') }}" data-twin-run-url="{{ route('twin') }}?run=" data-can-advance="{{ auth()->user()->can('manage-campaign') ? '1' : '0' }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
+<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-op-state-url="{{ route('operation.state') }}" data-op-advance-url="{{ route('operation.advance') }}" data-op-plan-base="{{ url('/campaigns') }}" data-twin-url="{{ route('twin') }}" data-twin-run-url="{{ route('twin') }}?run=" data-can-advance="{{ auth()->user()->can('manage-campaign') ? '1' : '0' }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
     @include('runs._topbar', ['active' => 'twin', 'daysMenu' => true])
 
     <main id="tw-stage" class="tw-stage" aria-label="Digital twin pabrik">
@@ -107,6 +107,7 @@
                 <span id="tw-sheet-chip" class="tw-status"></span>
                 <dl id="tw-sheet-rows"></dl>
                 <section id="tw-sheet-queue" hidden></section>
+                <section id="tw-sheet-maint" class="tw-maint" hidden></section>
                 <section id="tw-sheet-gates" hidden>
                     <h3>Gate mutu</h3>
                     <ul></ul>

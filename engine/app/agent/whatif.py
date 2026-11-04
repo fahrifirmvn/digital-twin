@@ -68,6 +68,18 @@ class OpenProposal(BaseModel):
         return v
 
 
+class TankService(BaseModel):
+    """Meter servis satu tangki: siklus CIP sejak maintenance terakhir terhadap batas servis (ambang demo)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    asset: str = Field(pattern=r"^TK-(RAW|STO)-\d{1,2}$")
+    cycles: int = Field(ge=0, le=999)
+    limit: int = Field(ge=1, le=999)
+    state: Literal["ok", "near", "due"]
+    planned: bool = False
+
+
 class CampaignContext(BaseModel):
     """Keadaan hari kampanye yang sedang disusun. Dibangun Laravel dari database; Engine tidak
     menerimanya dari klien browser."""
@@ -87,6 +99,9 @@ class CampaignContext(BaseModel):
     planned_count: int = Field(ge=0, le=20)  # yang diputuskan manusia hari ini (tanpa carry-in)
     max_planned: int = Field(ge=1, le=20)
     open_proposals: list[OpenProposal] = Field(default_factory=list, max_length=10)
+    service_limit: int = Field(default=10, ge=1, le=999)
+    tank_service: list[TankService] = Field(default_factory=list, max_length=40)
+    tanks_due: list[TankService] = Field(default_factory=list, max_length=40)
 
     def plant_config(self) -> PlantConfig:
         return self.plant.to_config() if self.plant else PlantConfig()
@@ -100,7 +115,9 @@ class CampaignContext(BaseModel):
 
     def key(self) -> str:
         # Usulan terbuka tidak memengaruhi simulasi, jadi tidak boleh membatalkan cache what-if.
-        payload = self.model_dump_json(exclude={"open_proposals"})
+        payload = self.model_dump_json(
+            exclude={"open_proposals", "tank_service", "tanks_due", "service_limit"}
+        )
         return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 

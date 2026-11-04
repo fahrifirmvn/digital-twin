@@ -22,12 +22,17 @@ class ProposalService
     /** Keadaan hari kampanye untuk what-if engine, dibaca dari database (bukan dari klien). @return array<string, mixed> */
     public function context(Campaign $c, ?User $user = null): array
     {
-        $day = $this->campaigns->currentDay($c);
+        $day = $this->campaigns->targetDay($c);
         [$commands] = $this->campaigns->segments($day);
         $existing = array_map(fn ($e) => ['asset' => $e['asset'], 'minute' => (float) $e['minute'], 'duration_min' => (float) $e['duration_min']], $commands);
+        $service = $this->campaigns->tankService($c);
 
         return [
-            'campaign_id' => $c->id, 'day_no' => $day->day_no, 'editable' => $this->editable($day), 'seed' => $c->daySeed($day->day_no),
+            'campaign_id' => $c->id, 'day_no' => $day->day_no, 'editable' => $this->editable($c, $day), 'seed' => $c->daySeed($day->day_no),
+            'service_limit' => (int) config('twin.tanks.service_cycles'),
+            'tank_service' => array_values(array_filter($service, fn ($t) => $t['cycles'] > 0 || $t['planned'])),
+            'tanks_due' => array_values(array_map(fn ($t) => ['asset' => $t['asset'], 'cycles' => $t['cycles'], 'limit' => $t['limit'], 'state' => $t['state']],
+                array_filter($service, fn ($t) => $t['state'] !== 'ok' && ! $t['planned']))),
             'config' => $c->config, 'scenario' => $c->scenario,
             'volume_ton' => (float) ($c->params['volume_ton'] ?? 320), 'extra_bad' => (int) ($c->params['extra_bad'] ?? 0),
             'plant' => ($c->params['plant'] ?? null) ?: null,
@@ -73,7 +78,7 @@ class ProposalService
 
                 continue;
             }
-            $day = $this->campaigns->currentDay($c);
+            $day = $this->campaigns->targetDay($c);
             $findings = $this->findings($c, $day, $payload);
             if ($findings) {
                 $this->audit->record('user', (string) $user->id, 'agent.proposal_discarded', ['conversation_id' => $conversation, 'campaign_id' => $c->id, 'day' => $day->day_no, 'reason' => 'diblokir_validator', 'codes' => array_keys($findings)]);
@@ -188,8 +193,8 @@ class ProposalService
     public function findings(Campaign $c, CampaignDay $day, array $w): array
     {
         $out = [];
-        if (! $this->editable($day)) {
-            $out['day_not_editable'] = 'Hari ini sedang berjalan atau sudah ditutup.';
+        if (! $this->editable($c, $day)) {
+            $out['day_not_editable'] = $day->status === 'running' ? 'Hari berikutnya sedang dihitung engine; coba lagi beberapa detik.' : 'Hari ini sudah ditonton atau ditutup.';
         }
         $limits = $this->campaigns->tankLimits($c);
         $asset = $w['asset'];
@@ -227,8 +232,8 @@ class ProposalService
     private function staleReason(AgentProposal $p): ?string
     {
         $c = $p->campaign;
-        $day = $this->campaigns->currentDay($c);
-        if ((int) $c->current_day !== (int) $p->day_no) {
+        $day = $this->campaigns->targetDay($c);
+        if ((int) $day->day_no !== (int) $p->day_no) {
             return 'hari kampanye sudah berganti';
         }
         $findings = $this->findings($c, $day, $p->payload);
@@ -254,9 +259,9 @@ class ProposalService
         }
     }
 
-    private function editable(CampaignDay $day): bool
+    private function editable(Campaign $c, CampaignDay $day): bool
     {
-        return in_array($day->status, ['planned', 'failed'], true);
+        return $this->campaigns->canChange($c, $day);
     }
 
     /** @return array{asset:string, minute:float, duration_min:float}|null */

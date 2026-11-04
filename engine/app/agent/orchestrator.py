@@ -39,7 +39,8 @@ Gaya percakapan (aturan di atas tetap berlaku):
 7. Kamu boleh mengobrol: menjawab sapaan dan terima kasih, menjelaskan istilah (CIP, holding time, what-if, gate, status usulan) dan cara kerjamu. Untuk itu alat tidak wajib, tetapi jangan menyebut angka, kode, atau status pabrik tanpa hasil alat.
 8. Pertanyaan tentang keadaan pabrik, run, atau kampanye dijawab dari alat dulu. Ingat percakapan sebelumnya dan rujuk apa yang sudah dibahas.
 9. Bila permintaan kurang jelas (tangki, jam, atau durasi tidak disebut), ajukan satu pertanyaan balik yang singkat, jangan menebak.
-10. Pengguna dapat menanggapi usulan yang masih terbuka (mis. "geser sejam", "pakai tangki lain", "kenapa lebih buruk?"). Panggil campaign_state dan lihat open_proposals. Untuk menjelaskan, kutip selisih yang ada di sana. Untuk merevisi, hitung jendela baru dari ucapan pengguna dan jendela lama, jalankan run_whatif, lalu create_proposal dengan supersedes berisi id usulan lama. Jangan menyebut hasil konversi satuan sendiri sebagai fakta; pakai angka dari alat atau dari pengguna. Revisi hanya menjadi draf baru; pengajuan dan persetujuan tetap oleh manusia."""
+10. Pengguna dapat menanggapi usulan yang masih terbuka (mis. "geser sejam", "pakai tangki lain", "kenapa lebih buruk?"). Panggil campaign_state dan lihat open_proposals. Untuk menjelaskan, kutip selisih yang ada di sana. Untuk merevisi, hitung jendela baru dari ucapan pengguna dan jendela lama, jalankan run_whatif, lalu create_proposal dengan supersedes berisi id usulan lama. Jangan menyebut hasil konversi satuan sendiri sebagai fakta; pakai angka dari alat atau dari pengguna. Revisi hanya menjadi draf baru; pengajuan dan persetujuan tetap oleh manusia.
+11. Bila campaign_state menunjukkan tanks_due tidak kosong, sebutkan tangki itu (siklus dan batasnya persis dari alat) dan tawarkan usulan maintenance; tunggu pengguna setuju sebelum menjalankan run_whatif dan create_proposal. Pilih jam mulai di luar jam sibuk hanya bila pengguna menyerahkannya padamu dan tetap lewat what-if; tanpa itu tanyakan jam dan durasinya. Perubahan baru berlaku mulai hari operasi berikutnya dan hanya diterapkan setelah pengguna yang berwenang menekan Izinkan pada kartu usulan."""
 
 
 @dataclass
@@ -144,6 +145,11 @@ class Agent:
         context = f"Peran pengguna: {role}. Mode: {mode}. Run yang dibuka: {run_id if run_id else 'tidak ada'}."
         if campaign:
             context += f" Kampanye {campaign.campaign_id}, hari {campaign.day_no}."
+            if campaign.tanks_due:
+                context += (
+                    f" Ada {len(campaign.tanks_due)} tangki mendekati atau melewati batas servis"
+                    " dan belum dijadwalkan (lihat campaign_state)."
+                )
             if campaign.open_proposals:
                 context += (
                     f" Ada {len(campaign.open_proposals)} usulan terbuka milik pengguna"

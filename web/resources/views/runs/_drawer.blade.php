@@ -2,20 +2,21 @@
 @include('runs._approval')
 @endunless
 @php
-    $liveRun = isset($run) && $run && $run->modeBadge()['key'] === 'live';
-    $asMode = ! isset($campaign) && $liveRun ? 'LIVE' : 'SIMULASI';
+    // Halaman twin/dasbor: asisten ikut hari operasi (usulan maintenance untuk hari berikutnya). Halaman kampanye memakai $campaign.
+    $liveOp = ! isset($campaign) && isset($run) && $run ? app(\App\Services\OperationService::class)->dayOf($run)?->campaign : null;
 @endphp
 <aside id="cp-drawer" class="{{ ($plain ?? false) ? 'as-drawer as-plain' : 'tw-drawer as-drawer' }}" aria-label="Asisten AI" hidden
     data-user-id="{{ auth()->id() }}" data-can-approve="{{ auth()->user()->can('approve-proposal') ? 1 : 0 }}"
     data-turn-url="{{ route('agent.turn') }}" data-proposals-url="{{ route('agent.proposals.index') }}"
     @isset($run) data-run-id="{{ $run->id }}" @endisset
-    @isset($campaign) data-campaign-id="{{ $campaign->id }}" data-reload-on-approve="1" @endisset>
+    @isset($campaign) data-campaign-id="{{ $campaign->id }}" data-reload-on-approve="1" @endisset
+    @if ($liveOp) data-campaign-id="{{ $liveOp->id }}" data-live="1" data-op-state-url="{{ route('operation.state') }}" @endif>
     <div class="tw-drawer-head">
         <h2>Asisten AI</h2>
         <button id="cp-new" class="as-new as-secondary" type="button">Percakapan baru</button>
         <button id="cp-close" class="tw-ico" type="button" aria-label="Tutup asisten" data-icon="x"></button>
     </div>
-    <p id="cp-label" class="as-label" data-mode="{{ $asMode }}" hidden></p>
+    <p id="cp-label" class="as-label" hidden></p>
     <p class="as-meta">Asisten hanya membaca data operasi dan mengusulkan. Keputusan tetap di PPIC.</p>
     @isset($campaign)
     <section aria-labelledby="cp-ptitle">

@@ -247,6 +247,20 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 .tw-sheet dd[data-tone='bad'] { color: var(--bad-text); }
 #tw-sheet-back { margin: 10px 0 0; }
 #tw-sheet-queue { margin-top: 4px; }
+.tw-maint { margin-top: 4px; }
+.tw-meter { --t-bd: var(--ok); }
+.tw-meter[data-tone='warn'] { --t-bd: var(--warn); }
+.tw-meter[data-tone='bad'] { --t-bd: var(--bad); }
+.tw-meter p { margin: 6px 0 0; font-size: 13px; }
+.tw-meter-bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.tw-meter-bar i { display: block; height: 100%; background: var(--t-bd); border-radius: inherit; }
+.tw-maint-form { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+.tw-maint-form label { font-size: 12px; color: var(--mute); }
+.tw-maint-form input { min-height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r-btn); background: transparent; color: inherit; font: inherit; }
+.tw-maint-form button { margin-top: 6px; }
+.tw-maint-note, .tw-maint-msg { margin: 10px 0 0; font-size: 13px; }
+.tw-maint-msg { color: var(--ok-text); font-weight: 600; }
+.tw-maint-msg[data-tone='bad'] { color: var(--bad-text); }
 .tw-queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .tw-queue button { width: 100%; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; align-items: baseline; text-align: left; padding: 9px 12px; border: 1px solid var(--line); border-left: 4px solid var(--t-bd, var(--line)); border-radius: 10px; background: var(--card, transparent); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
 .tw-queue button:hover { background: var(--t-bg, rgba(127, 127, 127, .08)); }

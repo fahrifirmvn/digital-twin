@@ -1,8 +1,31 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-    MAX_HISTORY, buildTurn, canDecide, canSubmit, changeRows, describeWindow, httpError, modelNote, pushHistory, reasonError, replyNote, statusLabel,
+    ALLOW_REASON, MAX_HISTORY, allowReason, buildTurn, canDecide, canSubmit, changeRows, describeWindow, dueNotice, httpError, modelNote, pushHistory, reasonError, replyNote, statusLabel,
 } from './assistant-model.js';
+
+test('dueNotice: hanya tangki yang mendekati/melewati batas dan belum dijadwalkan', () => {
+    const op = (open = true) => ({ exists: true, maintenance: { day: 3, open, tanks: [
+        { asset: 'TK-RAW-1', cycles: 2, limit: 10, state: 'ok', planned: false },
+        { asset: 'TK-RAW-2', cycles: 11, limit: 10, state: 'due', planned: false },
+        { asset: 'TK-STO-1', cycles: 8, limit: 10, state: 'near', planned: false },
+        { asset: 'TK-STO-2', cycles: 12, limit: 10, state: 'due', planned: true },
+    ] } });
+    const n = dueNotice(op());
+    assert.deepEqual(n.tanks.map((t) => t.asset), ['TK-RAW-2', 'TK-STO-1']);
+    assert.match(n.text, /TK-RAW-2 \(11\/10 siklus, perlu servis\)/);
+    assert.match(n.prompt, /Hari 3/);
+    assert.equal(dueNotice(op(false)), null);
+    assert.equal(dueNotice({ exists: false }), null);
+    assert.equal(dueNotice(null), null);
+});
+
+test('allowReason memakai catatan bila cukup panjang, selain itu alasan bawaan', () => {
+    assert.equal(allowReason('  servis rutin  '), 'servis rutin');
+    assert.equal(allowReason('ab'), ALLOW_REASON);
+    assert.equal(allowReason(undefined), ALLOW_REASON);
+    assert.equal(allowReason('x'.repeat(900)).length, 500);
+});
 
 test('buildTurn memotong pesan dan riwayat, hanya mengirim id yang ada', () => {
     const history = Array.from({ length: 30 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: `m${i}`, extra: 'x' }));

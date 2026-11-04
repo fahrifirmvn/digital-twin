@@ -28,6 +28,8 @@ return [
         'volume_ton' => 300,
         'extra_bad' => 2,
     ],
+    // Meter servis tangki: siklus CIP sejak maintenance terakhir (dihitung engine pada carry harian). Ambang demo.
+    'tanks' => ['service_cycles' => 10],
     // Kampanye harian: pabrik yang berjalan hari demi hari dengan checkpoint tiap akhir hari.
     'campaign' => [
         'max_days' => 365,

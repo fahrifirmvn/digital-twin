@@ -185,6 +185,31 @@ export function revisePrompt(p) {
     return `Usulan ${describeWindow(p.payload)} (versi ${p.version}): `;
 }
 
+/**
+ * Tangki yang perlu servis menurut state operasi (belum dijadwalkan). Hanya pemberitahuan: usulan baru disusun asisten
+ * setelah pengguna menekan tombolnya, dan baru diterapkan setelah pengguna mengizinkan.
+ */
+export function dueNotice(op) {
+    const m = op?.maintenance;
+    if (!op?.exists || !m?.open) return null;
+    const tanks = m.tanks.filter((t) => t.state !== 'ok' && !t.planned).sort((a, b) => b.cycles - a.cycles);
+    if (!tanks.length) return null;
+    const label = (t) => `${t.asset} (${t.cycles}/${t.limit} siklus, ${t.state === 'due' ? 'perlu servis' : 'mendekati batas'})`;
+    const names = tanks.map((t) => t.asset);
+    return {
+        tanks,
+        text: `Tangki berikut belum dijadwalkan servis: ${tanks.map(label).join('; ')}.`,
+        prompt: `Tangki ${names.join(', ')} sudah dekat atau melewati batas servis. Usulkan jadwal maintenance yang aman untuk Hari ${m.day}.`,
+    };
+}
+
+/** Izin satu klik: alasan bawaan dipakai bila catatan dikosongkan (server tetap mewajibkan alasan). */
+export const ALLOW_REASON = 'Disetujui lewat Asisten AI';
+export function allowReason(note) {
+    const t = String(note ?? '').trim();
+    return t.length >= REASON_MIN ? t.slice(0, REASON_MAX) : ALLOW_REASON;
+}
+
 /** Banyak karakter per tik agar pengetikan selesai dalam batas tik tetap (balasan panjang tidak lambat). */
 export function revealStep(total, maxTicks = 70) {
     return Math.max(2, Math.ceil(total / maxTicks));

@@ -43,6 +43,12 @@
 .as-changes li[data-tone='worse'] b { color: var(--bad-text, #b91c1c); }
 .as-changes li[data-tone='better'] b { color: var(--ok-text, #166534); }
 .as-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.as-card input[type='text'] {
+    box-sizing: border-box; width: 100%; min-height: 40px; padding: 0 12px; font: inherit; background: var(--bg, #fff); color: var(--ink, #0f172a);
+    border: 1px solid var(--line-strong, #7a889f); border-radius: var(--r-btn, 12px);
+}
+.as-notice { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--warn, #b45309); border-left-width: 4px; border-radius: 12px; background: var(--warn-soft, #fef3c7); color: var(--warn-text, #92400e); font-size: 13px; }
+.as-notice button { align-self: flex-start; }
 .as-err:empty { display: none; }
 .as-err { color: var(--bad-text, #b91c1c); font-size: 13px; }
 .as-plain .tw-drawer-head { display: flex; justify-content: space-between; align-items: center; }

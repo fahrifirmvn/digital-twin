@@ -28,6 +28,7 @@ from app.contracts.events import (
     FoulingExpiry,
     GateDecided,
     GateId,
+    LabResult,
     LineChangeover,
     OrdersEvaluated,
     PlantRoute,
@@ -331,6 +332,7 @@ class TankPool:
         self.sim.status(t.code, AssetStatus.UNAVAILABLE, 0.0, t.capacity_ton)
         yield self.sim.env.timeout(max(0.0, start + duration - self.sim.env.now))
         t.down, t.status = False, "idle"
+        self.sim.serviced[code] = self.sim.env.now
         self.sim.status(t.code, AssetStatus.IDLE, 0.0, t.capacity_ton)
         self._notify()
 
@@ -405,6 +407,7 @@ class TwinSimulation:
         self.batches: dict[str, Batch] = {}
         self.gate_log: list[GateRecord] = []
         self.cips: list[CipRecord] = []
+        self.serviced: dict[str, float] = {}  # tangki yang selesai maintenance -> menit selesainya
         self.changeovers: list[tuple[str, float]] = []
         self.tankers = {s.code: TankerRecord(s) for s in specs}
 
@@ -528,6 +531,29 @@ class TwinSimulation:
             )
         )
         return r.passed
+
+    def _emit_lab_result(
+        self, spec: TankerSpec, analyst: str, started: float, g2: gates.GateResult
+    ) -> None:
+        r = spec.lab_results
+        num = lambda k: float(r[k]) if isinstance(r.get(k), int | float) else 0.0  # noqa: E731
+        self.emit(
+            LabResult(
+                tanker_code=spec.code,
+                analyst=analyst,
+                started_min=round(started, 2),
+                duration_min=round(spec.lab_duration_min, 2),
+                fat_pct=round(num("fat_pct"), 3),
+                protein_pct=round(num("protein_pct"), 3),
+                acidity_pct=round(num("acidity_pct"), 4),
+                ph=round(num("ph"), 2) if "ph" in r else None,
+                antibiotic_residue=r.get("antibiotic_residue") is not False,
+                adulterant=r.get("adulterant") is not False,
+                test_type=spec.test_type,
+                g2=g2.decision,
+                g2_reason=g2.reason,
+            )
+        )
 
     def transfer(self, src: str, dst: str, batch: str, vol: float) -> None:
         self.transfers.append(Transfer(src, dst, batch, round(vol, 2), self.env.now))
@@ -812,7 +838,9 @@ class TwinSimulation:
         yield self.env.timeout(spec.lab_duration_min)
         rec.lab_end = self.env.now
         self.analysts.put(analyst)
-        if not self.record_gate(gates.g2_lab_result(spec.lab_results, th), "tanker", spec.code):
+        g2 = gates.g2_lab_result(spec.lab_results, th)
+        self._emit_lab_result(spec, analyst, rec.lab_start, g2)
+        if not self.record_gate(g2, "tanker", spec.code):
             rec.outcome = "rejected_g2"
             self._tanker_status(rec, TankerStatus.REJECTED)
             return

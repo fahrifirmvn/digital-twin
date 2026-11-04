@@ -655,6 +655,108 @@
       "title": "GateId",
       "type": "string"
     },
+    "LabResult": {
+      "additionalProperties": false,
+      "description": "Hasil uji lab satu truk, dikirim begitu uji selesai (sebelum keputusan G2).",
+      "properties": {
+        "type": {
+          "const": "lab.result",
+          "default": "lab.result",
+          "title": "Type",
+          "type": "string"
+        },
+        "tanker_code": {
+          "title": "Tanker Code",
+          "type": "string"
+        },
+        "analyst": {
+          "title": "Analyst",
+          "type": "string"
+        },
+        "started_min": {
+          "description": "Menit simulasi uji dimulai",
+          "title": "Started Min",
+          "type": "number"
+        },
+        "duration_min": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Min",
+          "type": "number"
+        },
+        "fat_pct": {
+          "title": "Fat Pct",
+          "type": "number"
+        },
+        "protein_pct": {
+          "title": "Protein Pct",
+          "type": "number"
+        },
+        "acidity_pct": {
+          "title": "Acidity Pct",
+          "type": "number"
+        },
+        "ph": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Kosong bila hasil tidak memuat pH",
+          "title": "Ph"
+        },
+        "antibiotic_residue": {
+          "title": "Antibiotic Residue",
+          "type": "boolean"
+        },
+        "adulterant": {
+          "title": "Adulterant",
+          "type": "boolean"
+        },
+        "test_type": {
+          "title": "Test Type",
+          "type": "string"
+        },
+        "g2": {
+          "enum": [
+            "pass",
+            "hold"
+          ],
+          "title": "G2",
+          "type": "string"
+        },
+        "g2_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "G2 Reason"
+        }
+      },
+      "required": [
+        "tanker_code",
+        "analyst",
+        "started_min",
+        "duration_min",
+        "fat_pct",
+        "protein_pct",
+        "acidity_pct",
+        "antibiotic_residue",
+        "adulterant",
+        "test_type",
+        "g2"
+      ],
+      "title": "LabResult",
+      "type": "object"
+    },
     "LineChangeover": {
       "additionalProperties": false,
       "description": "Filling line berganti SKU: tidak mengisi selama `minutes`.",
@@ -1444,6 +1546,7 @@
           "day.summary": "#/$defs/DaySummary",
           "fouling.expiry": "#/$defs/FoulingExpiry",
           "gate.decided": "#/$defs/GateDecided",
+          "lab.result": "#/$defs/LabResult",
           "line.changeover": "#/$defs/LineChangeover",
           "orders.evaluated": "#/$defs/OrdersEvaluated",
           "plant.routes": "#/$defs/PlantRoutes",
@@ -1509,6 +1612,9 @@
         },
         {
           "$ref": "#/$defs/CipEvent"
+        },
+        {
+          "$ref": "#/$defs/LabResult"
         },
         {
           "$ref": "#/$defs/GateDecided"

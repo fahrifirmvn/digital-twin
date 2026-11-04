@@ -97,6 +97,14 @@ def _plates(
     return out
 
 
+def _ph(res: dict[str, float | bool]) -> float:
+    """pH sintetis: turun saat keasaman naik. Stream acak sendiri (turunan nilai lab) agar data lain
+    dan seed baseline tidak bergeser."""
+    acidity = float(res["acidity_pct"])
+    noise = random.Random(f"ph:{res['fat_pct']:.6f}:{acidity:.6f}").gauss(0.0, 0.02)
+    return round(6.70 - (acidity - 0.15) * 4.0 + noise, 2)
+
+
 def _lab_results(rng: random.Random, fail: bool) -> dict[str, float | bool]:
     res: dict[str, float | bool] = {
         "fat_pct": rng.gauss(3.7, 0.25),
@@ -113,6 +121,7 @@ def _lab_results(rng: random.Random, fail: bool) -> dict[str, float | bool]:
             res["fat_pct"] = rng.uniform(2.0, 2.9)
         else:
             res["acidity_pct"] = rng.uniform(0.19, 0.25)
+    res["ph"] = _ph(res)
     return res
 
 

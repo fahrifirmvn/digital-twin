@@ -71,6 +71,11 @@ def g2_lab_result(results: Mapping[str, object] | None, th: Thresholds) -> GateR
     lo, hi = th.acidity_range_pct
     if not lo <= acidity <= hi:
         return _hold(GateId.G2, f"keasaman {acidity:.3f}% di luar {lo}-{hi}%")
+    ph = _num(results.get("ph"))
+    if ph is not None:  # hasil lama tanpa pH tetap dinilai dari parameter lain
+        p_lo, p_hi = th.ph_range
+        if not p_lo <= ph <= p_hi:
+            return _hold(GateId.G2, f"pH {ph:.2f} di luar {p_lo}-{p_hi}")
     # Residu antibiotik dan adulteran harus eksplisit False, nilai lain dianggap positif.
     if results.get("antibiotic_residue") is not False:
         return _hold(GateId.G2, "residu antibiotik positif atau tidak diuji")

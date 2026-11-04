@@ -234,3 +234,47 @@ test('tangki tidak tersedia ditampilkan sebagai Maintenance, unit lain tetap Tid
     const s = base({ assets: { 'TK-STO-2': { status: 'unavailable', level: 0, cap: 60 } } });
     assert.equal(levelBadges(s, any)[0].text, 'Maintenance');
 });
+
+test('detail truk menampilkan hasil lab dan menandai nilai di luar batas', () => {
+    const lab = { analyst: 'AN-1', durationMin: 42, doneAt: 90, testType: 'standard', fat: 3.71, protein: 3.1, acidity: 0.2, ph: 6.5, antibiotic: false, adulterant: false, g2: 'hold', g2Reason: 'keasaman 0.200% di luar 0.12-0.18%' };
+    const s = base({ tankers: { A: truck('A', { status: 'rejected', lab }) } });
+    const rows = Object.fromEntries(detailOf(s, 'A').rows.map(([k, v, tone]) => [k, [v, tone]]));
+    assert.equal(rows.Lemak[0], '3,71 %');
+    assert.equal(rows.Lemak[1], null);
+    assert.equal(rows.Keasaman[1], 'bad');
+    assert.equal(rows.pH[0], '6,50');
+    assert.equal(rows.pH[1], 'bad');
+    assert.equal(rows.Antibiotik[0], 'negatif');
+    assert.equal(rows['Keputusan G2'][1], 'bad');
+});
+
+test('detail truk yang masih diuji tidak mengarang hasil', () => {
+    const s = base({ tankers: { A: truck('A', { status: 'lab_test', labStartAt: 70 }) } });
+    const labels = detailOf(s, 'A').rows.map(([k]) => k);
+    assert.ok(labels.includes('Uji lab'));
+    assert.ok(!labels.includes('pH') && !labels.includes('Lemak'));
+});
+
+test('panel lab: antrean, uji, hasil terbaru, dan hitungan', () => {
+    const done = (g2) => ({ analyst: 'AN-2', durationMin: 30, doneAt: 80, testType: 'standard', fat: 3.6, protein: 3.0, acidity: 0.15, ph: 6.7, antibiotic: false, adulterant: false, g2, g2Reason: g2 === 'hold' ? 'lemak rendah' : null });
+    const s = base({
+        tankers: {
+            W2: truck('W2', { status: 'sampling', samplingAt: 60 }),
+            W1: truck('W1', { status: 'sampling', samplingAt: 50 }),
+            T1: truck('T1', { status: 'lab_test', labStartAt: 85 }),
+            D1: truck('D1', { status: 'released', lab: done('pass') }),
+            D2: truck('D2', { status: 'rejected', lab: done('hold') }),
+            Q: truck('Q'),
+        },
+    });
+    const p = detailOf(s, 'LAB1');
+    assert.equal(p.kind, 'lab');
+    assert.equal(p.title, 'Laboratorium');
+    const [testing, waiting, recent] = p.queue.map(([, list]) => list);
+    assert.deepEqual(testing.map((r) => r.code), ['T1']);
+    assert.deepEqual(waiting.map((r) => r.code), ['W1', 'W2']);
+    assert.match(waiting[0].note, /^#1/);
+    assert.equal(recent.find((r) => r.code === 'D2').tone, 'bad');
+    assert.match(recent.find((r) => r.code === 'D1').note, /pH 6,70/);
+    assert.ok(p.rows.some(([k, v]) => k === 'Antre analis' && v === '2 truk'));
+});

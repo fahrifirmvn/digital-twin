@@ -9,6 +9,7 @@ class Thresholds:
     fat_min_pct: float = 3.0
     protein_min_pct: float = 2.8
     acidity_range_pct: tuple[float, float] = (0.12, 0.18)
+    ph_range: tuple[float, float] = (6.55, 6.85)  # demo; pH susu segar sekitar 6,6-6,8
     holding_max_min: float = 240.0
     steril_min_temp_c: float = 137.0
     steril_min_hold_s: float = 4.0

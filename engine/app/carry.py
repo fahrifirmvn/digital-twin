@@ -40,6 +40,10 @@ class CarryState(BaseModel):
     )
     fg_stock_ton: float = 0.0
     qa_hold_ton: float = 0.0
+    tank_cycles: dict[str, int] = Field(
+        default_factory=dict,
+        description="Siklus CIP tiap tangki sejak maintenance terakhir (meter servis)",
+    )
 
 
 def day_date(day: int) -> datetime:
@@ -114,6 +118,20 @@ def _cleaned(sim: "TwinSimulation") -> list[str]:
     ]
 
 
+def tank_cycles(sim: "TwinSimulation", carry_in: CarryState) -> dict[str, int]:
+    """Meter servis tangki: tiap CIP menambah satu siklus; tangki yang selesai maintenance hari ini
+    kembali ke nol (siklus CIP setelah maintenance di hari yang sama tetap dihitung)."""
+    codes = [t.code for t in sim.raw.tanks + sim.storage.tanks]
+    out: dict[str, int] = {}
+    for code in codes:
+        base = 0 if code in sim.serviced else carry_in.tank_cycles.get(code, 0)
+        after = sum(
+            1 for c in sim.cips if c.asset == code and c.start >= sim.serviced.get(code, 0.0)
+        )
+        out[code] = base + after
+    return out
+
+
 def carry_out(sim: "TwinSimulation", carry_in: CarryState, day: int) -> CarryState:
     cleaned = set(_cleaned(sim))
     fouling = {
@@ -129,6 +147,7 @@ def carry_out(sim: "TwinSimulation", carry_in: CarryState, day: int) -> CarrySta
         day=day,
         line_sku={code: s.code for code, s in sim.line_sku.items() if s is not None},
         fouling_min=fouling,
+        tank_cycles=tank_cycles(sim, carry_in),
         late_trucks=[defer(s) for s in sim.deferred],
         fg_stock_ton=round(carry_in.fg_stock_ton + sum(b.volume_ton for b in fgs), 2),
         qa_hold_ton=round(carry_in.qa_hold_ton + held, 2),

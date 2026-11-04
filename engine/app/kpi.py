@@ -52,6 +52,7 @@ def _unsafe(spec, th) -> bool:
         or r["fat_pct"] < th.fat_min_pct
         or r["protein_pct"] < th.protein_min_pct
         or not lo <= r["acidity_pct"] <= hi
+        or not th.ph_range[0] <= r.get("ph", th.ph_range[0]) <= th.ph_range[1]
         or r["antibiotic_residue"] is not False
         or r["adulterant"] is not False
     )

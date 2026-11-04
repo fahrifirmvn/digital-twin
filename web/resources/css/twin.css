@@ -244,6 +244,14 @@ td .tw-status, .row-item .tw-status, .tw-table .tw-status { margin: 0; padding: 
 #tw-sheet-gates li { display: grid; gap: 4px; font-size: 13px; }
 #tw-sheet-gates .tw-status { margin: 0; justify-self: start; }
 #tw-sheet-gates small { color: var(--mute); font-size: 12px; }
+.tw-sheet dd[data-tone='bad'] { color: var(--bad-text); }
+#tw-sheet-back { margin: 10px 0 0; }
+#tw-sheet-queue { margin-top: 4px; }
+.tw-queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.tw-queue button { width: 100%; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; align-items: baseline; text-align: left; padding: 9px 12px; border: 1px solid var(--line); border-left: 4px solid var(--t-bd, var(--line)); border-radius: 10px; background: var(--card, transparent); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.tw-queue button:hover { background: var(--t-bg, rgba(127, 127, 127, .08)); }
+.tw-queue button:focus-visible { outline: 2px solid var(--brand, #2563eb); outline-offset: 2px; }
+.tw-queue small { grid-column: 1 / -1; color: var(--t-fg, var(--mute)); font-size: 12px; }
 @keyframes tw-slide { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .tw-table { margin-top: auto; flex: 0 1 auto; min-height: 150px; max-height: 46%; display: flex; flex-direction: column; padding: 12px 14px; }

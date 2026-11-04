@@ -18,6 +18,7 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
     let projector = null;
     let state = null;
     let selected = null;
+    let backTo = null;
     let returnTo = null;
     let pinSig = '';
 
@@ -141,10 +142,50 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         }
     }
 
+    // Antrean laboratorium: tiap truk adalah tombol yang memilih truk itu (detail hasil uji tampil di sheet).
+    let queueSig = '';
+    function renderQueue(groups) {
+        const box = $('#tw-sheet-queue');
+        const sig = JSON.stringify(groups ?? null);
+        if (sig === queueSig) return;
+        queueSig = sig;
+        box.hidden = !groups?.length;
+        if (!groups?.length) {
+            box.replaceChildren();
+            return;
+        }
+        box.replaceChildren(...groups.flatMap(([title, list]) => {
+            const h3 = document.createElement('h3');
+            h3.textContent = title;
+            const ul = document.createElement('ul');
+            ul.className = 'tw-queue';
+            for (const r of list) {
+                const li = document.createElement('li');
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.dataset.tone = r.tone;
+                b.title = `Lihat detail ${r.code}`;
+                const name = document.createElement('b');
+                name.textContent = r.code;
+                const meta = document.createElement('span');
+                meta.textContent = `${r.farm} · ${r.volume}`;
+                const note = document.createElement('small');
+                note.textContent = `${r.phase} · ${r.note}`;
+                b.append(name, meta, note);
+                b.addEventListener('click', () => select(r.code));
+                li.append(b);
+                ul.append(li);
+            }
+            return [h3, ul];
+        }));
+    }
+
     function renderSheet() {
         const d = state && selected ? detailOf(state, selected) : null;
         if (!d) return close();
         $('#tw-sheet-title').textContent = d.title;
+        const back = $('#tw-sheet-back');
+        back.hidden = !(backTo && d.kind === 'truck');
         const chip = $('#tw-sheet-chip');
         chip.dataset.tone = d.chip.tone;
         chip.innerHTML = icon(d.chip.icon, 16);
@@ -152,13 +193,15 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         label.textContent = d.chip.label;
         chip.append(label);
         const rows = $('#tw-sheet-rows');
-        rows.replaceChildren(...d.rows.flatMap(([k, v]) => {
+        rows.replaceChildren(...d.rows.flatMap(([k, v, tone]) => {
             const dt = document.createElement('dt');
             const dd = document.createElement('dd');
             dt.textContent = k;
-            dd.textContent = v;
+            dd.textContent = tone === 'bad' ? `${v} (di luar batas)` : v;
+            if (tone) dd.dataset.tone = tone;
             return [dt, dd];
         }));
+        renderQueue(d.queue);
         const gates = $('#tw-sheet-gates');
         gates.hidden = !d.gates;
         gates.querySelector('ul').replaceChildren(...(d.gates ?? []).map((g) => {
@@ -184,6 +227,10 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         if (!code) return close();
         if (!state || !detailOf(state, code)) return;
         const wasOpen = !sheet.hidden;
+        // Dari sheet laboratorium ke satu truk: sediakan jalan kembali ke antrean.
+        if (/^LAB/.test(code)) backTo = null;
+        else if (selected && /^LAB/.test(selected) && state.tankers[code]) backTo = selected;
+        else if (!state.tankers[code]) backTo = null;
         selected = code;
         renderSheet();
         sheet.hidden = false;
@@ -199,6 +246,7 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         if (sheet.hidden) return;
         sheet.hidden = true;
         selected = null;
+        backTo = null;
         scene?.resetFocus();
         if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
         returnTo = null;
@@ -206,6 +254,7 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
     }
 
     sheetClose.addEventListener('click', close);
+    $('#tw-sheet-back').addEventListener('click', () => backTo && select(backTo));
     root.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !sheet.hidden) {
             e.preventDefault();

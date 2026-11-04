@@ -45,6 +45,13 @@ def test_g2_pass_and_each_failure():
         assert not gates.g2_lab_result({**lab_ok(), key: value}, TH).passed, (key, value)
 
 
+def test_g2_ph_range_and_legacy_results_without_ph():
+    assert gates.g2_lab_result({**lab_ok(), "ph": 6.7}, TH).passed
+    assert gates.g2_lab_result(lab_ok(), TH).passed  # hasil lama tanpa pH
+    for bad in (6.4, 6.9):
+        assert not gates.g2_lab_result({**lab_ok(), "ph": bad}, TH).passed
+
+
 def test_g2_missing_or_empty_is_hold():
     assert not gates.g2_lab_result(None, TH).passed
     assert not gates.g2_lab_result({}, TH).passed

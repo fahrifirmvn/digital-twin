@@ -147,8 +147,15 @@ export function buildWorld(layout, { theme = 'light', detail = 1 } = {}) {
     root.add(makeGate(kit, gate).group);
     for (const p of layout.pads) root.add(makePad(kit, p).group);
     for (const l of layout.labs) {
-        root.add(makeLab(kit, l).group);
+        const lab = makeLab(kit, l).group;
+        lab.traverse((o) => {
+            if (!o.isMesh) return;
+            o.userData = { code: l.id };
+            pickables.push(o);
+        });
+        root.add(lab);
         anchors.set(`LAB:${l.id}`, { a: l.at[0], b: l.at[1], h: 70 });
+        anchors.set(l.id, { a: l.at[0], b: l.at[1], h: 70 });
     }
     for (const d of layout.decor ?? []) root.add(makeDecor(kit, d).group);
 

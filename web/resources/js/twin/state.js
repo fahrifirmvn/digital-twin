@@ -71,6 +71,8 @@ export function apply(s, ev) {
                 t.status = p.status;
                 t.bay = p.bay_code ?? null;
                 t.since = m;
+                if (p.status === 'sampling') t.samplingAt ??= m;
+                if (p.status === 'lab_test') t.labStartAt ??= m;
                 if (p.status === 'unloading') t.unloadAt ??= m;
             }
             if (p.status === 'rejected') s.counters.rejectedG2++;
@@ -114,6 +116,15 @@ export function apply(s, ev) {
             if (!p.is_scheduled) {
                 s.counters.emergencyCip++;
                 feed(s, m, 'warn', `CIP darurat ${p.asset_code}`);
+            }
+            break;
+        case 'lab.result':
+            if (s.tankers[p.tanker_code]) {
+                s.tankers[p.tanker_code].lab = {
+                    analyst: p.analyst, durationMin: p.duration_min, doneAt: m, testType: p.test_type,
+                    fat: p.fat_pct, protein: p.protein_pct, acidity: p.acidity_pct, ph: p.ph ?? null,
+                    antibiotic: p.antibiotic_residue, adulterant: p.adulterant, g2: p.g2, g2Reason: p.g2_reason ?? null,
+                };
             }
             break;
         case 'gate.decided':

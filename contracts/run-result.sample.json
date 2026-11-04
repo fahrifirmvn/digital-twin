@@ -944,7 +944,8 @@
         "protein_pct": 3.0311463995812375,
         "acidity_pct": 0.1684252092722695,
         "antibiotic_residue": false,
-        "adulterant": false
+        "adulterant": false,
+        "ph": 6.65
       },
       "eta_p50": "2026-10-28T09:30:52.960413Z",
       "eta_p80": "2026-10-28T09:39:33.526008Z",
@@ -970,7 +971,8 @@
         "protein_pct": 2.891956336979628,
         "acidity_pct": 0.14935686248536076,
         "antibiotic_residue": false,
-        "adulterant": false
+        "adulterant": false,
+        "ph": 6.69
       },
       "eta_p50": "2026-10-28T16:28:35.291946Z",
       "eta_p80": "2026-10-28T16:52:00.226352Z",
@@ -996,7 +998,8 @@
         "protein_pct": 3.151344496919003,
         "acidity_pct": 0.14112970658048035,
         "antibiotic_residue": false,
-        "adulterant": false
+        "adulterant": false,
+        "ph": 6.73
       },
       "eta_p50": "2026-10-28T17:36:56.053153Z",
       "eta_p80": "2026-10-28T17:54:43.003421Z",
@@ -1022,7 +1025,8 @@
         "protein_pct": 3.003908943390185,
         "acidity_pct": 0.15145409526563927,
         "antibiotic_residue": false,
-        "adulterant": false
+        "adulterant": false,
+        "ph": 6.69
       },
       "eta_p50": "2026-10-29T00:48:53.137218Z",
       "eta_p80": "2026-10-29T01:05:57.573835Z",
@@ -2576,6 +2580,28 @@
       "seq": 55,
       "sim_time": "2026-10-28T10:56:06.490724Z",
       "payload": {
+        "type": "lab.result",
+        "tanker_code": "RT-001",
+        "analyst": "ANL-1",
+        "started_min": 222.77,
+        "duration_min": 73.34,
+        "fat_pct": 4.095,
+        "protein_pct": 3.031,
+        "acidity_pct": 0.1684,
+        "ph": 6.65,
+        "antibiotic_residue": false,
+        "adulterant": false,
+        "test_type": "standard",
+        "g2": "pass",
+        "g2_reason": null
+      }
+    },
+    {
+      "event_id": "1ba61ecf-dc28-5f47-8240-280b1a0f0dc7",
+      "run_id": 1,
+      "seq": 56,
+      "sim_time": "2026-10-28T10:56:06.490724Z",
+      "payload": {
         "type": "gate.decided",
         "gate": "G2",
         "object_type": "tanker",
@@ -2586,9 +2612,9 @@
       }
     },
     {
-      "event_id": "1ba61ecf-dc28-5f47-8240-280b1a0f0dc7",
+      "event_id": "ca184017-a9f2-5bb1-b38c-5739590131f3",
       "run_id": 1,
-      "seq": 56,
+      "seq": 57,
       "sim_time": "2026-10-28T10:56:06.490724Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -2598,9 +2624,9 @@
       }
     },
     {
-      "event_id": "ca184017-a9f2-5bb1-b38c-5739590131f3",
+      "event_id": "04581a36-6748-5afe-bde5-9e197d93c690",
       "run_id": 1,
-      "seq": 57,
+      "seq": 58,
       "sim_time": "2026-10-28T10:56:06.490724Z",
       "payload": {
         "type": "gate.decided",
@@ -2613,26 +2639,13 @@
       }
     },
     {
-      "event_id": "04581a36-6748-5afe-bde5-9e197d93c690",
-      "run_id": 1,
-      "seq": 58,
-      "sim_time": "2026-10-28T10:56:06.490724Z",
-      "payload": {
-        "type": "asset.status_changed",
-        "asset_code": "BAY-3",
-        "status": "in_use",
-        "level_ton": null,
-        "capacity_ton": null
-      }
-    },
-    {
       "event_id": "545b9f29-dd8b-5b13-b580-655166b3ccfa",
       "run_id": 1,
       "seq": 59,
       "sim_time": "2026-10-28T10:56:06.490724Z",
       "payload": {
         "type": "asset.status_changed",
-        "asset_code": "DEG-1",
+        "asset_code": "BAY-3",
         "status": "in_use",
         "level_ton": null,
         "capacity_ton": null
@@ -2644,6 +2657,19 @@
       "seq": 60,
       "sim_time": "2026-10-28T10:56:06.490724Z",
       "payload": {
+        "type": "asset.status_changed",
+        "asset_code": "DEG-1",
+        "status": "in_use",
+        "level_ton": null,
+        "capacity_ton": null
+      }
+    },
+    {
+      "event_id": "ac2cdbcf-1d81-565d-9b07-eeb98f5226b7",
+      "run_id": 1,
+      "seq": 61,
+      "sim_time": "2026-10-28T10:56:06.490724Z",
+      "payload": {
         "type": "tanker.status_changed",
         "tanker_code": "RT-001",
         "status": "unloading",
@@ -2651,9 +2677,9 @@
       }
     },
     {
-      "event_id": "ac2cdbcf-1d81-565d-9b07-eeb98f5226b7",
+      "event_id": "3f7ec255-1cd9-5938-be6b-ac68f38aba00",
       "run_id": 1,
-      "seq": 61,
+      "seq": 62,
       "sim_time": "2026-10-28T11:01:20.740724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2664,9 +2690,9 @@
       }
     },
     {
-      "event_id": "3f7ec255-1cd9-5938-be6b-ac68f38aba00",
+      "event_id": "4d2a9d45-ebe1-5e5b-9bc5-b6ae4fcbaa3b",
       "run_id": 1,
-      "seq": 62,
+      "seq": 63,
       "sim_time": "2026-10-28T11:06:34.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2677,9 +2703,9 @@
       }
     },
     {
-      "event_id": "4d2a9d45-ebe1-5e5b-9bc5-b6ae4fcbaa3b",
+      "event_id": "f9ab235d-7ffa-5cf5-bb05-1aee6009bdc4",
       "run_id": 1,
-      "seq": 63,
+      "seq": 64,
       "sim_time": "2026-10-28T11:11:49.240724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2690,9 +2716,9 @@
       }
     },
     {
-      "event_id": "f9ab235d-7ffa-5cf5-bb05-1aee6009bdc4",
+      "event_id": "96907655-bdf1-5854-9892-cd0c3b719040",
       "run_id": 1,
-      "seq": 64,
+      "seq": 65,
       "sim_time": "2026-10-28T11:17:03.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2703,9 +2729,9 @@
       }
     },
     {
-      "event_id": "96907655-bdf1-5854-9892-cd0c3b719040",
+      "event_id": "d32dc236-3b07-5085-89bb-c40f64265add",
       "run_id": 1,
-      "seq": 65,
+      "seq": 66,
       "sim_time": "2026-10-28T11:22:17.740724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2716,9 +2742,9 @@
       }
     },
     {
-      "event_id": "d32dc236-3b07-5085-89bb-c40f64265add",
+      "event_id": "c14db788-dc80-5545-abbe-626043765f2f",
       "run_id": 1,
-      "seq": 66,
+      "seq": 67,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2729,27 +2755,14 @@
       }
     },
     {
-      "event_id": "c14db788-dc80-5545-abbe-626043765f2f",
-      "run_id": 1,
-      "seq": 67,
-      "sim_time": "2026-10-28T11:27:31.990724Z",
-      "payload": {
-        "type": "transfer.completed",
-        "from_asset": "RT-001",
-        "to_asset": "BAY-3",
-        "batch_code": "RAW-RT-001",
-        "volume_ton": 20.95
-      }
-    },
-    {
       "event_id": "b7e9adc9-bf8a-541b-93fd-59f64585d5cb",
       "run_id": 1,
       "seq": 68,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "transfer.completed",
-        "from_asset": "BAY-3",
-        "to_asset": "DEG-1",
+        "from_asset": "RT-001",
+        "to_asset": "BAY-3",
         "batch_code": "RAW-RT-001",
         "volume_ton": 20.95
       }
@@ -2761,8 +2774,8 @@
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "transfer.completed",
-        "from_asset": "DEG-1",
-        "to_asset": "TK-RAW-1",
+        "from_asset": "BAY-3",
+        "to_asset": "DEG-1",
         "batch_code": "RAW-RT-001",
         "volume_ton": 20.95
       }
@@ -2773,11 +2786,11 @@
       "seq": 70,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
-        "type": "asset.status_changed",
-        "asset_code": "BAY-3",
-        "status": "idle",
-        "level_ton": null,
-        "capacity_ton": null
+        "type": "transfer.completed",
+        "from_asset": "DEG-1",
+        "to_asset": "TK-RAW-1",
+        "batch_code": "RAW-RT-001",
+        "volume_ton": 20.95
       }
     },
     {
@@ -2787,7 +2800,7 @@
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "asset.status_changed",
-        "asset_code": "DEG-1",
+        "asset_code": "BAY-3",
         "status": "idle",
         "level_ton": null,
         "capacity_ton": null
@@ -2799,6 +2812,19 @@
       "seq": 72,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
+        "type": "asset.status_changed",
+        "asset_code": "DEG-1",
+        "status": "idle",
+        "level_ton": null,
+        "capacity_ton": null
+      }
+    },
+    {
+      "event_id": "8602df59-bdaa-5ded-9e23-afc7437fd94d",
+      "run_id": 1,
+      "seq": 73,
+      "sim_time": "2026-10-28T11:27:31.990724Z",
+      "payload": {
         "type": "unload.finished",
         "tanker_code": "RT-001",
         "bay_code": "BAY-3",
@@ -2808,9 +2834,9 @@
       }
     },
     {
-      "event_id": "8602df59-bdaa-5ded-9e23-afc7437fd94d",
+      "event_id": "2c4c3256-4845-5cb0-8db4-c3fc9ad25250",
       "run_id": 1,
-      "seq": 73,
+      "seq": 74,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -2820,9 +2846,9 @@
       }
     },
     {
-      "event_id": "2c4c3256-4845-5cb0-8db4-c3fc9ad25250",
+      "event_id": "5a1b22d2-2dca-5620-ae9a-aad89cc77d29",
       "run_id": 1,
-      "seq": 74,
+      "seq": 75,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "gate.decided",
@@ -2835,26 +2861,13 @@
       }
     },
     {
-      "event_id": "5a1b22d2-2dca-5620-ae9a-aad89cc77d29",
-      "run_id": 1,
-      "seq": 75,
-      "sim_time": "2026-10-28T11:27:31.990724Z",
-      "payload": {
-        "type": "asset.status_changed",
-        "asset_code": "THM-1",
-        "status": "in_use",
-        "level_ton": null,
-        "capacity_ton": null
-      }
-    },
-    {
       "event_id": "1c3e5466-1d9e-531c-b573-b6df6d8cc1fa",
       "run_id": 1,
       "seq": 76,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
         "type": "asset.status_changed",
-        "asset_code": "SEP-1",
+        "asset_code": "THM-1",
         "status": "in_use",
         "level_ton": null,
         "capacity_ton": null
@@ -2866,6 +2879,19 @@
       "seq": 77,
       "sim_time": "2026-10-28T11:27:31.990724Z",
       "payload": {
+        "type": "asset.status_changed",
+        "asset_code": "SEP-1",
+        "status": "in_use",
+        "level_ton": null,
+        "capacity_ton": null
+      }
+    },
+    {
+      "event_id": "2dfab241-2178-5f3a-965c-e26b70b7ccbd",
+      "run_id": 1,
+      "seq": 78,
+      "sim_time": "2026-10-28T11:27:31.990724Z",
+      "payload": {
         "type": "transfer.completed",
         "from_asset": "TK-RAW-1",
         "to_asset": "THM-1",
@@ -2874,9 +2900,9 @@
       }
     },
     {
-      "event_id": "2dfab241-2178-5f3a-965c-e26b70b7ccbd",
+      "event_id": "54f7fecb-88e4-530d-9675-0866527f5597",
       "run_id": 1,
-      "seq": 78,
+      "seq": 79,
       "sim_time": "2026-10-28T11:32:46.240724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2887,9 +2913,9 @@
       }
     },
     {
-      "event_id": "54f7fecb-88e4-530d-9675-0866527f5597",
+      "event_id": "c999284d-457e-5aaa-9ef1-fc5e747565fc",
       "run_id": 1,
-      "seq": 79,
+      "seq": 80,
       "sim_time": "2026-10-28T11:32:46.240724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2900,9 +2926,9 @@
       }
     },
     {
-      "event_id": "c999284d-457e-5aaa-9ef1-fc5e747565fc",
+      "event_id": "131b286c-4473-5ca5-94c3-487dacb3df4b",
       "run_id": 1,
-      "seq": 80,
+      "seq": 81,
       "sim_time": "2026-10-28T11:38:00.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2913,9 +2939,9 @@
       }
     },
     {
-      "event_id": "131b286c-4473-5ca5-94c3-487dacb3df4b",
+      "event_id": "fab2acd5-56ed-5fba-a842-a57d5f1fe8c8",
       "run_id": 1,
-      "seq": 81,
+      "seq": 82,
       "sim_time": "2026-10-28T11:38:00.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2926,9 +2952,9 @@
       }
     },
     {
-      "event_id": "fab2acd5-56ed-5fba-a842-a57d5f1fe8c8",
+      "event_id": "add18e07-3b59-54f2-8bc0-b048b83c4dae",
       "run_id": 1,
-      "seq": 82,
+      "seq": 83,
       "sim_time": "2026-10-28T11:43:14.740724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2939,9 +2965,9 @@
       }
     },
     {
-      "event_id": "add18e07-3b59-54f2-8bc0-b048b83c4dae",
+      "event_id": "68d1cb0f-64f2-5b07-a2e6-035a0706f76d",
       "run_id": 1,
-      "seq": 83,
+      "seq": 84,
       "sim_time": "2026-10-28T11:43:14.740724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2952,9 +2978,9 @@
       }
     },
     {
-      "event_id": "68d1cb0f-64f2-5b07-a2e6-035a0706f76d",
+      "event_id": "4f97b7b0-56ad-5e82-ae7b-4ab5ac936a62",
       "run_id": 1,
-      "seq": 84,
+      "seq": 85,
       "sim_time": "2026-10-28T11:48:28.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2965,9 +2991,9 @@
       }
     },
     {
-      "event_id": "4f97b7b0-56ad-5e82-ae7b-4ab5ac936a62",
+      "event_id": "c00fd3ac-600b-5e75-91d6-1bfd084fe3bb",
       "run_id": 1,
-      "seq": 85,
+      "seq": 86,
       "sim_time": "2026-10-28T11:48:28.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2978,9 +3004,9 @@
       }
     },
     {
-      "event_id": "c00fd3ac-600b-5e75-91d6-1bfd084fe3bb",
+      "event_id": "88b4a8ba-7aca-5df5-8835-d45f562ade91",
       "run_id": 1,
-      "seq": 86,
+      "seq": 87,
       "sim_time": "2026-10-28T11:53:43.240724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -2991,9 +3017,9 @@
       }
     },
     {
-      "event_id": "88b4a8ba-7aca-5df5-8835-d45f562ade91",
+      "event_id": "f6f6acd4-1f0d-57e3-a3e4-071c0ceab0a1",
       "run_id": 1,
-      "seq": 87,
+      "seq": 88,
       "sim_time": "2026-10-28T11:53:43.240724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3004,9 +3030,9 @@
       }
     },
     {
-      "event_id": "f6f6acd4-1f0d-57e3-a3e4-071c0ceab0a1",
+      "event_id": "aa6099eb-384d-588a-98dd-cc74424daf15",
       "run_id": 1,
-      "seq": 88,
+      "seq": 89,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3017,9 +3043,9 @@
       }
     },
     {
-      "event_id": "aa6099eb-384d-588a-98dd-cc74424daf15",
+      "event_id": "64f07bc3-893c-5cac-838e-53c5b3ad113c",
       "run_id": 1,
-      "seq": 89,
+      "seq": 90,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3030,9 +3056,9 @@
       }
     },
     {
-      "event_id": "64f07bc3-893c-5cac-838e-53c5b3ad113c",
+      "event_id": "bb05e04f-4bff-55aa-8a71-f8f453ffa65a",
       "run_id": 1,
-      "seq": 90,
+      "seq": 91,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3043,26 +3069,13 @@
       }
     },
     {
-      "event_id": "bb05e04f-4bff-55aa-8a71-f8f453ffa65a",
-      "run_id": 1,
-      "seq": 91,
-      "sim_time": "2026-10-28T11:58:57.490724Z",
-      "payload": {
-        "type": "asset.status_changed",
-        "asset_code": "THM-1",
-        "status": "idle",
-        "level_ton": null,
-        "capacity_ton": null
-      }
-    },
-    {
       "event_id": "365f8425-2e61-5044-b092-0a84b3de11b1",
       "run_id": 1,
       "seq": 92,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "asset.status_changed",
-        "asset_code": "SEP-1",
+        "asset_code": "THM-1",
         "status": "idle",
         "level_ton": null,
         "capacity_ton": null
@@ -3074,15 +3087,28 @@
       "seq": 93,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
-        "type": "cip.started",
-        "asset_code": "TK-RAW-1",
-        "is_scheduled": true
+        "type": "asset.status_changed",
+        "asset_code": "SEP-1",
+        "status": "idle",
+        "level_ton": null,
+        "capacity_ton": null
       }
     },
     {
       "event_id": "2ad998b3-f92c-5167-8962-256cb16ecb23",
       "run_id": 1,
       "seq": 94,
+      "sim_time": "2026-10-28T11:58:57.490724Z",
+      "payload": {
+        "type": "cip.started",
+        "asset_code": "TK-RAW-1",
+        "is_scheduled": true
+      }
+    },
+    {
+      "event_id": "59e3d623-d015-5fd9-acc8-b4a0dac295a3",
+      "run_id": 1,
+      "seq": 95,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3093,9 +3119,9 @@
       }
     },
     {
-      "event_id": "59e3d623-d015-5fd9-acc8-b4a0dac295a3",
+      "event_id": "20fe00e8-2776-5bcc-bf72-082af83898e3",
       "run_id": 1,
-      "seq": 95,
+      "seq": 96,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "gate.decided",
@@ -3108,9 +3134,9 @@
       }
     },
     {
-      "event_id": "20fe00e8-2776-5bcc-bf72-082af83898e3",
+      "event_id": "76573c5a-8c9e-54e2-8acb-44309d686d5c",
       "run_id": 1,
-      "seq": 96,
+      "seq": 97,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3121,9 +3147,9 @@
       }
     },
     {
-      "event_id": "76573c5a-8c9e-54e2-8acb-44309d686d5c",
+      "event_id": "6edeca37-c2b5-5940-8550-698d85a456df",
       "run_id": 1,
-      "seq": 97,
+      "seq": 98,
       "sim_time": "2026-10-28T11:58:57.490724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3134,9 +3160,9 @@
       }
     },
     {
-      "event_id": "6edeca37-c2b5-5940-8550-698d85a456df",
+      "event_id": "2286f723-bb11-5c1b-aa26-7d0fe1448289",
       "run_id": 1,
-      "seq": 98,
+      "seq": 99,
       "sim_time": "2026-10-28T12:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -3148,9 +3174,9 @@
       }
     },
     {
-      "event_id": "2286f723-bb11-5c1b-aa26-7d0fe1448289",
+      "event_id": "7a4f4712-48ce-55c2-afc8-b853801793d8",
       "run_id": 1,
-      "seq": 99,
+      "seq": 100,
       "sim_time": "2026-10-28T12:09:22.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3161,9 +3187,9 @@
       }
     },
     {
-      "event_id": "7a4f4712-48ce-55c2-afc8-b853801793d8",
+      "event_id": "7709b47f-4607-5b41-abfa-ccd16a0173f5",
       "run_id": 1,
-      "seq": 100,
+      "seq": 101,
       "sim_time": "2026-10-28T12:19:48.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3174,9 +3200,9 @@
       }
     },
     {
-      "event_id": "7709b47f-4607-5b41-abfa-ccd16a0173f5",
+      "event_id": "5826d0fc-c221-5c6c-926a-3975f840a623",
       "run_id": 1,
-      "seq": 101,
+      "seq": 102,
       "sim_time": "2026-10-28T12:30:13.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3187,9 +3213,9 @@
       }
     },
     {
-      "event_id": "5826d0fc-c221-5c6c-926a-3975f840a623",
+      "event_id": "904aeb66-2e46-5f6a-b378-e5271f6e6aea",
       "run_id": 1,
-      "seq": 102,
+      "seq": 103,
       "sim_time": "2026-10-28T12:40:39.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3200,9 +3226,9 @@
       }
     },
     {
-      "event_id": "904aeb66-2e46-5f6a-b378-e5271f6e6aea",
+      "event_id": "08b142c0-3b90-517a-b85d-46d6bcbdb697",
       "run_id": 1,
-      "seq": 103,
+      "seq": 104,
       "sim_time": "2026-10-28T12:51:04.990724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3213,9 +3239,9 @@
       }
     },
     {
-      "event_id": "08b142c0-3b90-517a-b85d-46d6bcbdb697",
+      "event_id": "fc744197-fb1b-5342-b29b-5460b1e90c5d",
       "run_id": 1,
-      "seq": 104,
+      "seq": 105,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "gate.decided",
@@ -3228,9 +3254,9 @@
       }
     },
     {
-      "event_id": "fc744197-fb1b-5342-b29b-5460b1e90c5d",
+      "event_id": "08235036-1e88-50ed-8531-41f361a5b25b",
       "run_id": 1,
-      "seq": 105,
+      "seq": 106,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3241,9 +3267,9 @@
       }
     },
     {
-      "event_id": "08235036-1e88-50ed-8531-41f361a5b25b",
+      "event_id": "1ded37ae-4d47-5ee9-aca7-dc435f088106",
       "run_id": 1,
-      "seq": 106,
+      "seq": 107,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3254,9 +3280,9 @@
       }
     },
     {
-      "event_id": "1ded37ae-4d47-5ee9-aca7-dc435f088106",
+      "event_id": "6c63477b-32e0-5153-b4ab-79a96473abf4",
       "run_id": 1,
-      "seq": 107,
+      "seq": 108,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "asset.level",
@@ -3271,9 +3297,9 @@
       }
     },
     {
-      "event_id": "6c63477b-32e0-5153-b4ab-79a96473abf4",
+      "event_id": "c7b0ba08-4590-5d3e-8c42-32720277c998",
       "run_id": 1,
-      "seq": 108,
+      "seq": 109,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "gate.decided",
@@ -3286,9 +3312,9 @@
       }
     },
     {
-      "event_id": "c7b0ba08-4590-5d3e-8c42-32720277c998",
+      "event_id": "d8f11b5d-c68a-520a-b926-725cd5503786",
       "run_id": 1,
-      "seq": 109,
+      "seq": 110,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "cip.started",
@@ -3297,9 +3323,9 @@
       }
     },
     {
-      "event_id": "d8f11b5d-c68a-520a-b926-725cd5503786",
+      "event_id": "8d48994b-edb6-52fb-9969-d3d238e02681",
       "run_id": 1,
-      "seq": 110,
+      "seq": 111,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3310,9 +3336,9 @@
       }
     },
     {
-      "event_id": "8d48994b-edb6-52fb-9969-d3d238e02681",
+      "event_id": "1e0db83c-8446-5463-8e60-52462c8bda45",
       "run_id": 1,
-      "seq": 111,
+      "seq": 112,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3323,9 +3349,9 @@
       }
     },
     {
-      "event_id": "1e0db83c-8446-5463-8e60-52462c8bda45",
+      "event_id": "5c015d68-e77e-5227-99be-0e5727db6af2",
       "run_id": 1,
-      "seq": 112,
+      "seq": 113,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3336,9 +3362,9 @@
       }
     },
     {
-      "event_id": "5c015d68-e77e-5227-99be-0e5727db6af2",
+      "event_id": "535b4762-237c-5d2a-b15e-f879128ed7f2",
       "run_id": 1,
-      "seq": 113,
+      "seq": 114,
       "sim_time": "2026-10-28T13:01:30.490724Z",
       "payload": {
         "type": "asset.level",
@@ -3353,9 +3379,9 @@
       }
     },
     {
-      "event_id": "535b4762-237c-5d2a-b15e-f879128ed7f2",
+      "event_id": "89fbe6d6-15c3-5350-84d7-7806328e3027",
       "run_id": 1,
-      "seq": 114,
+      "seq": 115,
       "sim_time": "2026-10-28T13:02:59.346364Z",
       "payload": {
         "type": "cip.finished",
@@ -3364,9 +3390,9 @@
       }
     },
     {
-      "event_id": "89fbe6d6-15c3-5350-84d7-7806328e3027",
+      "event_id": "eced4527-751b-5a0b-8cd9-e4cee91b695a",
       "run_id": 1,
-      "seq": 115,
+      "seq": 116,
       "sim_time": "2026-10-28T13:02:59.346364Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3377,9 +3403,9 @@
       }
     },
     {
-      "event_id": "eced4527-751b-5a0b-8cd9-e4cee91b695a",
+      "event_id": "9b6a41ca-2f50-5262-a28b-83b071e7e92e",
       "run_id": 1,
-      "seq": 116,
+      "seq": 117,
       "sim_time": "2026-10-28T13:32:37.608224Z",
       "payload": {
         "type": "asset.level",
@@ -3394,9 +3420,9 @@
       }
     },
     {
-      "event_id": "9b6a41ca-2f50-5262-a28b-83b071e7e92e",
+      "event_id": "51f9763e-882d-5d2a-b0b9-6347cd7ed4e8",
       "run_id": 1,
-      "seq": 117,
+      "seq": 118,
       "sim_time": "2026-10-28T14:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -3408,9 +3434,9 @@
       }
     },
     {
-      "event_id": "51f9763e-882d-5d2a-b0b9-6347cd7ed4e8",
+      "event_id": "9a7a672b-bf9e-5a58-b42e-d68579126751",
       "run_id": 1,
-      "seq": 118,
+      "seq": 119,
       "sim_time": "2026-10-28T14:03:44.725724Z",
       "payload": {
         "type": "asset.level",
@@ -3425,9 +3451,9 @@
       }
     },
     {
-      "event_id": "9a7a672b-bf9e-5a58-b42e-d68579126751",
+      "event_id": "8a4f6242-0d21-5809-bec1-92fc652e8dc5",
       "run_id": 1,
-      "seq": 119,
+      "seq": 120,
       "sim_time": "2026-10-28T14:26:55.871451Z",
       "payload": {
         "type": "cip.finished",
@@ -3436,9 +3462,9 @@
       }
     },
     {
-      "event_id": "8a4f6242-0d21-5809-bec1-92fc652e8dc5",
+      "event_id": "6736ced3-eeaa-5d50-8d6c-d5943153b1e4",
       "run_id": 1,
-      "seq": 120,
+      "seq": 121,
       "sim_time": "2026-10-28T14:26:55.871451Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3449,9 +3475,9 @@
       }
     },
     {
-      "event_id": "6736ced3-eeaa-5d50-8d6c-d5943153b1e4",
+      "event_id": "c9913f5f-1bdd-5507-b021-c1ee7a4bca2b",
       "run_id": 1,
-      "seq": 121,
+      "seq": 122,
       "sim_time": "2026-10-28T14:34:51.843224Z",
       "payload": {
         "type": "asset.level",
@@ -3466,9 +3492,9 @@
       }
     },
     {
-      "event_id": "c9913f5f-1bdd-5507-b021-c1ee7a4bca2b",
+      "event_id": "ddd16d18-9edb-5809-8d40-936a0e8575c9",
       "run_id": 1,
-      "seq": 122,
+      "seq": 123,
       "sim_time": "2026-10-28T15:05:58.960724Z",
       "payload": {
         "type": "asset.level",
@@ -3483,9 +3509,9 @@
       }
     },
     {
-      "event_id": "ddd16d18-9edb-5809-8d40-936a0e8575c9",
+      "event_id": "53f26d61-ddd6-596a-aeff-b8a5f5d40d6f",
       "run_id": 1,
-      "seq": 123,
+      "seq": 124,
       "sim_time": "2026-10-28T15:05:58.960724Z",
       "payload": {
         "type": "transfer.completed",
@@ -3496,9 +3522,9 @@
       }
     },
     {
-      "event_id": "53f26d61-ddd6-596a-aeff-b8a5f5d40d6f",
+      "event_id": "ef18daff-7dc9-565e-a8e6-4fcb6fd7e4bf",
       "run_id": 1,
-      "seq": 124,
+      "seq": 125,
       "sim_time": "2026-10-28T15:05:58.960724Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3509,9 +3535,9 @@
       }
     },
     {
-      "event_id": "ef18daff-7dc9-565e-a8e6-4fcb6fd7e4bf",
+      "event_id": "dde46d1e-942d-567d-a08a-34a47c5977ea",
       "run_id": 1,
-      "seq": 125,
+      "seq": 126,
       "sim_time": "2026-10-28T15:48:09.139760Z",
       "payload": {
         "type": "truck.dispatched",
@@ -3524,9 +3550,9 @@
       }
     },
     {
-      "event_id": "dde46d1e-942d-567d-a08a-34a47c5977ea",
+      "event_id": "ec384610-5922-5751-be4e-be4fac636431",
       "run_id": 1,
-      "seq": 126,
+      "seq": 127,
       "sim_time": "2026-10-28T16:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -3538,9 +3564,9 @@
       }
     },
     {
-      "event_id": "ec384610-5922-5751-be4e-be4fac636431",
+      "event_id": "ed0a6af0-7f66-5c8a-ba35-b37e70e10b68",
       "run_id": 1,
-      "seq": 127,
+      "seq": 128,
       "sim_time": "2026-10-28T16:33:09.139760Z",
       "payload": {
         "type": "truck.arrived",
@@ -3552,9 +3578,9 @@
       }
     },
     {
-      "event_id": "ed0a6af0-7f66-5c8a-ba35-b37e70e10b68",
+      "event_id": "0d2faa8d-6646-52ba-a9c7-dd387228a042",
       "run_id": 1,
-      "seq": 128,
+      "seq": 129,
       "sim_time": "2026-10-28T16:33:09.139760Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3564,9 +3590,9 @@
       }
     },
     {
-      "event_id": "0d2faa8d-6646-52ba-a9c7-dd387228a042",
+      "event_id": "75e0badb-2a68-53be-9303-4e7d8f91efca",
       "run_id": 1,
-      "seq": 129,
+      "seq": 130,
       "sim_time": "2026-10-28T16:33:09.139760Z",
       "payload": {
         "type": "gate.decided",
@@ -3579,9 +3605,9 @@
       }
     },
     {
-      "event_id": "75e0badb-2a68-53be-9303-4e7d8f91efca",
+      "event_id": "234d89c0-cfa1-5482-85b1-493d8085f92d",
       "run_id": 1,
-      "seq": 130,
+      "seq": 131,
       "sim_time": "2026-10-28T16:33:09.139760Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3591,9 +3617,9 @@
       }
     },
     {
-      "event_id": "234d89c0-cfa1-5482-85b1-493d8085f92d",
+      "event_id": "43c50646-7979-5e7b-89b1-c9fe20dad73a",
       "run_id": 1,
-      "seq": 131,
+      "seq": 132,
       "sim_time": "2026-10-28T16:33:09.139760Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3603,9 +3629,9 @@
       }
     },
     {
-      "event_id": "43c50646-7979-5e7b-89b1-c9fe20dad73a",
+      "event_id": "f39f9100-f939-5792-b0f8-8422af1e5ab9",
       "run_id": 1,
-      "seq": 132,
+      "seq": 133,
       "sim_time": "2026-10-28T17:06:41.568161Z",
       "payload": {
         "type": "truck.dispatched",
@@ -3618,30 +3644,25 @@
       }
     },
     {
-      "event_id": "f39f9100-f939-5792-b0f8-8422af1e5ab9",
-      "run_id": 1,
-      "seq": 133,
-      "sim_time": "2026-10-28T17:35:11.179966Z",
-      "payload": {
-        "type": "gate.decided",
-        "gate": "G2",
-        "object_type": "tanker",
-        "object_id": "RT-002",
-        "decision": "pass",
-        "reason": null,
-        "decided_by": "gate_engine"
-      }
-    },
-    {
       "event_id": "a0cbee10-5f76-577d-a910-535dde0d1f12",
       "run_id": 1,
       "seq": 134,
       "sim_time": "2026-10-28T17:35:11.179966Z",
       "payload": {
-        "type": "tanker.status_changed",
+        "type": "lab.result",
         "tanker_code": "RT-002",
-        "status": "released",
-        "bay_code": null
+        "analyst": "ANL-1",
+        "started_min": 633.15,
+        "duration_min": 62.03,
+        "fat_pct": 4.146,
+        "protein_pct": 2.892,
+        "acidity_pct": 0.1494,
+        "ph": 6.69,
+        "antibiotic_residue": false,
+        "adulterant": false,
+        "test_type": "standard",
+        "g2": "pass",
+        "g2_reason": null
       }
     },
     {
@@ -3651,7 +3672,7 @@
       "sim_time": "2026-10-28T17:35:11.179966Z",
       "payload": {
         "type": "gate.decided",
-        "gate": "G3",
+        "gate": "G2",
         "object_type": "tanker",
         "object_id": "RT-002",
         "decision": "pass",
@@ -3665,6 +3686,33 @@
       "seq": 136,
       "sim_time": "2026-10-28T17:35:11.179966Z",
       "payload": {
+        "type": "tanker.status_changed",
+        "tanker_code": "RT-002",
+        "status": "released",
+        "bay_code": null
+      }
+    },
+    {
+      "event_id": "e3f4dbce-48ca-5794-b7ac-f37edb2f2dee",
+      "run_id": 1,
+      "seq": 137,
+      "sim_time": "2026-10-28T17:35:11.179966Z",
+      "payload": {
+        "type": "gate.decided",
+        "gate": "G3",
+        "object_type": "tanker",
+        "object_id": "RT-002",
+        "decision": "pass",
+        "reason": null,
+        "decided_by": "gate_engine"
+      }
+    },
+    {
+      "event_id": "d2677943-60f2-50cf-a162-639a7ea59b71",
+      "run_id": 1,
+      "seq": 138,
+      "sim_time": "2026-10-28T17:35:11.179966Z",
+      "payload": {
         "type": "asset.status_changed",
         "asset_code": "BAY-3",
         "status": "in_use",
@@ -3673,9 +3721,9 @@
       }
     },
     {
-      "event_id": "e3f4dbce-48ca-5794-b7ac-f37edb2f2dee",
+      "event_id": "cf7cf3ad-2185-5b94-8010-b78ae9e51f1c",
       "run_id": 1,
-      "seq": 137,
+      "seq": 139,
       "sim_time": "2026-10-28T17:35:11.179966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3686,9 +3734,9 @@
       }
     },
     {
-      "event_id": "d2677943-60f2-50cf-a162-639a7ea59b71",
+      "event_id": "1e6fe50d-ec27-52a9-ae6d-e47ad32d1028",
       "run_id": 1,
-      "seq": 138,
+      "seq": 140,
       "sim_time": "2026-10-28T17:35:11.179966Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3698,9 +3746,9 @@
       }
     },
     {
-      "event_id": "cf7cf3ad-2185-5b94-8010-b78ae9e51f1c",
+      "event_id": "9ad5b3dc-c549-571b-adb4-187fa58ae543",
       "run_id": 1,
-      "seq": 139,
+      "seq": 141,
       "sim_time": "2026-10-28T17:40:44.029966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3711,9 +3759,9 @@
       }
     },
     {
-      "event_id": "1e6fe50d-ec27-52a9-ae6d-e47ad32d1028",
+      "event_id": "e15e6c08-4cb6-5301-bc4d-900d705bfa6d",
       "run_id": 1,
-      "seq": 140,
+      "seq": 142,
       "sim_time": "2026-10-28T17:46:16.879966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3724,9 +3772,9 @@
       }
     },
     {
-      "event_id": "9ad5b3dc-c549-571b-adb4-187fa58ae543",
+      "event_id": "26cd6c11-c3fa-522f-94d8-8d80c883cb76",
       "run_id": 1,
-      "seq": 141,
+      "seq": 143,
       "sim_time": "2026-10-28T17:51:41.568161Z",
       "payload": {
         "type": "truck.arrived",
@@ -3738,9 +3786,9 @@
       }
     },
     {
-      "event_id": "e15e6c08-4cb6-5301-bc4d-900d705bfa6d",
+      "event_id": "3031fd89-b62d-58a5-bcfc-66f3c435496b",
       "run_id": 1,
-      "seq": 142,
+      "seq": 144,
       "sim_time": "2026-10-28T17:51:41.568161Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3750,9 +3798,9 @@
       }
     },
     {
-      "event_id": "26cd6c11-c3fa-522f-94d8-8d80c883cb76",
+      "event_id": "1c320201-0564-5fa1-82ef-a85229d3a9a1",
       "run_id": 1,
-      "seq": 143,
+      "seq": 145,
       "sim_time": "2026-10-28T17:51:41.568161Z",
       "payload": {
         "type": "gate.decided",
@@ -3765,9 +3813,9 @@
       }
     },
     {
-      "event_id": "3031fd89-b62d-58a5-bcfc-66f3c435496b",
+      "event_id": "5c5c1b59-e795-544b-9901-e5e323afeb06",
       "run_id": 1,
-      "seq": 144,
+      "seq": 146,
       "sim_time": "2026-10-28T17:51:41.568161Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3777,9 +3825,9 @@
       }
     },
     {
-      "event_id": "1c320201-0564-5fa1-82ef-a85229d3a9a1",
+      "event_id": "5564b98f-daa5-51e9-b330-4c0bad1c2dc7",
       "run_id": 1,
-      "seq": 145,
+      "seq": 147,
       "sim_time": "2026-10-28T17:51:41.568161Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3789,9 +3837,9 @@
       }
     },
     {
-      "event_id": "5c5c1b59-e795-544b-9901-e5e323afeb06",
+      "event_id": "2bc0c477-6768-51e5-a0b3-9360c54b7460",
       "run_id": 1,
-      "seq": 146,
+      "seq": 148,
       "sim_time": "2026-10-28T17:51:49.729966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3802,9 +3850,9 @@
       }
     },
     {
-      "event_id": "5564b98f-daa5-51e9-b330-4c0bad1c2dc7",
+      "event_id": "65cf8d37-9bb3-5ff6-801f-e05059202e3c",
       "run_id": 1,
-      "seq": 147,
+      "seq": 149,
       "sim_time": "2026-10-28T17:57:22.579966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3815,9 +3863,9 @@
       }
     },
     {
-      "event_id": "2bc0c477-6768-51e5-a0b3-9360c54b7460",
+      "event_id": "8859ec17-cae5-57ae-822d-4f0fff937f96",
       "run_id": 1,
-      "seq": 148,
+      "seq": 150,
       "sim_time": "2026-10-28T18:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -3829,9 +3877,9 @@
       }
     },
     {
-      "event_id": "65cf8d37-9bb3-5ff6-801f-e05059202e3c",
+      "event_id": "671e37f2-a5c2-56b1-a568-486b06a766b3",
       "run_id": 1,
-      "seq": 149,
+      "seq": 151,
       "sim_time": "2026-10-28T18:02:55.429966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3842,9 +3890,9 @@
       }
     },
     {
-      "event_id": "8859ec17-cae5-57ae-822d-4f0fff937f96",
+      "event_id": "e0cc0855-1430-5e14-966f-a770ff0589c3",
       "run_id": 1,
-      "seq": 150,
+      "seq": 152,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3855,9 +3903,9 @@
       }
     },
     {
-      "event_id": "671e37f2-a5c2-56b1-a568-486b06a766b3",
+      "event_id": "b36fe31a-f01c-5ef5-9fd5-25ae3d20e2a5",
       "run_id": 1,
-      "seq": 151,
+      "seq": 153,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "transfer.completed",
@@ -3868,9 +3916,9 @@
       }
     },
     {
-      "event_id": "e0cc0855-1430-5e14-966f-a770ff0589c3",
+      "event_id": "57d8d6a4-72f2-5799-85ad-28456f17721d",
       "run_id": 1,
-      "seq": 152,
+      "seq": 154,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "transfer.completed",
@@ -3881,9 +3929,9 @@
       }
     },
     {
-      "event_id": "b36fe31a-f01c-5ef5-9fd5-25ae3d20e2a5",
+      "event_id": "cc765edc-2e79-5f27-a042-f500ca9af00e",
       "run_id": 1,
-      "seq": 153,
+      "seq": 155,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "transfer.completed",
@@ -3894,9 +3942,9 @@
       }
     },
     {
-      "event_id": "57d8d6a4-72f2-5799-85ad-28456f17721d",
+      "event_id": "a796abf8-7006-5df8-b638-bf2a4cffdaac",
       "run_id": 1,
-      "seq": 154,
+      "seq": 156,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3907,9 +3955,9 @@
       }
     },
     {
-      "event_id": "cc765edc-2e79-5f27-a042-f500ca9af00e",
+      "event_id": "b75c01f9-8ef5-52ac-83b9-d7084a41a16f",
       "run_id": 1,
-      "seq": 155,
+      "seq": 157,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3920,9 +3968,9 @@
       }
     },
     {
-      "event_id": "a796abf8-7006-5df8-b638-bf2a4cffdaac",
+      "event_id": "040f4d13-dcf0-5885-ac2a-22bd99c1b655",
       "run_id": 1,
-      "seq": 156,
+      "seq": 158,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "unload.finished",
@@ -3934,9 +3982,9 @@
       }
     },
     {
-      "event_id": "b75c01f9-8ef5-52ac-83b9-d7084a41a16f",
+      "event_id": "274be381-f583-52e1-af4d-32f5737c9358",
       "run_id": 1,
-      "seq": 157,
+      "seq": 159,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -3946,9 +3994,9 @@
       }
     },
     {
-      "event_id": "040f4d13-dcf0-5885-ac2a-22bd99c1b655",
+      "event_id": "d787f9d5-1a20-5a4d-9b1f-35b647810f26",
       "run_id": 1,
-      "seq": 158,
+      "seq": 160,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "gate.decided",
@@ -3961,9 +4009,9 @@
       }
     },
     {
-      "event_id": "274be381-f583-52e1-af4d-32f5737c9358",
+      "event_id": "d7ec1499-47fa-55e2-a4ae-609dc24acd5f",
       "run_id": 1,
-      "seq": 159,
+      "seq": 161,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3974,9 +4022,9 @@
       }
     },
     {
-      "event_id": "d787f9d5-1a20-5a4d-9b1f-35b647810f26",
+      "event_id": "ecac7a7a-1a7e-5084-bb3a-bdee95efbf84",
       "run_id": 1,
-      "seq": 160,
+      "seq": 162,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -3987,9 +4035,9 @@
       }
     },
     {
-      "event_id": "d7ec1499-47fa-55e2-a4ae-609dc24acd5f",
+      "event_id": "8fff3561-6c10-5294-b746-f1eb83d14341",
       "run_id": 1,
-      "seq": 161,
+      "seq": 163,
       "sim_time": "2026-10-28T18:08:28.279966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4000,9 +4048,9 @@
       }
     },
     {
-      "event_id": "ecac7a7a-1a7e-5084-bb3a-bdee95efbf84",
+      "event_id": "b33bf1f6-30fc-54fe-b1fd-2acebcdc1485",
       "run_id": 1,
-      "seq": 162,
+      "seq": 164,
       "sim_time": "2026-10-28T18:14:01.129966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4013,9 +4061,9 @@
       }
     },
     {
-      "event_id": "8fff3561-6c10-5294-b746-f1eb83d14341",
+      "event_id": "bf99cced-ac98-5d0d-8a6d-53df0e6af8c6",
       "run_id": 1,
-      "seq": 163,
+      "seq": 165,
       "sim_time": "2026-10-28T18:14:01.129966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4026,9 +4074,9 @@
       }
     },
     {
-      "event_id": "b33bf1f6-30fc-54fe-b1fd-2acebcdc1485",
+      "event_id": "ffb67939-d234-56de-8239-9a0b582ba821",
       "run_id": 1,
-      "seq": 164,
+      "seq": 166,
       "sim_time": "2026-10-28T18:19:33.979966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4039,9 +4087,9 @@
       }
     },
     {
-      "event_id": "bf99cced-ac98-5d0d-8a6d-53df0e6af8c6",
+      "event_id": "8f688179-6576-5f7b-bf52-334692307e20",
       "run_id": 1,
-      "seq": 165,
+      "seq": 167,
       "sim_time": "2026-10-28T18:19:33.979966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4052,9 +4100,9 @@
       }
     },
     {
-      "event_id": "ffb67939-d234-56de-8239-9a0b582ba821",
+      "event_id": "125ac8aa-46d0-59e8-80d3-ba6abff84006",
       "run_id": 1,
-      "seq": 166,
+      "seq": 168,
       "sim_time": "2026-10-28T18:25:06.829966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4065,9 +4113,9 @@
       }
     },
     {
-      "event_id": "8f688179-6576-5f7b-bf52-334692307e20",
+      "event_id": "b2908673-88b7-58ff-bbc7-3b7bb3bc18db",
       "run_id": 1,
-      "seq": 167,
+      "seq": 169,
       "sim_time": "2026-10-28T18:25:06.829966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4078,9 +4126,9 @@
       }
     },
     {
-      "event_id": "125ac8aa-46d0-59e8-80d3-ba6abff84006",
+      "event_id": "42f37ae7-c4ed-5b88-af58-af7685cb090e",
       "run_id": 1,
-      "seq": 168,
+      "seq": 170,
       "sim_time": "2026-10-28T18:30:39.679966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4091,9 +4139,9 @@
       }
     },
     {
-      "event_id": "b2908673-88b7-58ff-bbc7-3b7bb3bc18db",
+      "event_id": "ee19a12d-ab35-5602-a1da-49153fc9f6b9",
       "run_id": 1,
-      "seq": 169,
+      "seq": 171,
       "sim_time": "2026-10-28T18:30:39.679966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4104,9 +4152,9 @@
       }
     },
     {
-      "event_id": "42f37ae7-c4ed-5b88-af58-af7685cb090e",
+      "event_id": "ecf20944-d51e-54f2-bfd3-123bed00caa3",
       "run_id": 1,
-      "seq": 170,
+      "seq": 172,
       "sim_time": "2026-10-28T18:36:12.529966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4117,9 +4165,9 @@
       }
     },
     {
-      "event_id": "ee19a12d-ab35-5602-a1da-49153fc9f6b9",
+      "event_id": "f791bee3-4ca6-5bc1-940b-d0f26737fc24",
       "run_id": 1,
-      "seq": 171,
+      "seq": 173,
       "sim_time": "2026-10-28T18:36:12.529966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4130,9 +4178,9 @@
       }
     },
     {
-      "event_id": "ecf20944-d51e-54f2-bfd3-123bed00caa3",
+      "event_id": "de02152b-725e-5989-91aa-1f2fb275e525",
       "run_id": 1,
-      "seq": 172,
+      "seq": 174,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4143,9 +4191,9 @@
       }
     },
     {
-      "event_id": "f791bee3-4ca6-5bc1-940b-d0f26737fc24",
+      "event_id": "67207cc1-2221-5ba9-b809-1cb01ab93a91",
       "run_id": 1,
-      "seq": 173,
+      "seq": 175,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4156,9 +4204,9 @@
       }
     },
     {
-      "event_id": "de02152b-725e-5989-91aa-1f2fb275e525",
+      "event_id": "60e057d5-be60-5dcd-8304-33c0310b6269",
       "run_id": 1,
-      "seq": 174,
+      "seq": 176,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4169,9 +4217,9 @@
       }
     },
     {
-      "event_id": "67207cc1-2221-5ba9-b809-1cb01ab93a91",
+      "event_id": "7036c662-ea5d-576e-8248-bef11fd08dd3",
       "run_id": 1,
-      "seq": 175,
+      "seq": 177,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4182,9 +4230,9 @@
       }
     },
     {
-      "event_id": "60e057d5-be60-5dcd-8304-33c0310b6269",
+      "event_id": "f271306b-5d17-5b64-8867-96f791011292",
       "run_id": 1,
-      "seq": 176,
+      "seq": 178,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4195,9 +4243,9 @@
       }
     },
     {
-      "event_id": "7036c662-ea5d-576e-8248-bef11fd08dd3",
+      "event_id": "0a597e97-921a-5f54-89f2-8f3a6ea6f144",
       "run_id": 1,
-      "seq": 177,
+      "seq": 179,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "cip.started",
@@ -4206,9 +4254,9 @@
       }
     },
     {
-      "event_id": "f271306b-5d17-5b64-8867-96f791011292",
+      "event_id": "24bb4726-1607-5a97-969c-b4afbc075733",
       "run_id": 1,
-      "seq": 178,
+      "seq": 180,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4219,9 +4267,9 @@
       }
     },
     {
-      "event_id": "0a597e97-921a-5f54-89f2-8f3a6ea6f144",
+      "event_id": "0a7bf265-d58a-51b7-b2d6-bd8591bc7100",
       "run_id": 1,
-      "seq": 179,
+      "seq": 181,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "gate.decided",
@@ -4234,9 +4282,9 @@
       }
     },
     {
-      "event_id": "24bb4726-1607-5a97-969c-b4afbc075733",
+      "event_id": "d8eed6fd-996a-5c01-a4c5-76fce76b2173",
       "run_id": 1,
-      "seq": 180,
+      "seq": 182,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4247,9 +4295,9 @@
       }
     },
     {
-      "event_id": "0a7bf265-d58a-51b7-b2d6-bd8591bc7100",
+      "event_id": "824dd4f3-f2a6-592d-b2af-fe536bcbc022",
       "run_id": 1,
-      "seq": 181,
+      "seq": 183,
       "sim_time": "2026-10-28T18:41:45.379966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4260,9 +4308,31 @@
       }
     },
     {
-      "event_id": "d8eed6fd-996a-5c01-a4c5-76fce76b2173",
+      "event_id": "a4673eaa-f2d3-5381-9b57-469962d27b4d",
       "run_id": 1,
-      "seq": 182,
+      "seq": 184,
+      "sim_time": "2026-10-28T18:48:45.279438Z",
+      "payload": {
+        "type": "lab.result",
+        "tanker_code": "RT-003",
+        "analyst": "ANL-1",
+        "started_min": 711.69,
+        "duration_min": 57.06,
+        "fat_pct": 3.818,
+        "protein_pct": 3.151,
+        "acidity_pct": 0.1411,
+        "ph": 6.73,
+        "antibiotic_residue": false,
+        "adulterant": false,
+        "test_type": "standard",
+        "g2": "pass",
+        "g2_reason": null
+      }
+    },
+    {
+      "event_id": "0d313232-3116-57bf-8c86-8e8c05a8408c",
+      "run_id": 1,
+      "seq": 185,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "gate.decided",
@@ -4275,9 +4345,9 @@
       }
     },
     {
-      "event_id": "824dd4f3-f2a6-592d-b2af-fe536bcbc022",
+      "event_id": "e8403714-acaa-585a-b46d-5922d9b063ca",
       "run_id": 1,
-      "seq": 183,
+      "seq": 186,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -4287,9 +4357,9 @@
       }
     },
     {
-      "event_id": "a4673eaa-f2d3-5381-9b57-469962d27b4d",
+      "event_id": "50127cd9-558a-5ade-8b9c-b598f1c963eb",
       "run_id": 1,
-      "seq": 184,
+      "seq": 187,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "gate.decided",
@@ -4302,9 +4372,9 @@
       }
     },
     {
-      "event_id": "0d313232-3116-57bf-8c86-8e8c05a8408c",
+      "event_id": "31f374e4-37d2-5a8b-8900-a792b28dff89",
       "run_id": 1,
-      "seq": 185,
+      "seq": 188,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4315,9 +4385,9 @@
       }
     },
     {
-      "event_id": "e8403714-acaa-585a-b46d-5922d9b063ca",
+      "event_id": "5df1e2fe-c8e0-59d6-a62d-1195d0ac4720",
       "run_id": 1,
-      "seq": 186,
+      "seq": 189,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4328,9 +4398,9 @@
       }
     },
     {
-      "event_id": "50127cd9-558a-5ade-8b9c-b598f1c963eb",
+      "event_id": "e1c7a01c-cc49-5112-aace-73e8d9cd28bc",
       "run_id": 1,
-      "seq": 187,
+      "seq": 190,
       "sim_time": "2026-10-28T18:48:45.279438Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -4340,9 +4410,9 @@
       }
     },
     {
-      "event_id": "31f374e4-37d2-5a8b-8900-a792b28dff89",
+      "event_id": "dffd6497-831d-5a52-b91f-3d3bfd670236",
       "run_id": 1,
-      "seq": 188,
+      "seq": 191,
       "sim_time": "2026-10-28T18:52:47.779966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4353,9 +4423,9 @@
       }
     },
     {
-      "event_id": "5df1e2fe-c8e0-59d6-a62d-1195d0ac4720",
+      "event_id": "8aa6e8bc-a908-5db2-915b-6b6a79a0261b",
       "run_id": 1,
-      "seq": 189,
+      "seq": 192,
       "sim_time": "2026-10-28T18:54:05.229438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4366,9 +4436,9 @@
       }
     },
     {
-      "event_id": "e1c7a01c-cc49-5112-aace-73e8d9cd28bc",
+      "event_id": "59004a4e-4027-5989-a2b9-2164406b112e",
       "run_id": 1,
-      "seq": 190,
+      "seq": 193,
       "sim_time": "2026-10-28T18:59:25.179438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4379,9 +4449,9 @@
       }
     },
     {
-      "event_id": "dffd6497-831d-5a52-b91f-3d3bfd670236",
+      "event_id": "f7f84314-e816-510c-8373-521e6eb8c098",
       "run_id": 1,
-      "seq": 191,
+      "seq": 194,
       "sim_time": "2026-10-28T19:03:50.179966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4392,9 +4462,9 @@
       }
     },
     {
-      "event_id": "8aa6e8bc-a908-5db2-915b-6b6a79a0261b",
+      "event_id": "4a1c1bd3-eaab-51f5-ac8d-78101a224a01",
       "run_id": 1,
-      "seq": 192,
+      "seq": 195,
       "sim_time": "2026-10-28T19:04:45.129438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4405,9 +4475,9 @@
       }
     },
     {
-      "event_id": "59004a4e-4027-5989-a2b9-2164406b112e",
+      "event_id": "0c477f30-32c5-55dd-9121-0f7906357973",
       "run_id": 1,
-      "seq": 193,
+      "seq": 196,
       "sim_time": "2026-10-28T19:10:05.079438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4418,9 +4488,9 @@
       }
     },
     {
-      "event_id": "f7f84314-e816-510c-8373-521e6eb8c098",
+      "event_id": "ba3a6d44-7591-52cb-827a-89b04155497e",
       "run_id": 1,
-      "seq": 194,
+      "seq": 197,
       "sim_time": "2026-10-28T19:14:52.579966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4431,9 +4501,9 @@
       }
     },
     {
-      "event_id": "4a1c1bd3-eaab-51f5-ac8d-78101a224a01",
+      "event_id": "84dac188-ec35-5e83-8a31-65a335c5c7cd",
       "run_id": 1,
-      "seq": 195,
+      "seq": 198,
       "sim_time": "2026-10-28T19:15:25.029438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4444,9 +4514,9 @@
       }
     },
     {
-      "event_id": "0c477f30-32c5-55dd-9121-0f7906357973",
+      "event_id": "a2fa51be-1b39-5341-a9c7-dd5ddd81d29d",
       "run_id": 1,
-      "seq": 196,
+      "seq": 199,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4457,9 +4527,9 @@
       }
     },
     {
-      "event_id": "ba3a6d44-7591-52cb-827a-89b04155497e",
+      "event_id": "d81c2fb7-19b0-5229-b312-7c4ce911589a",
       "run_id": 1,
-      "seq": 197,
+      "seq": 200,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4470,9 +4540,9 @@
       }
     },
     {
-      "event_id": "84dac188-ec35-5e83-8a31-65a335c5c7cd",
+      "event_id": "38064aa9-9279-58e0-bb08-90702a390fa9",
       "run_id": 1,
-      "seq": 198,
+      "seq": 201,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4483,9 +4553,9 @@
       }
     },
     {
-      "event_id": "a2fa51be-1b39-5341-a9c7-dd5ddd81d29d",
+      "event_id": "a0171847-f4ed-5468-9d0a-c810f641efaa",
       "run_id": 1,
-      "seq": 199,
+      "seq": 202,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4496,9 +4566,9 @@
       }
     },
     {
-      "event_id": "d81c2fb7-19b0-5229-b312-7c4ce911589a",
+      "event_id": "c9237f83-4518-5d0d-8d88-215f35894bd3",
       "run_id": 1,
-      "seq": 200,
+      "seq": 203,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4509,9 +4579,9 @@
       }
     },
     {
-      "event_id": "38064aa9-9279-58e0-bb08-90702a390fa9",
+      "event_id": "a8548e36-0c65-52d8-92c7-44352dc6fc3c",
       "run_id": 1,
-      "seq": 201,
+      "seq": 204,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4522,9 +4592,9 @@
       }
     },
     {
-      "event_id": "a0171847-f4ed-5468-9d0a-c810f641efaa",
+      "event_id": "58a33c3c-02a2-5994-a297-1ab781cb4873",
       "run_id": 1,
-      "seq": 202,
+      "seq": 205,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "unload.finished",
@@ -4536,9 +4606,9 @@
       }
     },
     {
-      "event_id": "c9237f83-4518-5d0d-8d88-215f35894bd3",
+      "event_id": "a298adea-b15b-5be1-b0b6-cb750131a917",
       "run_id": 1,
-      "seq": 203,
+      "seq": 206,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -4548,9 +4618,9 @@
       }
     },
     {
-      "event_id": "a8548e36-0c65-52d8-92c7-44352dc6fc3c",
+      "event_id": "e536cbdc-ade2-54c1-a006-2b465a1bc8a6",
       "run_id": 1,
-      "seq": 204,
+      "seq": 207,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "gate.decided",
@@ -4563,9 +4633,9 @@
       }
     },
     {
-      "event_id": "58a33c3c-02a2-5994-a297-1ab781cb4873",
+      "event_id": "46e889df-4e0e-52e7-9342-2c94950f16d5",
       "run_id": 1,
-      "seq": 205,
+      "seq": 208,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4576,9 +4646,9 @@
       }
     },
     {
-      "event_id": "a298adea-b15b-5be1-b0b6-cb750131a917",
+      "event_id": "599f2a59-e983-5e74-9732-1d7fbcfe8561",
       "run_id": 1,
-      "seq": 206,
+      "seq": 209,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4589,9 +4659,9 @@
       }
     },
     {
-      "event_id": "e536cbdc-ade2-54c1-a006-2b465a1bc8a6",
+      "event_id": "17320a93-8078-58eb-be04-b9e6efc14d8e",
       "run_id": 1,
-      "seq": 207,
+      "seq": 210,
       "sim_time": "2026-10-28T19:20:44.979438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4602,9 +4672,9 @@
       }
     },
     {
-      "event_id": "46e889df-4e0e-52e7-9342-2c94950f16d5",
+      "event_id": "67faf873-9fa8-55aa-a401-703bd7091f27",
       "run_id": 1,
-      "seq": 208,
+      "seq": 211,
       "sim_time": "2026-10-28T19:25:54.979966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4615,9 +4685,9 @@
       }
     },
     {
-      "event_id": "599f2a59-e983-5e74-9732-1d7fbcfe8561",
+      "event_id": "b0bd5db3-bf9a-5d46-acc0-6020c3f928ee",
       "run_id": 1,
-      "seq": 209,
+      "seq": 212,
       "sim_time": "2026-10-28T19:26:04.929438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4628,9 +4698,9 @@
       }
     },
     {
-      "event_id": "17320a93-8078-58eb-be04-b9e6efc14d8e",
+      "event_id": "92dc59e7-501d-56eb-adce-178a46ba1597",
       "run_id": 1,
-      "seq": 210,
+      "seq": 213,
       "sim_time": "2026-10-28T19:26:04.929438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4641,9 +4711,9 @@
       }
     },
     {
-      "event_id": "67faf873-9fa8-55aa-a401-703bd7091f27",
+      "event_id": "5269c186-0493-577d-bdfa-54dfe5642242",
       "run_id": 1,
-      "seq": 211,
+      "seq": 214,
       "sim_time": "2026-10-28T19:31:24.879438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4654,9 +4724,9 @@
       }
     },
     {
-      "event_id": "b0bd5db3-bf9a-5d46-acc0-6020c3f928ee",
+      "event_id": "511a508d-3e98-5abc-ac27-fd9736e81be6",
       "run_id": 1,
-      "seq": 212,
+      "seq": 215,
       "sim_time": "2026-10-28T19:31:24.879438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4667,9 +4737,9 @@
       }
     },
     {
-      "event_id": "92dc59e7-501d-56eb-adce-178a46ba1597",
+      "event_id": "852358a3-7f97-5522-9282-488243f0041b",
       "run_id": 1,
-      "seq": 213,
+      "seq": 216,
       "sim_time": "2026-10-28T19:36:44.829438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4680,9 +4750,9 @@
       }
     },
     {
-      "event_id": "5269c186-0493-577d-bdfa-54dfe5642242",
+      "event_id": "1398ba50-61c5-58c1-bef7-aecdf456093a",
       "run_id": 1,
-      "seq": 214,
+      "seq": 217,
       "sim_time": "2026-10-28T19:36:44.829438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4693,9 +4763,9 @@
       }
     },
     {
-      "event_id": "511a508d-3e98-5abc-ac27-fd9736e81be6",
+      "event_id": "d84e8ac6-fd40-5134-bf4a-70b25699dbd9",
       "run_id": 1,
-      "seq": 215,
+      "seq": 218,
       "sim_time": "2026-10-28T19:36:57.379966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4706,9 +4776,9 @@
       }
     },
     {
-      "event_id": "852358a3-7f97-5522-9282-488243f0041b",
+      "event_id": "80d9204c-2e27-5e61-81a9-e62a72f728e4",
       "run_id": 1,
-      "seq": 216,
+      "seq": 219,
       "sim_time": "2026-10-28T19:42:04.779438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4719,9 +4789,9 @@
       }
     },
     {
-      "event_id": "1398ba50-61c5-58c1-bef7-aecdf456093a",
+      "event_id": "c51f775a-98ed-5495-87a8-d2b172ba0746",
       "run_id": 1,
-      "seq": 217,
+      "seq": 220,
       "sim_time": "2026-10-28T19:42:04.779438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4732,9 +4802,9 @@
       }
     },
     {
-      "event_id": "d84e8ac6-fd40-5134-bf4a-70b25699dbd9",
+      "event_id": "ebfeb30f-5447-5279-8d2c-6009acd7f38c",
       "run_id": 1,
-      "seq": 218,
+      "seq": 221,
       "sim_time": "2026-10-28T19:47:24.729438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4745,9 +4815,9 @@
       }
     },
     {
-      "event_id": "80d9204c-2e27-5e61-81a9-e62a72f728e4",
+      "event_id": "180ac788-fcdd-51b5-92fe-b81b41a44490",
       "run_id": 1,
-      "seq": 219,
+      "seq": 222,
       "sim_time": "2026-10-28T19:47:24.729438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4758,9 +4828,9 @@
       }
     },
     {
-      "event_id": "c51f775a-98ed-5495-87a8-d2b172ba0746",
+      "event_id": "049ae616-1560-5d07-ad3c-fe5fb838a2c7",
       "run_id": 1,
-      "seq": 220,
+      "seq": 223,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4771,9 +4841,9 @@
       }
     },
     {
-      "event_id": "ebfeb30f-5447-5279-8d2c-6009acd7f38c",
+      "event_id": "13c22728-cd35-5d93-9a32-23ca12f543ab",
       "run_id": 1,
-      "seq": 221,
+      "seq": 224,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "gate.decided",
@@ -4786,9 +4856,9 @@
       }
     },
     {
-      "event_id": "180ac788-fcdd-51b5-92fe-b81b41a44490",
+      "event_id": "fd2c5425-67ff-5abd-a23f-5d3251a137f9",
       "run_id": 1,
-      "seq": 222,
+      "seq": 225,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4799,9 +4869,9 @@
       }
     },
     {
-      "event_id": "049ae616-1560-5d07-ad3c-fe5fb838a2c7",
+      "event_id": "3d142599-fdbc-55cc-9638-ed29cbf689a0",
       "run_id": 1,
-      "seq": 223,
+      "seq": 226,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4812,9 +4882,9 @@
       }
     },
     {
-      "event_id": "13c22728-cd35-5d93-9a32-23ca12f543ab",
+      "event_id": "0e801f59-453b-59a5-b960-f9c963420dac",
       "run_id": 1,
-      "seq": 224,
+      "seq": 227,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "asset.level",
@@ -4829,9 +4899,9 @@
       }
     },
     {
-      "event_id": "fd2c5425-67ff-5abd-a23f-5d3251a137f9",
+      "event_id": "7c7a95af-7721-5283-a6d3-99b8e45d4a74",
       "run_id": 1,
-      "seq": 225,
+      "seq": 228,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "gate.decided",
@@ -4844,9 +4914,9 @@
       }
     },
     {
-      "event_id": "3d142599-fdbc-55cc-9638-ed29cbf689a0",
+      "event_id": "4ea829f6-481a-57fc-b87d-0770807282d6",
       "run_id": 1,
-      "seq": 226,
+      "seq": 229,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4857,9 +4927,9 @@
       }
     },
     {
-      "event_id": "0e801f59-453b-59a5-b960-f9c963420dac",
+      "event_id": "bfaedc13-d62d-51dd-9a8b-66895ba2cdd1",
       "run_id": 1,
-      "seq": 227,
+      "seq": 230,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "transfer.completed",
@@ -4870,9 +4940,9 @@
       }
     },
     {
-      "event_id": "7c7a95af-7721-5283-a6d3-99b8e45d4a74",
+      "event_id": "3f56b80f-8e90-5464-9dd6-6362432f0174",
       "run_id": 1,
-      "seq": 228,
+      "seq": 231,
       "sim_time": "2026-10-28T19:47:59.779966Z",
       "payload": {
         "type": "asset.level",
@@ -4887,9 +4957,9 @@
       }
     },
     {
-      "event_id": "4ea829f6-481a-57fc-b87d-0770807282d6",
+      "event_id": "02486667-1c9b-5270-88f7-13427e44c548",
       "run_id": 1,
-      "seq": 229,
+      "seq": 232,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4900,9 +4970,9 @@
       }
     },
     {
-      "event_id": "bfaedc13-d62d-51dd-9a8b-66895ba2cdd1",
+      "event_id": "c14fc677-82c9-5216-b82a-d4d4716a4eac",
       "run_id": 1,
-      "seq": 230,
+      "seq": 233,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4913,9 +4983,9 @@
       }
     },
     {
-      "event_id": "3f56b80f-8e90-5464-9dd6-6362432f0174",
+      "event_id": "d8cbf277-a6f5-5441-840a-af6775872087",
       "run_id": 1,
-      "seq": 231,
+      "seq": 234,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "transfer.completed",
@@ -4926,9 +4996,9 @@
       }
     },
     {
-      "event_id": "02486667-1c9b-5270-88f7-13427e44c548",
+      "event_id": "2b64c3e3-4a57-5f76-86f0-1f56118c8815",
       "run_id": 1,
-      "seq": 232,
+      "seq": 235,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4939,9 +5009,9 @@
       }
     },
     {
-      "event_id": "c14fc677-82c9-5216-b82a-d4d4716a4eac",
+      "event_id": "ea121d31-7299-585a-88d8-944859e90696",
       "run_id": 1,
-      "seq": 233,
+      "seq": 236,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4952,9 +5022,9 @@
       }
     },
     {
-      "event_id": "d8cbf277-a6f5-5441-840a-af6775872087",
+      "event_id": "80ccfc47-0aa7-5918-be05-35ca0249025f",
       "run_id": 1,
-      "seq": 234,
+      "seq": 237,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "cip.started",
@@ -4963,9 +5033,9 @@
       }
     },
     {
-      "event_id": "2b64c3e3-4a57-5f76-86f0-1f56118c8815",
+      "event_id": "4b83b448-85da-5980-b89d-088cf9a511da",
       "run_id": 1,
-      "seq": 235,
+      "seq": 238,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -4976,9 +5046,9 @@
       }
     },
     {
-      "event_id": "ea121d31-7299-585a-88d8-944859e90696",
+      "event_id": "115cd153-655d-5a05-8198-11cac7995474",
       "run_id": 1,
-      "seq": 236,
+      "seq": 239,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "gate.decided",
@@ -4991,9 +5061,9 @@
       }
     },
     {
-      "event_id": "80ccfc47-0aa7-5918-be05-35ca0249025f",
+      "event_id": "8ef4de56-35f9-58b0-a011-c9f105abb39d",
       "run_id": 1,
-      "seq": 237,
+      "seq": 240,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5004,9 +5074,9 @@
       }
     },
     {
-      "event_id": "4b83b448-85da-5980-b89d-088cf9a511da",
+      "event_id": "6783444c-0e86-5d81-9fde-bc1dc7be4971",
       "run_id": 1,
-      "seq": 238,
+      "seq": 241,
       "sim_time": "2026-10-28T19:52:44.679438Z",
       "payload": {
         "type": "transfer.completed",
@@ -5017,9 +5087,9 @@
       }
     },
     {
-      "event_id": "115cd153-655d-5a05-8198-11cac7995474",
+      "event_id": "921718d8-3cfa-5376-9cb8-22b7384af733",
       "run_id": 1,
-      "seq": 239,
+      "seq": 242,
       "sim_time": "2026-10-28T20:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -5031,9 +5101,9 @@
       }
     },
     {
-      "event_id": "8ef4de56-35f9-58b0-a011-c9f105abb39d",
+      "event_id": "f7e010e3-d4e7-566b-abf3-be5751c360b3",
       "run_id": 1,
-      "seq": 240,
+      "seq": 243,
       "sim_time": "2026-10-28T20:03:21.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5044,9 +5114,9 @@
       }
     },
     {
-      "event_id": "6783444c-0e86-5d81-9fde-bc1dc7be4971",
+      "event_id": "46b47579-656d-5422-8f88-dadb0411cf15",
       "run_id": 1,
-      "seq": 241,
+      "seq": 244,
       "sim_time": "2026-10-28T20:04:40.174280Z",
       "payload": {
         "type": "cip.finished",
@@ -5055,9 +5125,9 @@
       }
     },
     {
-      "event_id": "921718d8-3cfa-5376-9cb8-22b7384af733",
+      "event_id": "63d84045-8217-5c9b-bde9-dc0e34ea697b",
       "run_id": 1,
-      "seq": 242,
+      "seq": 245,
       "sim_time": "2026-10-28T20:04:40.174280Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5068,9 +5138,9 @@
       }
     },
     {
-      "event_id": "f7e010e3-d4e7-566b-abf3-be5751c360b3",
+      "event_id": "93da5fce-9bbc-5684-93b5-03351b6094bf",
       "run_id": 1,
-      "seq": 243,
+      "seq": 246,
       "sim_time": "2026-10-28T20:13:57.879438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5081,9 +5151,9 @@
       }
     },
     {
-      "event_id": "46b47579-656d-5422-8f88-dadb0411cf15",
+      "event_id": "08052bce-2619-50fd-b249-d0023dd3eb1a",
       "run_id": 1,
-      "seq": 244,
+      "seq": 247,
       "sim_time": "2026-10-28T20:20:57.043966Z",
       "payload": {
         "type": "asset.level",
@@ -5098,9 +5168,9 @@
       }
     },
     {
-      "event_id": "63d84045-8217-5c9b-bde9-dc0e34ea697b",
+      "event_id": "dbcd20ab-44a7-5ead-bd93-3a03c8b79084",
       "run_id": 1,
-      "seq": 245,
+      "seq": 248,
       "sim_time": "2026-10-28T20:24:34.479438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5111,9 +5181,9 @@
       }
     },
     {
-      "event_id": "93da5fce-9bbc-5684-93b5-03351b6094bf",
+      "event_id": "dcaae250-c1ab-54e9-a97c-0413facb18b5",
       "run_id": 1,
-      "seq": 246,
+      "seq": 249,
       "sim_time": "2026-10-28T20:35:11.079438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5124,9 +5194,9 @@
       }
     },
     {
-      "event_id": "08052bce-2619-50fd-b249-d0023dd3eb1a",
+      "event_id": "18e77380-ffa4-5877-8a21-3b7b1c954b0c",
       "run_id": 1,
-      "seq": 247,
+      "seq": 250,
       "sim_time": "2026-10-28T20:45:47.679438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5137,9 +5207,9 @@
       }
     },
     {
-      "event_id": "dbcd20ab-44a7-5ead-bd93-3a03c8b79084",
+      "event_id": "3de849be-adee-5cb4-a460-b9136513462c",
       "run_id": 1,
-      "seq": 248,
+      "seq": 251,
       "sim_time": "2026-10-28T20:53:54.307966Z",
       "payload": {
         "type": "asset.level",
@@ -5154,9 +5224,9 @@
       }
     },
     {
-      "event_id": "dcaae250-c1ab-54e9-a97c-0413facb18b5",
+      "event_id": "54323eab-e4e5-50bc-9dd8-773ece6f9716",
       "run_id": 1,
-      "seq": 249,
+      "seq": 252,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "gate.decided",
@@ -5169,9 +5239,9 @@
       }
     },
     {
-      "event_id": "18e77380-ffa4-5877-8a21-3b7b1c954b0c",
+      "event_id": "a5013bf6-bca3-56bc-abac-8482d3202120",
       "run_id": 1,
-      "seq": 250,
+      "seq": 253,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5182,9 +5252,9 @@
       }
     },
     {
-      "event_id": "3de849be-adee-5cb4-a460-b9136513462c",
+      "event_id": "a46bc85f-e32d-5c9c-adb6-38bfb5c1dec5",
       "run_id": 1,
-      "seq": 251,
+      "seq": 254,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "transfer.completed",
@@ -5195,9 +5265,9 @@
       }
     },
     {
-      "event_id": "54323eab-e4e5-50bc-9dd8-773ece6f9716",
+      "event_id": "cebe97d6-eb2f-5aee-9c50-e6e0c029e01f",
       "run_id": 1,
-      "seq": 252,
+      "seq": 255,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "asset.level",
@@ -5212,9 +5282,9 @@
       }
     },
     {
-      "event_id": "a5013bf6-bca3-56bc-abac-8482d3202120",
+      "event_id": "c714fc4c-bbce-5bcf-bfa4-9073bf1185f8",
       "run_id": 1,
-      "seq": 253,
+      "seq": 256,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "gate.decided",
@@ -5227,9 +5297,9 @@
       }
     },
     {
-      "event_id": "a46bc85f-e32d-5c9c-adb6-38bfb5c1dec5",
+      "event_id": "9766e50b-74cd-579f-b9cf-2d028f785217",
       "run_id": 1,
-      "seq": 254,
+      "seq": 257,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "cip.started",
@@ -5238,9 +5308,9 @@
       }
     },
     {
-      "event_id": "cebe97d6-eb2f-5aee-9c50-e6e0c029e01f",
+      "event_id": "d2c242fc-bdaf-552f-9727-8962a6298f8b",
       "run_id": 1,
-      "seq": 255,
+      "seq": 258,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5251,9 +5321,9 @@
       }
     },
     {
-      "event_id": "c714fc4c-bbce-5bcf-bfa4-9073bf1185f8",
+      "event_id": "bbf4a940-e7e7-5bff-addc-2572c3f04bc4",
       "run_id": 1,
-      "seq": 256,
+      "seq": 259,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5264,9 +5334,9 @@
       }
     },
     {
-      "event_id": "9766e50b-74cd-579f-b9cf-2d028f785217",
+      "event_id": "5aa41b69-834a-5257-b8b2-7da794eb8dbe",
       "run_id": 1,
-      "seq": 257,
+      "seq": 260,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "transfer.completed",
@@ -5277,9 +5347,9 @@
       }
     },
     {
-      "event_id": "d2c242fc-bdaf-552f-9727-8962a6298f8b",
+      "event_id": "4c9d0ae2-d23e-5c61-ae83-fedc4fed6910",
       "run_id": 1,
-      "seq": 258,
+      "seq": 261,
       "sim_time": "2026-10-28T20:56:24.279438Z",
       "payload": {
         "type": "asset.level",
@@ -5294,9 +5364,9 @@
       }
     },
     {
-      "event_id": "bbf4a940-e7e7-5bff-addc-2572c3f04bc4",
+      "event_id": "b3cc6d42-4053-564d-908d-9c981016d60a",
       "run_id": 1,
-      "seq": 259,
+      "seq": 262,
       "sim_time": "2026-10-28T21:00:23.803685Z",
       "payload": {
         "type": "cip.finished",
@@ -5305,9 +5375,9 @@
       }
     },
     {
-      "event_id": "5aa41b69-834a-5257-b8b2-7da794eb8dbe",
+      "event_id": "8ec152c9-f2b0-5fcc-9f0f-d1c7f0a7daf7",
       "run_id": 1,
-      "seq": 260,
+      "seq": 263,
       "sim_time": "2026-10-28T21:00:23.803685Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5318,9 +5388,9 @@
       }
     },
     {
-      "event_id": "4c9d0ae2-d23e-5c61-ae83-fedc4fed6910",
+      "event_id": "e9a3b619-9ada-51f4-bf26-1172aac3f72b",
       "run_id": 1,
-      "seq": 261,
+      "seq": 264,
       "sim_time": "2026-10-28T21:26:51.571966Z",
       "payload": {
         "type": "asset.level",
@@ -5335,9 +5405,9 @@
       }
     },
     {
-      "event_id": "b3cc6d42-4053-564d-908d-9c981016d60a",
+      "event_id": "85c4c5a3-3460-58c0-9bd2-a8ef6ecbbc17",
       "run_id": 1,
-      "seq": 262,
+      "seq": 265,
       "sim_time": "2026-10-28T21:28:04.530438Z",
       "payload": {
         "type": "asset.level",
@@ -5352,9 +5422,9 @@
       }
     },
     {
-      "event_id": "8ec152c9-f2b0-5fcc-9f0f-d1c7f0a7daf7",
+      "event_id": "966d999c-9a8b-5b79-af6d-cafb2e449eb3",
       "run_id": 1,
-      "seq": 263,
+      "seq": 266,
       "sim_time": "2026-10-28T21:59:44.781438Z",
       "payload": {
         "type": "asset.level",
@@ -5369,9 +5439,9 @@
       }
     },
     {
-      "event_id": "e9a3b619-9ada-51f4-bf26-1172aac3f72b",
+      "event_id": "a3f47e8e-50bb-57b4-bc2e-e06014e1f83b",
       "run_id": 1,
-      "seq": 264,
+      "seq": 267,
       "sim_time": "2026-10-28T21:59:48.835966Z",
       "payload": {
         "type": "asset.level",
@@ -5386,9 +5456,9 @@
       }
     },
     {
-      "event_id": "85c4c5a3-3460-58c0-9bd2-a8ef6ecbbc17",
+      "event_id": "82ffd91e-d4fe-510b-be1f-13132d9069d8",
       "run_id": 1,
-      "seq": 265,
+      "seq": 268,
       "sim_time": "2026-10-28T21:59:48.835966Z",
       "payload": {
         "type": "transfer.completed",
@@ -5399,9 +5469,9 @@
       }
     },
     {
-      "event_id": "966d999c-9a8b-5b79-af6d-cafb2e449eb3",
+      "event_id": "b6f8c4db-6eaa-5bb1-bd06-b7f7d11424f9",
       "run_id": 1,
-      "seq": 266,
+      "seq": 269,
       "sim_time": "2026-10-28T21:59:48.835966Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5412,9 +5482,9 @@
       }
     },
     {
-      "event_id": "a3f47e8e-50bb-57b4-bc2e-e06014e1f83b",
+      "event_id": "33911109-15ba-5ec2-89f7-8ff8ef3bbcac",
       "run_id": 1,
-      "seq": 267,
+      "seq": 270,
       "sim_time": "2026-10-28T22:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -5426,9 +5496,9 @@
       }
     },
     {
-      "event_id": "82ffd91e-d4fe-510b-be1f-13132d9069d8",
+      "event_id": "01f8a2aa-09b5-51f2-ae65-505cd13bed36",
       "run_id": 1,
-      "seq": 268,
+      "seq": 271,
       "sim_time": "2026-10-28T22:11:16.062595Z",
       "payload": {
         "type": "cip.finished",
@@ -5437,9 +5507,9 @@
       }
     },
     {
-      "event_id": "b6f8c4db-6eaa-5bb1-bd06-b7f7d11424f9",
+      "event_id": "0505f738-0d22-5315-9da4-6af2d3ff6783",
       "run_id": 1,
-      "seq": 269,
+      "seq": 272,
       "sim_time": "2026-10-28T22:11:16.062595Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5450,9 +5520,9 @@
       }
     },
     {
-      "event_id": "33911109-15ba-5ec2-89f7-8ff8ef3bbcac",
+      "event_id": "61ba7b62-ff11-59bb-bfa8-3b46beecb634",
       "run_id": 1,
-      "seq": 270,
+      "seq": 273,
       "sim_time": "2026-10-28T22:31:25.032438Z",
       "payload": {
         "type": "asset.level",
@@ -5467,9 +5537,9 @@
       }
     },
     {
-      "event_id": "01f8a2aa-09b5-51f2-ae65-505cd13bed36",
+      "event_id": "b0f8b90e-f493-5668-9a9d-3a46ee115a97",
       "run_id": 1,
-      "seq": 271,
+      "seq": 274,
       "sim_time": "2026-10-28T23:03:05.283438Z",
       "payload": {
         "type": "asset.level",
@@ -5484,9 +5554,9 @@
       }
     },
     {
-      "event_id": "0505f738-0d22-5315-9da4-6af2d3ff6783",
+      "event_id": "9b3d71df-577f-5677-ba04-b3d09fe66169",
       "run_id": 1,
-      "seq": 272,
+      "seq": 275,
       "sim_time": "2026-10-28T23:03:05.283438Z",
       "payload": {
         "type": "transfer.completed",
@@ -5497,9 +5567,9 @@
       }
     },
     {
-      "event_id": "61ba7b62-ff11-59bb-bfa8-3b46beecb634",
+      "event_id": "93672d0f-c3c5-521f-a3dc-27e440b8bdb9",
       "run_id": 1,
-      "seq": 273,
+      "seq": 276,
       "sim_time": "2026-10-28T23:03:05.283438Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5510,9 +5580,9 @@
       }
     },
     {
-      "event_id": "b0f8b90e-f493-5668-9a9d-3a46ee115a97",
+      "event_id": "920fa815-dd4b-5898-aa52-fcdbe4353d7e",
       "run_id": 1,
-      "seq": 274,
+      "seq": 277,
       "sim_time": "2026-10-29T00:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -5524,9 +5594,9 @@
       }
     },
     {
-      "event_id": "9b3d71df-577f-5677-ba04-b3d09fe66169",
+      "event_id": "6e50956f-e8f3-5687-b6ab-666f2f596192",
       "run_id": 1,
-      "seq": 275,
+      "seq": 278,
       "sim_time": "2026-10-29T00:29:00.666324Z",
       "payload": {
         "type": "truck.dispatched",
@@ -5539,9 +5609,9 @@
       }
     },
     {
-      "event_id": "93672d0f-c3c5-521f-a3dc-27e440b8bdb9",
+      "event_id": "eda375f6-8906-585e-8572-9e59470efcca",
       "run_id": 1,
-      "seq": 276,
+      "seq": 279,
       "sim_time": "2026-10-29T01:14:00.666324Z",
       "payload": {
         "type": "truck.arrived",
@@ -5553,9 +5623,9 @@
       }
     },
     {
-      "event_id": "920fa815-dd4b-5898-aa52-fcdbe4353d7e",
+      "event_id": "33e8462e-0b2e-5698-8e32-c8da90776e09",
       "run_id": 1,
-      "seq": 277,
+      "seq": 280,
       "sim_time": "2026-10-29T01:14:00.666324Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5565,9 +5635,9 @@
       }
     },
     {
-      "event_id": "6e50956f-e8f3-5687-b6ab-666f2f596192",
+      "event_id": "d4da8703-6319-5984-9dd4-7d1b33170693",
       "run_id": 1,
-      "seq": 278,
+      "seq": 281,
       "sim_time": "2026-10-29T01:14:00.666324Z",
       "payload": {
         "type": "gate.decided",
@@ -5580,9 +5650,9 @@
       }
     },
     {
-      "event_id": "eda375f6-8906-585e-8572-9e59470efcca",
+      "event_id": "1ef4b7ce-49c8-5ae4-a448-d7d6c78db3ee",
       "run_id": 1,
-      "seq": 279,
+      "seq": 282,
       "sim_time": "2026-10-29T01:14:00.666324Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5592,9 +5662,9 @@
       }
     },
     {
-      "event_id": "33e8462e-0b2e-5698-8e32-c8da90776e09",
+      "event_id": "5794c5ca-2312-59f5-92b6-37eee0042aad",
       "run_id": 1,
-      "seq": 280,
+      "seq": 283,
       "sim_time": "2026-10-29T01:14:00.666324Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5604,9 +5674,31 @@
       }
     },
     {
-      "event_id": "d4da8703-6319-5984-9dd4-7d1b33170693",
+      "event_id": "5b262f3a-3c75-5271-9013-f198a01cbb58",
       "run_id": 1,
-      "seq": 281,
+      "seq": 284,
+      "sim_time": "2026-10-29T01:58:53.089158Z",
+      "payload": {
+        "type": "lab.result",
+        "tanker_code": "RT-004",
+        "analyst": "ANL-2",
+        "started_min": 1154.01,
+        "duration_min": 44.87,
+        "fat_pct": 3.956,
+        "protein_pct": 3.004,
+        "acidity_pct": 0.1515,
+        "ph": 6.69,
+        "antibiotic_residue": false,
+        "adulterant": false,
+        "test_type": "standard",
+        "g2": "pass",
+        "g2_reason": null
+      }
+    },
+    {
+      "event_id": "426fa0e4-445e-593b-97f0-29250db2761b",
+      "run_id": 1,
+      "seq": 285,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "gate.decided",
@@ -5619,9 +5711,9 @@
       }
     },
     {
-      "event_id": "1ef4b7ce-49c8-5ae4-a448-d7d6c78db3ee",
+      "event_id": "0b3277e2-79ea-5c87-a1ee-b0e5f5f6f6b2",
       "run_id": 1,
-      "seq": 282,
+      "seq": 286,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5631,9 +5723,9 @@
       }
     },
     {
-      "event_id": "5794c5ca-2312-59f5-92b6-37eee0042aad",
+      "event_id": "4b2c5fa4-d284-57ea-9bff-cda10bd9e64e",
       "run_id": 1,
-      "seq": 283,
+      "seq": 287,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "gate.decided",
@@ -5646,9 +5738,9 @@
       }
     },
     {
-      "event_id": "5b262f3a-3c75-5271-9013-f198a01cbb58",
+      "event_id": "04d01833-24fa-5536-a8eb-9cea26a8d556",
       "run_id": 1,
-      "seq": 284,
+      "seq": 288,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5659,9 +5751,9 @@
       }
     },
     {
-      "event_id": "426fa0e4-445e-593b-97f0-29250db2761b",
+      "event_id": "b5a26e76-58ad-5585-8abe-7ed3e10aa2ec",
       "run_id": 1,
-      "seq": 285,
+      "seq": 289,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5672,9 +5764,9 @@
       }
     },
     {
-      "event_id": "0b3277e2-79ea-5c87-a1ee-b0e5f5f6f6b2",
+      "event_id": "4c3555a2-790e-5680-9691-cd7c8960b567",
       "run_id": 1,
-      "seq": 286,
+      "seq": 290,
       "sim_time": "2026-10-29T01:58:53.089158Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5684,9 +5776,9 @@
       }
     },
     {
-      "event_id": "4b2c5fa4-d284-57ea-9bff-cda10bd9e64e",
+      "event_id": "df2d0bbf-2b2b-5783-867c-0bfc4509d3c1",
       "run_id": 1,
-      "seq": 287,
+      "seq": 291,
       "sim_time": "2026-10-29T02:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -5698,9 +5790,9 @@
       }
     },
     {
-      "event_id": "04d01833-24fa-5536-a8eb-9cea26a8d556",
+      "event_id": "02292dc5-0fa3-594a-b0a2-7590a49827f5",
       "run_id": 1,
-      "seq": 288,
+      "seq": 292,
       "sim_time": "2026-10-29T02:04:09.439158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5711,9 +5803,9 @@
       }
     },
     {
-      "event_id": "b5a26e76-58ad-5585-8abe-7ed3e10aa2ec",
+      "event_id": "8a701302-991b-5d3d-bc14-48b61018ef53",
       "run_id": 1,
-      "seq": 289,
+      "seq": 293,
       "sim_time": "2026-10-29T02:09:25.789158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5724,9 +5816,9 @@
       }
     },
     {
-      "event_id": "4c3555a2-790e-5680-9691-cd7c8960b567",
+      "event_id": "3b87ca76-5757-535e-8d08-8b3a5aedfd41",
       "run_id": 1,
-      "seq": 290,
+      "seq": 294,
       "sim_time": "2026-10-29T02:14:42.139158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5737,9 +5829,9 @@
       }
     },
     {
-      "event_id": "df2d0bbf-2b2b-5783-867c-0bfc4509d3c1",
+      "event_id": "095aefc0-a897-5e26-9d1b-42494c03daba",
       "run_id": 1,
-      "seq": 291,
+      "seq": 295,
       "sim_time": "2026-10-29T02:19:58.489158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5750,9 +5842,9 @@
       }
     },
     {
-      "event_id": "02292dc5-0fa3-594a-b0a2-7590a49827f5",
+      "event_id": "e1330930-2533-565c-96ba-ab16232de6e9",
       "run_id": 1,
-      "seq": 292,
+      "seq": 296,
       "sim_time": "2026-10-29T02:25:14.839158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5763,9 +5855,9 @@
       }
     },
     {
-      "event_id": "8a701302-991b-5d3d-bc14-48b61018ef53",
+      "event_id": "58d21a19-d02c-5622-b264-eda39b0e83e6",
       "run_id": 1,
-      "seq": 293,
+      "seq": 297,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5776,9 +5868,9 @@
       }
     },
     {
-      "event_id": "3b87ca76-5757-535e-8d08-8b3a5aedfd41",
+      "event_id": "3d69c845-d082-5c93-82a4-b96929d453c3",
       "run_id": 1,
-      "seq": 294,
+      "seq": 298,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "transfer.completed",
@@ -5789,9 +5881,9 @@
       }
     },
     {
-      "event_id": "095aefc0-a897-5e26-9d1b-42494c03daba",
+      "event_id": "55a610b6-77ee-56c6-a6b1-f8778b092388",
       "run_id": 1,
-      "seq": 295,
+      "seq": 299,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "transfer.completed",
@@ -5802,9 +5894,9 @@
       }
     },
     {
-      "event_id": "e1330930-2533-565c-96ba-ab16232de6e9",
+      "event_id": "a4fab301-21cc-59c7-89a3-153da2672ac5",
       "run_id": 1,
-      "seq": 296,
+      "seq": 300,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "transfer.completed",
@@ -5815,9 +5907,9 @@
       }
     },
     {
-      "event_id": "58d21a19-d02c-5622-b264-eda39b0e83e6",
+      "event_id": "03f25ed7-a992-5d79-a8db-8bef67a9bf66",
       "run_id": 1,
-      "seq": 297,
+      "seq": 301,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5828,9 +5920,9 @@
       }
     },
     {
-      "event_id": "3d69c845-d082-5c93-82a4-b96929d453c3",
+      "event_id": "6f1eaa90-04bb-58cc-bb36-821af08bc69a",
       "run_id": 1,
-      "seq": 298,
+      "seq": 302,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5841,9 +5933,9 @@
       }
     },
     {
-      "event_id": "55a610b6-77ee-56c6-a6b1-f8778b092388",
+      "event_id": "950dbd56-dbd8-5c8a-844d-728078a2e65f",
       "run_id": 1,
-      "seq": 299,
+      "seq": 303,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "unload.finished",
@@ -5855,9 +5947,9 @@
       }
     },
     {
-      "event_id": "a4fab301-21cc-59c7-89a3-153da2672ac5",
+      "event_id": "22837102-024e-57da-a1f9-8f07256f2677",
       "run_id": 1,
-      "seq": 300,
+      "seq": 304,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "tanker.status_changed",
@@ -5867,9 +5959,9 @@
       }
     },
     {
-      "event_id": "03f25ed7-a992-5d79-a8db-8bef67a9bf66",
+      "event_id": "f286fe13-36e8-51b5-b44f-a49f18c1b3ca",
       "run_id": 1,
-      "seq": 301,
+      "seq": 305,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "gate.decided",
@@ -5882,9 +5974,9 @@
       }
     },
     {
-      "event_id": "6f1eaa90-04bb-58cc-bb36-821af08bc69a",
+      "event_id": "8df354cb-fd10-52b0-95d9-637b614cd683",
       "run_id": 1,
-      "seq": 302,
+      "seq": 306,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5895,9 +5987,9 @@
       }
     },
     {
-      "event_id": "950dbd56-dbd8-5c8a-844d-728078a2e65f",
+      "event_id": "d112ccf1-90b3-5680-a2be-cb7c6c72fc10",
       "run_id": 1,
-      "seq": 303,
+      "seq": 307,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5908,9 +6000,9 @@
       }
     },
     {
-      "event_id": "22837102-024e-57da-a1f9-8f07256f2677",
+      "event_id": "8dd21266-820a-51fc-9825-4ead37775ae3",
       "run_id": 1,
-      "seq": 304,
+      "seq": 308,
       "sim_time": "2026-10-29T02:30:31.189158Z",
       "payload": {
         "type": "transfer.completed",
@@ -5921,9 +6013,9 @@
       }
     },
     {
-      "event_id": "f286fe13-36e8-51b5-b44f-a49f18c1b3ca",
+      "event_id": "81594f63-d2af-5907-ae65-6e5afcdaed37",
       "run_id": 1,
-      "seq": 305,
+      "seq": 309,
       "sim_time": "2026-10-29T02:35:47.539158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5934,9 +6026,9 @@
       }
     },
     {
-      "event_id": "8df354cb-fd10-52b0-95d9-637b614cd683",
+      "event_id": "595c4fd7-bcff-517a-9ab4-27ad3cc32ce1",
       "run_id": 1,
-      "seq": 306,
+      "seq": 310,
       "sim_time": "2026-10-29T02:35:47.539158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5947,9 +6039,9 @@
       }
     },
     {
-      "event_id": "d112ccf1-90b3-5680-a2be-cb7c6c72fc10",
+      "event_id": "e7c2b9dc-0d07-5bfb-a0ab-f5b99b60bf58",
       "run_id": 1,
-      "seq": 307,
+      "seq": 311,
       "sim_time": "2026-10-29T02:41:03.889158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5960,9 +6052,9 @@
       }
     },
     {
-      "event_id": "8dd21266-820a-51fc-9825-4ead37775ae3",
+      "event_id": "aeac1d87-9f30-5bcc-80e5-6b5e598353d3",
       "run_id": 1,
-      "seq": 308,
+      "seq": 312,
       "sim_time": "2026-10-29T02:41:03.889158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5973,9 +6065,9 @@
       }
     },
     {
-      "event_id": "81594f63-d2af-5907-ae65-6e5afcdaed37",
+      "event_id": "6d363400-f7f2-57ba-961e-69cb9ea22ae6",
       "run_id": 1,
-      "seq": 309,
+      "seq": 313,
       "sim_time": "2026-10-29T02:46:20.239158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5986,9 +6078,9 @@
       }
     },
     {
-      "event_id": "595c4fd7-bcff-517a-9ab4-27ad3cc32ce1",
+      "event_id": "eb621a94-fc56-59fa-9f1c-87a545ab0ecd",
       "run_id": 1,
-      "seq": 310,
+      "seq": 314,
       "sim_time": "2026-10-29T02:46:20.239158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -5999,9 +6091,9 @@
       }
     },
     {
-      "event_id": "e7c2b9dc-0d07-5bfb-a0ab-f5b99b60bf58",
+      "event_id": "ed96edeb-eee0-50b6-b79f-022dfcc1c5a8",
       "run_id": 1,
-      "seq": 311,
+      "seq": 315,
       "sim_time": "2026-10-29T02:51:36.589158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6012,9 +6104,9 @@
       }
     },
     {
-      "event_id": "aeac1d87-9f30-5bcc-80e5-6b5e598353d3",
+      "event_id": "0b335859-efb7-5567-ac41-3fcc8f30f887",
       "run_id": 1,
-      "seq": 312,
+      "seq": 316,
       "sim_time": "2026-10-29T02:51:36.589158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6025,9 +6117,9 @@
       }
     },
     {
-      "event_id": "6d363400-f7f2-57ba-961e-69cb9ea22ae6",
+      "event_id": "aa5e596e-cbae-5478-81b1-86a2dc05f48c",
       "run_id": 1,
-      "seq": 313,
+      "seq": 317,
       "sim_time": "2026-10-29T02:56:52.939158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6038,9 +6130,9 @@
       }
     },
     {
-      "event_id": "eb621a94-fc56-59fa-9f1c-87a545ab0ecd",
+      "event_id": "89a53040-6b0d-5ec7-b600-3e443d832d23",
       "run_id": 1,
-      "seq": 314,
+      "seq": 318,
       "sim_time": "2026-10-29T02:56:52.939158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6051,9 +6143,9 @@
       }
     },
     {
-      "event_id": "ed96edeb-eee0-50b6-b79f-022dfcc1c5a8",
+      "event_id": "fcfaae6d-3658-5826-969b-b95d9cf6f7c7",
       "run_id": 1,
-      "seq": 315,
+      "seq": 319,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6064,9 +6156,9 @@
       }
     },
     {
-      "event_id": "0b335859-efb7-5567-ac41-3fcc8f30f887",
+      "event_id": "0cc07cca-5798-5ae0-b686-904ee9c8b960",
       "run_id": 1,
-      "seq": 316,
+      "seq": 320,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6077,9 +6169,9 @@
       }
     },
     {
-      "event_id": "aa5e596e-cbae-5478-81b1-86a2dc05f48c",
+      "event_id": "1408faad-cf95-586f-9982-33c0541427d5",
       "run_id": 1,
-      "seq": 317,
+      "seq": 321,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6090,9 +6182,9 @@
       }
     },
     {
-      "event_id": "89a53040-6b0d-5ec7-b600-3e443d832d23",
+      "event_id": "b82fa1c6-4377-5c15-973a-a15ae9490ec0",
       "run_id": 1,
-      "seq": 318,
+      "seq": 322,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6103,9 +6195,9 @@
       }
     },
     {
-      "event_id": "fcfaae6d-3658-5826-969b-b95d9cf6f7c7",
+      "event_id": "01205054-d6af-5c2e-ac73-d01c714bbe28",
       "run_id": 1,
-      "seq": 319,
+      "seq": 323,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6116,9 +6208,9 @@
       }
     },
     {
-      "event_id": "0cc07cca-5798-5ae0-b686-904ee9c8b960",
+      "event_id": "b6c0801b-3205-5cc4-9e1e-14699475270d",
       "run_id": 1,
-      "seq": 320,
+      "seq": 324,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "cip.started",
@@ -6127,9 +6219,9 @@
       }
     },
     {
-      "event_id": "1408faad-cf95-586f-9982-33c0541427d5",
+      "event_id": "b02f0203-642e-5f39-ad04-ca608f352940",
       "run_id": 1,
-      "seq": 321,
+      "seq": 325,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6140,9 +6232,9 @@
       }
     },
     {
-      "event_id": "b82fa1c6-4377-5c15-973a-a15ae9490ec0",
+      "event_id": "1e69dbd3-8fe7-598d-bcb1-361a78e83ca0",
       "run_id": 1,
-      "seq": 322,
+      "seq": 326,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "gate.decided",
@@ -6155,9 +6247,9 @@
       }
     },
     {
-      "event_id": "01205054-d6af-5c2e-ac73-d01c714bbe28",
+      "event_id": "08a86974-d05d-50a6-880a-d56cf1e81067",
       "run_id": 1,
-      "seq": 323,
+      "seq": 327,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6168,9 +6260,9 @@
       }
     },
     {
-      "event_id": "b6c0801b-3205-5cc4-9e1e-14699475270d",
+      "event_id": "334b0a39-f450-598c-896b-d76a48ccdd7c",
       "run_id": 1,
-      "seq": 324,
+      "seq": 328,
       "sim_time": "2026-10-29T03:02:09.289158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6181,9 +6273,9 @@
       }
     },
     {
-      "event_id": "b02f0203-642e-5f39-ad04-ca608f352940",
+      "event_id": "2fc807ad-bc53-5b9a-a2f8-7d2f2aeda7b0",
       "run_id": 1,
-      "seq": 325,
+      "seq": 329,
       "sim_time": "2026-10-29T03:12:38.689158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6194,9 +6286,9 @@
       }
     },
     {
-      "event_id": "1e69dbd3-8fe7-598d-bcb1-361a78e83ca0",
+      "event_id": "e0d28226-8a32-5cba-b587-73b9d050513d",
       "run_id": 1,
-      "seq": 326,
+      "seq": 330,
       "sim_time": "2026-10-29T03:23:08.089158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6207,9 +6299,9 @@
       }
     },
     {
-      "event_id": "08a86974-d05d-50a6-880a-d56cf1e81067",
+      "event_id": "e2613b0d-1ad9-5ff7-8d36-c2bb9397086c",
       "run_id": 1,
-      "seq": 327,
+      "seq": 331,
       "sim_time": "2026-10-29T03:33:37.489158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6220,9 +6312,9 @@
       }
     },
     {
-      "event_id": "334b0a39-f450-598c-896b-d76a48ccdd7c",
+      "event_id": "4625a97d-b737-5c66-b9f1-e9ecaa24aaf2",
       "run_id": 1,
-      "seq": 328,
+      "seq": 332,
       "sim_time": "2026-10-29T03:44:06.889158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6233,9 +6325,9 @@
       }
     },
     {
-      "event_id": "2fc807ad-bc53-5b9a-a2f8-7d2f2aeda7b0",
+      "event_id": "eae024b5-ebbe-5448-b1a0-271c1ef2c680",
       "run_id": 1,
-      "seq": 329,
+      "seq": 333,
       "sim_time": "2026-10-29T03:54:36.289158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6246,9 +6338,9 @@
       }
     },
     {
-      "event_id": "e0d28226-8a32-5cba-b587-73b9d050513d",
+      "event_id": "6492c8af-700b-53a2-b63d-87935cf9ce5f",
       "run_id": 1,
-      "seq": 330,
+      "seq": 334,
       "sim_time": "2026-10-29T04:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -6260,9 +6352,9 @@
       }
     },
     {
-      "event_id": "e2613b0d-1ad9-5ff7-8d36-c2bb9397086c",
+      "event_id": "cd5ee99f-9704-52c4-bedb-a840d8979c67",
       "run_id": 1,
-      "seq": 331,
+      "seq": 335,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "gate.decided",
@@ -6275,9 +6367,9 @@
       }
     },
     {
-      "event_id": "4625a97d-b737-5c66-b9f1-e9ecaa24aaf2",
+      "event_id": "45a17b07-1985-55a9-9154-b8d69dc645b4",
       "run_id": 1,
-      "seq": 332,
+      "seq": 336,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6288,9 +6380,9 @@
       }
     },
     {
-      "event_id": "eae024b5-ebbe-5448-b1a0-271c1ef2c680",
+      "event_id": "94ceda28-e6d2-5e3b-a2da-7d244037b6a6",
       "run_id": 1,
-      "seq": 333,
+      "seq": 337,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6301,9 +6393,9 @@
       }
     },
     {
-      "event_id": "6492c8af-700b-53a2-b63d-87935cf9ce5f",
+      "event_id": "1f8cc2a4-aec4-5414-a014-455f6d09150f",
       "run_id": 1,
-      "seq": 334,
+      "seq": 338,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "asset.level",
@@ -6318,9 +6410,9 @@
       }
     },
     {
-      "event_id": "cd5ee99f-9704-52c4-bedb-a840d8979c67",
+      "event_id": "562a54dc-e780-5888-9765-49f3ef9e6c90",
       "run_id": 1,
-      "seq": 335,
+      "seq": 339,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "gate.decided",
@@ -6333,9 +6425,9 @@
       }
     },
     {
-      "event_id": "45a17b07-1985-55a9-9154-b8d69dc645b4",
+      "event_id": "23a98dda-707c-5442-8cb3-d3b4f1e52155",
       "run_id": 1,
-      "seq": 336,
+      "seq": 340,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "cip.started",
@@ -6344,9 +6436,9 @@
       }
     },
     {
-      "event_id": "94ceda28-e6d2-5e3b-a2da-7d244037b6a6",
+      "event_id": "111e6db3-4110-5a35-8c36-57c262f6f112",
       "run_id": 1,
-      "seq": 337,
+      "seq": 341,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6357,9 +6449,9 @@
       }
     },
     {
-      "event_id": "1f8cc2a4-aec4-5414-a014-455f6d09150f",
+      "event_id": "64411e8d-d1f7-573a-bfc0-7003b88175aa",
       "run_id": 1,
-      "seq": 338,
+      "seq": 342,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6370,9 +6462,9 @@
       }
     },
     {
-      "event_id": "562a54dc-e780-5888-9765-49f3ef9e6c90",
+      "event_id": "ba283b01-4461-50f2-bd02-e983083b161f",
       "run_id": 1,
-      "seq": 339,
+      "seq": 343,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6383,9 +6475,9 @@
       }
     },
     {
-      "event_id": "23a98dda-707c-5442-8cb3-d3b4f1e52155",
+      "event_id": "3b4c47e4-0aa0-5afc-977b-1e0b830b6b8b",
       "run_id": 1,
-      "seq": 340,
+      "seq": 344,
       "sim_time": "2026-10-29T04:05:05.689158Z",
       "payload": {
         "type": "asset.level",
@@ -6400,9 +6492,9 @@
       }
     },
     {
-      "event_id": "111e6db3-4110-5a35-8c36-57c262f6f112",
+      "event_id": "57072a73-8fa0-5541-b9ef-936228bc8509",
       "run_id": 1,
-      "seq": 341,
+      "seq": 345,
       "sim_time": "2026-10-29T04:15:38.373075Z",
       "payload": {
         "type": "cip.finished",
@@ -6411,9 +6503,9 @@
       }
     },
     {
-      "event_id": "64411e8d-d1f7-573a-bfc0-7003b88175aa",
+      "event_id": "b701ea2d-4dc0-5f77-b642-c1bbbdb5f43d",
       "run_id": 1,
-      "seq": 342,
+      "seq": 346,
       "sim_time": "2026-10-29T04:15:38.373075Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6424,9 +6516,9 @@
       }
     },
     {
-      "event_id": "ba283b01-4461-50f2-bd02-e983083b161f",
+      "event_id": "671f0e15-5e52-5fc8-b0fe-c59f3e5104e3",
       "run_id": 1,
-      "seq": 343,
+      "seq": 347,
       "sim_time": "2026-10-29T04:36:24.448158Z",
       "payload": {
         "type": "asset.level",
@@ -6441,9 +6533,9 @@
       }
     },
     {
-      "event_id": "3b4c47e4-0aa0-5afc-977b-1e0b830b6b8b",
+      "event_id": "dc103908-f8f3-5ff9-a72a-8293e7be7a38",
       "run_id": 1,
-      "seq": 344,
+      "seq": 348,
       "sim_time": "2026-10-29T05:07:43.207158Z",
       "payload": {
         "type": "asset.level",
@@ -6458,9 +6550,9 @@
       }
     },
     {
-      "event_id": "57072a73-8fa0-5541-b9ef-936228bc8509",
+      "event_id": "905cf3ae-024f-5f22-a40f-e5808d989ef6",
       "run_id": 1,
-      "seq": 345,
+      "seq": 349,
       "sim_time": "2026-10-29T05:24:38.556509Z",
       "payload": {
         "type": "cip.finished",
@@ -6469,9 +6561,9 @@
       }
     },
     {
-      "event_id": "b701ea2d-4dc0-5f77-b642-c1bbbdb5f43d",
+      "event_id": "5cd3f3cf-5b2a-5dc5-b4c6-6e2babb63c2c",
       "run_id": 1,
-      "seq": 346,
+      "seq": 350,
       "sim_time": "2026-10-29T05:24:38.556509Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6482,9 +6574,9 @@
       }
     },
     {
-      "event_id": "671f0e15-5e52-5fc8-b0fe-c59f3e5104e3",
+      "event_id": "1bfa20f1-740d-51f4-8c0f-90cd8090a417",
       "run_id": 1,
-      "seq": 347,
+      "seq": 351,
       "sim_time": "2026-10-29T05:39:01.966158Z",
       "payload": {
         "type": "asset.level",
@@ -6499,9 +6591,9 @@
       }
     },
     {
-      "event_id": "dc103908-f8f3-5ff9-a72a-8293e7be7a38",
+      "event_id": "01617542-3bff-590d-b6ad-c65c045bd0a5",
       "run_id": 1,
-      "seq": 348,
+      "seq": 352,
       "sim_time": "2026-10-29T06:00:00Z",
       "payload": {
         "type": "schedule.replanned",
@@ -6513,9 +6605,9 @@
       }
     },
     {
-      "event_id": "905cf3ae-024f-5f22-a40f-e5808d989ef6",
+      "event_id": "64fcfab5-5d43-59ad-9b16-7b5b762219bc",
       "run_id": 1,
-      "seq": 349,
+      "seq": 353,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "asset.level",
@@ -6530,9 +6622,9 @@
       }
     },
     {
-      "event_id": "5cd3f3cf-5b2a-5dc5-b4c6-6e2babb63c2c",
+      "event_id": "8cc47ed8-1ac9-50d6-b2f0-1733a2452ba0",
       "run_id": 1,
-      "seq": 350,
+      "seq": 354,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "transfer.completed",
@@ -6543,9 +6635,9 @@
       }
     },
     {
-      "event_id": "1bfa20f1-740d-51f4-8c0f-90cd8090a417",
+      "event_id": "58d8a4ef-b384-5def-b959-3a64dbe2ca29",
       "run_id": 1,
-      "seq": 351,
+      "seq": 355,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "asset.status_changed",
@@ -6556,9 +6648,9 @@
       }
     },
     {
-      "event_id": "01617542-3bff-590d-b6ad-c65c045bd0a5",
+      "event_id": "b5550cc2-7d47-5f99-8bf7-3245cd66b13c",
       "run_id": 1,
-      "seq": 352,
+      "seq": 356,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "orders.evaluated",
@@ -6603,9 +6695,9 @@
       }
     },
     {
-      "event_id": "64fcfab5-5d43-59ad-9b16-7b5b762219bc",
+      "event_id": "be7a29f5-3107-59b6-87b6-9f10fe6095de",
       "run_id": 1,
-      "seq": 353,
+      "seq": 357,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "volume.balance",
@@ -6620,9 +6712,9 @@
       }
     },
     {
-      "event_id": "8cc47ed8-1ac9-50d6-b2f0-1733a2452ba0",
+      "event_id": "f42eed5e-93ff-5ee1-b4f8-84efc3ea68d0",
       "run_id": 1,
-      "seq": 354,
+      "seq": 358,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "fouling.expiry",
@@ -6708,9 +6800,9 @@
       }
     },
     {
-      "event_id": "58d8a4ef-b384-5def-b959-3a64dbe2ca29",
+      "event_id": "9e7bee8c-00be-5fa5-81a4-51ab5b420911",
       "run_id": 1,
-      "seq": 355,
+      "seq": 359,
       "sim_time": "2026-10-29T06:10:20.725158Z",
       "payload": {
         "type": "sim.clock",

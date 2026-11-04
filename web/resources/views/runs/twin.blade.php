@@ -103,8 +103,10 @@
                     <h2 id="tw-sheet-title"></h2>
                     <button id="tw-sheet-close" class="tw-ico" type="button" aria-label="Tutup detail" data-icon="x"></button>
                 </div>
+                <button id="tw-sheet-back" class="tw-btn" type="button" hidden>&larr; Kembali ke Laboratorium</button>
                 <span id="tw-sheet-chip" class="tw-status"></span>
                 <dl id="tw-sheet-rows"></dl>
+                <section id="tw-sheet-queue" hidden></section>
                 <section id="tw-sheet-gates" hidden>
                     <h3>Gate mutu</h3>
                     <ul></ul>

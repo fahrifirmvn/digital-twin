@@ -162,6 +162,71 @@ export function detections(state) {
         });
 }
 
+// Batas mutu demo; sama dengan Thresholds di engine/app/plant.py (G1 suhu, G2 hasil lab).
+export const LAB_LIMITS = { tempMax: 6.0, fatMin: 3.0, proteinMin: 2.8, acidity: [0.12, 0.18], ph: [6.55, 6.85] };
+
+const dec = (n, d) => Number(n).toFixed(d).replace('.', ',');
+const outside = (v, [lo, hi]) => v < lo || v > hi;
+
+/** Baris hasil uji lab sebuah truk: [label, nilai, 'bad' bila di luar batas]. Kosong bila truk belum ke lab. */
+export function labRows(t, m) {
+    const l = t.lab;
+    if (!l) {
+        if (t.status === 'sampling') return [['Uji lab', `menunggu analis ${Math.max(0, Math.round(m - (t.samplingAt ?? t.since)))} mnt`]];
+        if (t.status === 'lab_test') return [['Uji lab', `berjalan ${Math.max(0, Math.round(m - (t.labStartAt ?? t.since)))} mnt, hasil belum keluar`]];
+        return [];
+    }
+    const bad = (cond) => (cond ? 'bad' : null);
+    return [
+        ['Analis', `${l.analyst} \u00b7 ${l.testType === 'extended' ? 'uji diperpanjang' : 'uji standar'} \u00b7 ${Math.round(l.durationMin)} mnt`],
+        ['Lemak', `${dec(l.fat, 2)} %`, bad(l.fat < LAB_LIMITS.fatMin)],
+        ['Protein', `${dec(l.protein, 2)} %`, bad(l.protein < LAB_LIMITS.proteinMin)],
+        ['Keasaman', `${dec(l.acidity, 3)} %`, bad(outside(l.acidity, LAB_LIMITS.acidity))],
+        ...(l.ph != null ? [['pH', dec(l.ph, 2), bad(outside(l.ph, LAB_LIMITS.ph))]] : []),
+        ['Antibiotik', l.antibiotic ? 'positif' : 'negatif', bad(l.antibiotic)],
+        ['Adulteran', l.adulterant ? 'positif' : 'negatif', bad(l.adulterant)],
+        ['Keputusan G2', l.g2 === 'pass' ? 'lolos' : `tahan${l.g2Reason ? `: ${l.g2Reason}` : ''}`, bad(l.g2 !== 'pass')],
+    ];
+}
+
+const DONE_LIMIT = 8;
+
+/** Antrean dan riwayat singkat laboratorium dari state: sedang diuji, menunggu analis, dan hasil terbaru. */
+export function labPanel(state) {
+    const all = Object.values(state.tankers);
+    const mk = (t, phase, tone, note) => ({ code: t.code, farm: t.farm, plate: t.plate, volume: fmtL(t.volume), phase, tone, note });
+    const testing = all.filter((t) => t.status === 'lab_test').sort((a, b) => (a.labStartAt ?? a.since) - (b.labStartAt ?? b.since))
+        .map((t) => mk(t, 'Diuji', 'lab', `${Math.max(0, Math.round(state.m - (t.labStartAt ?? t.since)))} mnt`));
+    const waiting = all.filter((t) => t.status === 'sampling').sort((a, b) => (a.samplingAt ?? a.since) - (b.samplingAt ?? b.since))
+        .map((t, i) => mk(t, 'Antre', 'mute', `#${i + 1} \u00b7 ${Math.max(0, Math.round(state.m - (t.samplingAt ?? t.since)))} mnt`));
+    const finished = all.filter((t) => t.lab).sort((a, b) => b.lab.doneAt - a.lab.doneAt);
+    const done = finished.slice(0, DONE_LIMIT).map((t) => {
+        const ok = t.lab.g2 === 'pass';
+        const note = ok ? (t.lab.ph != null ? `pH ${dec(t.lab.ph, 2)} \u00b7 lemak ${dec(t.lab.fat, 1)}%` : `lemak ${dec(t.lab.fat, 1)}%`) : (t.lab.g2Reason ?? 'ditolak');
+        return mk(t, ok ? 'Lolos' : 'Ditolak', ok ? 'ok' : 'bad', note);
+    });
+    return {
+        testing, waiting, done,
+        counts: { testing: testing.length, waiting: waiting.length, passed: finished.filter((t) => t.lab.g2 === 'pass').length, rejected: finished.filter((t) => t.lab.g2 !== 'pass').length },
+    };
+}
+
+function labDetail(state, code) {
+    const p = labPanel(state);
+    const n = p.counts;
+    const rows = [
+        ['Sedang diuji', `${n.testing} truk`],
+        ['Antre analis', `${n.waiting} truk`],
+        ['Lolos G2', `${n.passed} truk`],
+        ['Ditolak G2', `${n.rejected} truk`, n.rejected ? 'bad' : null],
+    ];
+    const chip = n.testing + n.waiting ? { tone: 'lab', label: `${n.testing} diuji \u00b7 ${n.waiting} antre`, icon: 'flask' } : { tone: 'mute', label: 'Lab kosong', icon: 'clock' };
+    return {
+        kind: 'lab', code, title: 'Laboratorium', chip, rows,
+        queue: [['Sedang diuji', p.testing], ['Antre analis', p.waiting], ['Hasil terbaru', p.done]].filter(([, list]) => list.length),
+    };
+}
+
 function asepRows(a, m) {
     if (!(a.level > 0)) return [['Lot', 'tidak ada isi']];
     const t = asepAge(a, m);
@@ -207,13 +272,15 @@ export function detailOf(state, code) {
             ['Asal', t.farm],
             ...(t.plate ? [['Plat', t.plate]] : []),
             ['Volume', fmtL(t.volume)],
-            ['Suhu', `${t.temp} °C`],
+            ['Suhu', `${dec(t.temp, 1)} °C`, t.temp > LAB_LIMITS.tempMax ? 'bad' : null],
             ['Tiba', clock(t.arrivedAt)],
         ];
         if (t.bay) rows.push(['Bay', t.bay]);
         if (!['rejected', 'stored'].includes(t.status)) rows.push(['Di pabrik', `${Math.max(0, Math.round(state.m - t.arrivedAt))} mnt`]);
+        rows.push(...labRows(t, state.m));
         return { kind: 'truck', code, title: code, chip: s, rows, gates: gateChips(t) };
     }
+    if (/^LAB/.test(code)) return labDetail(state, code);
     const known = code in state.assets || /^(BAY|TK|DEG|THM|SEP|STE|ASEP|LINE)-/.test(code);
     if (!known) return null;
     const a = state.assets[code] ?? { status: 'idle', level: null };

@@ -174,3 +174,18 @@ test('kapasitas tangki dibawa dari event dan bertahan bila event berikutnya tida
     apply(s, { m: 5, p: { type: 'asset.status_changed', asset_code: 'TK-RAW-1', status: 'filling', level_ton: 7.5 } });
     assert.deepEqual([s.assets['TK-RAW-1'].level, s.assets['TK-RAW-1'].cap], [7.5, 30]);
 });
+
+test('lab.result tersimpan di truk dan waktu mulai lab dicatat', async () => {
+    const { apply, emptyState } = await import('./state.js');
+    const s = emptyState();
+    apply(s, { m: 10, p: { type: 'truck.arrived', tanker_code: 'T1', farm_code: 'F', volume_ton: 20, temp_c: 4 } });
+    apply(s, { m: 12, p: { type: 'tanker.status_changed', tanker_code: 'T1', status: 'sampling' } });
+    apply(s, { m: 20, p: { type: 'tanker.status_changed', tanker_code: 'T1', status: 'lab_test' } });
+    apply(s, { m: 60, p: { type: 'lab.result', tanker_code: 'T1', analyst: 'AN-1', started_min: 20, duration_min: 40, fat_pct: 3.7, protein_pct: 3.1, acidity_pct: 0.15, ph: 6.7, antibiotic_residue: false, adulterant: false, test_type: 'standard', g2: 'pass', g2_reason: null } });
+    const t = s.tankers.T1;
+    assert.equal(t.samplingAt, 12);
+    assert.equal(t.labStartAt, 20);
+    assert.equal(t.lab.ph, 6.7);
+    assert.equal(t.lab.g2, 'pass');
+    assert.equal(t.lab.doneAt, 60);
+});

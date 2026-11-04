@@ -74,8 +74,15 @@ export function buildPlantWorld(layout, plant, { theme = 'light', detail = 1 } =
     }
     for (const p of approach.layout.pads) root.add(makePad(kit, p).group);
     for (const l of approach.layout.labs) {
-        root.add(makeLab(kit, l).group);
+        const lab = makeLab(kit, l).group;
+        lab.traverse((o) => {
+            if (!o.isMesh) return;
+            o.userData = { code: l.id };
+            pickables.push(o);
+        });
+        root.add(lab);
         anchors.set(`LAB:${l.id}`, { a: l.at[0], b: l.at[1], h: 70 });
+        anchors.set(l.id, { a: l.at[0], b: l.at[1], h: 70 });
     }
     anchors.set('ENTRANCE', { a: approach.entrance.a, b: approach.entrance.b, h: 20 });
 

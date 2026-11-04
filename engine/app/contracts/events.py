@@ -243,6 +243,25 @@ class CipEvent(Strict):
     is_scheduled: bool
 
 
+class LabResult(Strict):
+    """Hasil uji lab satu truk, dikirim begitu uji selesai (sebelum keputusan G2)."""
+
+    type: Literal["lab.result"] = "lab.result"
+    tanker_code: str
+    analyst: str
+    started_min: float = Field(description="Menit simulasi uji dimulai")
+    duration_min: float = Field(gt=0)
+    fat_pct: float
+    protein_pct: float
+    acidity_pct: float
+    ph: float | None = Field(default=None, description="Kosong bila hasil tidak memuat pH")
+    antibiotic_residue: bool
+    adulterant: bool
+    test_type: str
+    g2: Literal["pass", "hold"]
+    g2_reason: str | None = None
+
+
 class GateDecided(Strict):
     type: Literal["gate.decided"] = "gate.decided"
     gate: GateId
@@ -354,6 +373,7 @@ TwinPayload = Annotated[
     | VolumeBalance
     | FoulingExpiry
     | CipEvent
+    | LabResult
     | GateDecided
     | ScheduleReplanned
     | CommandApplied,

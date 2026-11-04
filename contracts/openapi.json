@@ -1051,6 +1051,14 @@
             "type": "number",
             "title": "Qa Hold Ton",
             "default": 0.0
+          },
+          "tank_cycles": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tank Cycles",
+            "description": "Siklus CIP tiap tangki sejak maintenance terakhir (meter servis)"
           }
         },
         "type": "object",
@@ -1916,6 +1924,106 @@
         ],
         "title": "Kpi",
         "description": "Definisi KPI mengikuti PRD 3.1. Satuan menit kecuali dinyatakan lain."
+      },
+      "LabResult": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "lab.result",
+            "title": "Type",
+            "default": "lab.result"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "analyst": {
+            "type": "string",
+            "title": "Analyst"
+          },
+          "started_min": {
+            "type": "number",
+            "title": "Started Min",
+            "description": "Menit simulasi uji dimulai"
+          },
+          "duration_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Min"
+          },
+          "fat_pct": {
+            "type": "number",
+            "title": "Fat Pct"
+          },
+          "protein_pct": {
+            "type": "number",
+            "title": "Protein Pct"
+          },
+          "acidity_pct": {
+            "type": "number",
+            "title": "Acidity Pct"
+          },
+          "ph": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ph",
+            "description": "Kosong bila hasil tidak memuat pH"
+          },
+          "antibiotic_residue": {
+            "type": "boolean",
+            "title": "Antibiotic Residue"
+          },
+          "adulterant": {
+            "type": "boolean",
+            "title": "Adulterant"
+          },
+          "test_type": {
+            "type": "string",
+            "title": "Test Type"
+          },
+          "g2": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "hold"
+            ],
+            "title": "G2"
+          },
+          "g2_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "G2 Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "analyst",
+          "started_min",
+          "duration_min",
+          "fat_pct",
+          "protein_pct",
+          "acidity_pct",
+          "antibiotic_residue",
+          "adulterant",
+          "test_type",
+          "g2"
+        ],
+        "title": "LabResult",
+        "description": "Hasil uji lab satu truk, dikirim begitu uji selesai (sebelum keputusan G2)."
       },
       "LineChangeover": {
         "properties": {
@@ -4193,6 +4301,9 @@
                 "$ref": "#/components/schemas/CipEvent"
               },
               {
+                "$ref": "#/components/schemas/LabResult"
+              },
+              {
                 "$ref": "#/components/schemas/GateDecided"
               },
               {
@@ -4216,6 +4327,7 @@
                 "day.summary": "#/components/schemas/DaySummary",
                 "fouling.expiry": "#/components/schemas/FoulingExpiry",
                 "gate.decided": "#/components/schemas/GateDecided",
+                "lab.result": "#/components/schemas/LabResult",
                 "line.changeover": "#/components/schemas/LineChangeover",
                 "orders.evaluated": "#/components/schemas/OrdersEvaluated",
                 "plant.routes": "#/components/schemas/PlantRoutes",

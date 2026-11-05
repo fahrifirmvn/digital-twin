@@ -88,3 +88,30 @@ def test_params_have_limits():
     for k, bad in (("fouling_max_min", 59), ("shelf_life_days", 366), ("dispatch_lead_days", -1)):
         with pytest.raises(ValueError):
             with_params(PlantConfig(), **{k: bad})
+
+
+def test_paper_changeover_is_not_added_during_size_change_and_flavour_cip_rule():
+    from app.plant import Sku, changeover_minutes, needs_flavour_cip
+
+    a = Sku("UHT-FULL-1000-REG", 1000, "full_cream", "regular")
+    b_paper = Sku("UHT-FULL-1000-PRM", 1000, "full_cream", "promo")
+    b_size_paper = Sku("UHT-FULL-200-PRM", 200, "full_cream", "promo")
+    choc = Sku("UHT-CHOC-200", 200, "chocolate", "regular")
+    straw = Sku("UHT-STRW-200", 200, "strawberry", "regular")
+
+    # Paper change alone adds paper_min (20)
+    assert changeover_minutes(a, b_paper, size_min=40, flavor_min=30, paper_min=20) == 20.0
+    # Size + paper change: paper is NOT added during size change (brief SOP rule)
+    assert changeover_minutes(a, b_size_paper, size_min=40, flavor_min=30, paper_min=20) == 40.0
+    # Flavour-to-white triggers CIP
+    assert needs_flavour_cip(choc, a) is True
+    assert needs_flavour_cip(straw, a) is True
+    assert needs_flavour_cip(a, choc) is False
+
+
+def test_fouling_limit_triggers_scheduled_sterilizer_cip_and_flavour_line_cip():
+    sim, _ = _wear(seed=2, volume=320, cfg=with_params(PlantConfig(), fouling_max_min=60))
+    ste_cips = [c for c in sim.cips if c.asset.startswith("STE-") and c.scheduled]
+    assert ste_cips, "Sterilizer harus menjalani CIP terjadwal saat melewati fouling_max_min"
+    line_cips = [c for c in sim.cips if c.asset.startswith("LINE-")]
+    assert len(line_cips) == 2

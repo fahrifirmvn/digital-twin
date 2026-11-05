@@ -8,6 +8,39 @@ const sample = JSON.parse(readFileSync(new URL('../../../../contracts/run-result
 const raw = sample.events.map((e) => ({ seq: e.seq, t: e.sim_time, p: e.payload }));
 const model = buildModel(raw);
 
+test('live hanya maju dengan jam Engine, melewati event terakhir tanpa mengekstrapolasi', () => {
+    const live = new Replay(buildModel([{ seq: 1, t: '2026-11-04T06:00:00Z', p: { type: 'day.started' } }]), { live: true });
+    assert.equal(live.seek(12).m, 12);
+    assert.equal(live.seek(2).m, 12);
+    assert.equal(live.seek(12).m, 12);
+    assert.equal(live.seek(15).m, 15);
+});
+
+test('snapshot live tidak menerapkan event di depan jam Engine', () => {
+    const r = new Replay(buildModel([
+        { seq: 1, t: '2026-11-04T06:00:00Z', p: { type: 'day.started' } },
+        { seq: 2, t: '2026-11-04T06:20:00Z', p: { type: 'maintenance.status', request_id: 'm1', asset: 'TK-RAW-1', status: 'maintenance', duration_min: 120 } },
+    ]), { live: true });
+    assert.deepEqual(r.seek(19).maintenance, {});
+    assert.equal(r.seek(20).maintenance['TK-RAW-1'].status, 'maintenance');
+    assert.equal(r.seek(5).m, 20);
+});
+
+test('maintenance lifecycle dicatat per tangki dan tampil di feed tanpa mengganti status fisik aset', () => {
+    const s = emptyState();
+    s.assets['TK-RAW-1'] = { status: 'holding', level: 10 };
+    for (const [m, status] of ['waiting_safe', 'maintenance', 'completed'].entries()) {
+        apply(s, { m, p: { type: 'maintenance.status', request_id: 'm1', asset: 'TK-RAW-1', status, duration_min: 120 } });
+        assert.equal(s.maintenance['TK-RAW-1'].status, status);
+        assert.equal(s.maintenance['TK-RAW-1'].request_id, 'm1');
+        assert.match(s.feed[0].text, /TK-RAW-1/);
+    }
+    assert.match(s.feed[0].text, /selesai/);
+    assert.match(s.feed[2].text, /Aliran masuk baru diblokir/);
+    assert.deepEqual(s.assets['TK-RAW-1'], { status: 'holding', level: 10 });
+    assert.equal(s.feed.length, 3);
+});
+
 test('model: waktu dalam menit sejak event pertama, tidak menurun', () => {
     assert.equal(model.events[0].m, 0);
     for (let i = 1; i < model.events.length; i++) assert.ok(model.events[i].m >= model.events[i - 1].m);
@@ -81,6 +114,45 @@ test('keputusan gate per truk dicatat untuk G1-G3 (lolos dan tahan)', () => {
     ]);
     const t = new Replay(m).seek(1).tankers['RT-9'];
     assert.deepEqual(t.gates, { G1: { decision: 'pass', reason: null }, G2: { decision: 'hold', reason: 'lemak rendah' } });
+});
+
+test('qa.review menjaga hasil lab awal dan menambahkan riwayat QA terpisah', () => {
+    const s = emptyState();
+    apply(s, { m: 0, p: { type: 'truck.arrived', tanker_code: 'RT-17', farm_code: 'F-2', volume_ton: 18, temp_c: 4 } });
+    apply(s, { m: 8, p: {
+        type: 'lab.result', tanker_code: 'RT-17', analyst: 'Ayu', duration_min: 42, test_type: 'standard',
+        fat_pct: 3.2, protein_pct: 2.9, acidity_pct: 0.17, ph: 6.7, antibiotic_residue: false, adulterant: false,
+        g2: 'hold', g2_reason: 'Konfirmasi mutu diperlukan',
+    } });
+    const initialLab = { ...s.tankers['RT-17'].lab };
+    apply(s, { m: 12, p: { type: 'tanker.status_changed', tanker_code: 'RT-17', status: 'qa_hold' } });
+    const review = {
+        type: 'qa.review', tanker_code: 'RT-17', status: 'held', reason: 'Konfirmasi mutu diperlukan',
+        actor: 'QA: Ayu', request_id: null, results: null, failures: [{ parameter: 'ph', value: 6.4, minimum: 6.55, maximum: 6.85, reason: 'Di bawah batas' }],
+        category: 'quality', disposition: null, expires_min: 1440,
+    };
+    apply(s, { m: 15, p: review });
+    assert.equal(s.tankers['RT-17'].status, 'qa_hold');
+    assert.deepEqual(s.tankers['RT-17'].lab, initialLab);
+    assert.deepEqual(s.tankers['RT-17'].qa, { ...review, at: 15 });
+    assert.deepEqual(s.tankers['RT-17'].qaHistory, [{ ...review, at: 15 }]);
+    apply(s, { m: 20, p: { ...review, status: 'testing', request_id: 'id-2', results: { ph: 6.7 }, failures: [], category: 'pass' } });
+    assert.equal(s.tankers['RT-17'].qaHistory.length, 2);
+    assert.equal(s.tankers['RT-17'].qa.request_id, 'id-2');
+    assert.deepEqual(s.tankers['RT-17'].lab, initialLab);
+});
+
+test('lab.result nullable dipertahankan tanpa nilai default yang direkayasa', () => {
+    const s = emptyState();
+    apply(s, { m: 0, p: { type: 'truck.arrived', tanker_code: 'RT-NULL', farm_code: 'F', volume_ton: 18, temp_c: 4 } });
+    apply(s, { m: 10, p: {
+        type: 'lab.result', tanker_code: 'RT-NULL', analyst: 'AN-1', duration_min: 10, test_type: 'standard',
+        fat_pct: null, protein_pct: null, acidity_pct: null, ph: null, antibiotic_residue: null, adulterant: null, g2: 'hold',
+    } });
+    assert.equal(s.tankers['RT-NULL'].lab.ph, null);
+    for (const field of ['fat', 'protein', 'acidity', 'antibiotic', 'adulterant']) {
+        assert.equal(field in s.tankers['RT-NULL'].lab, false);
+    }
 });
 
 test('truk masuk daftar inbound saat dispatched dan keluar saat tiba, dengan plat', () => {

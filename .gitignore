@@ -1,4 +1,8 @@
 .env
+.env.*
+!.env.example
+application_default_credentials.json
+*service-account*.json
 .venv/
 __pycache__/
 .pytest_cache/
@@ -9,3 +13,4 @@ node_modules/
 *.blend
 3d/
 export/
+decision_core_package/PLAYIT_PROTOTYPING BOOTCAMP.pdf

@@ -60,7 +60,9 @@ export class TwinScene3D {
         this.camera = createCamera();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         Object.assign(this.controls, { enableDamping: false, screenSpacePanning: true, ...ORBIT_LIMITS });
+        this.controls.addEventListener('start', () => cancelAnimationFrame(this.camRaf));
         this.controls.addEventListener('change', () => this.render());
+        this.renderer.domElement.setAttribute('aria-label', 'Tampilan pabrik 3D. Seret untuk memutar 360 derajat; klik kanan dan seret untuk menggeser; gulir untuk zoom.');
 
         this.buildTooltip();
         this.raycaster = new THREE.Raycaster();
@@ -164,6 +166,12 @@ export class TwinScene3D {
             f.line.material.dispose();
             f.dot.material.dispose();
         }
+        if (this.selectRing) {
+            this.scene.remove(this.selectRing);
+            this.selectRing.geometry.dispose();
+            this.selectRing.material.dispose();
+            this.selectRing = null;
+        }
         this.flowDot.dispose();
         this.world = null;
     }
@@ -198,6 +206,12 @@ export class TwinScene3D {
             this.scene.add(line, dot);
             return { line, dot };
         });
+        const ringGeo = new THREE.RingGeometry(24, 31, 36);
+        const ringMat = new THREE.MeshBasicMaterial({ color: FLOW_COLOR, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+        this.selectRing = new THREE.Mesh(ringGeo, ringMat);
+        this.selectRing.rotation.x = -Math.PI / 2;
+        this.selectRing.visible = false;
+        this.scene.add(this.selectRing);
     }
 
     buildTooltip() {
@@ -304,6 +318,12 @@ export class TwinScene3D {
         const p = this.pointOf(key);
         const w = this.container.clientWidth;
         if (!p || !w) return;
+        this.focusedKey = key;
+        if (this.selectRing) {
+            this.selectRing.position.set(p.a, 0.8, p.b);
+            this.selectRing.scale.setScalar(1);
+            this.selectRing.visible = true;
+        }
         if (p.inside && !this.inside) this.enter();
         const { camera, controls } = this;
         this.home ??= { offset: camera.position.clone().sub(controls.target), target: controls.target.clone(), zoom: camera.zoom };
@@ -315,7 +335,10 @@ export class TwinScene3D {
     }
 
     resetFocus() {
+        this.focusedKey = null;
+        if (this.selectRing) this.selectRing.visible = false;
         if (this.home) this.glide(this.home.target, this.home.offset, this.home.zoom);
+        else this.render();
     }
 
     /** Zoom satu langkah (faktor f) dalam batas orbit; target kamera tetap. */
@@ -325,13 +348,10 @@ export class TwinScene3D {
         this.glide(controls.target.clone(), camera.position.clone().sub(controls.target), zoom);
     }
 
-    /** Putar mengelilingi target sebesar rad; melewati batas azimuth kembali ke batas lawannya. */
+    /** Putar mengelilingi target tanpa batas azimuth. */
     rotateStep(rad) {
         const { camera, controls } = this;
-        const az = controls.getAzimuthalAngle();
-        const { minAzimuthAngle: lo, maxAzimuthAngle: hi } = ORBIT_LIMITS;
-        const next = az + rad > hi + 1e-6 ? lo : Math.min(hi, az + rad);
-        const offset = camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0, 1, 0), next - az);
+        const offset = camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0, 1, 0), rad);
         this.glide(controls.target.clone(), offset, camera.zoom);
     }
 
@@ -351,6 +371,10 @@ export class TwinScene3D {
             camera.zoom = from.zoom + (zoom - from.zoom) * k;
             camera.updateProjectionMatrix();
             controls.update();
+            if (this.selectRing?.visible && !reducedMotion()) {
+                const pulse = 1 + 0.14 * Math.sin(k * Math.PI);
+                this.selectRing.scale.setScalar(pulse);
+            }
             this.render();
         };
         if (reducedMotion()) return apply(1);
@@ -442,6 +466,9 @@ export class TwinScene3D {
             slot.group.position.set(p.a, 0, p.b);
             slot.group.rotation.y = p.rot;
             slot.band.material.color.set(STATUS_COLORS[p.status] ?? '#94a3b8');
+            if (this.focusedKey === code && this.selectRing) {
+                this.selectRing.position.set(p.a, 0.8, p.b);
+            }
         }
     }
 
@@ -480,7 +507,7 @@ export class TwinScene3D {
     click(e) {
         const d = this.down;
         this.down = null;
-        if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > CLICK_SLOP) return;
+        if (!d || e.button !== 0 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > CLICK_SLOP) return;
         this.onSelect?.(this.pickAt(e));
     }
 

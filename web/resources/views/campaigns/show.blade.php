@@ -1,7 +1,18 @@
 @extends('layouts.app')
 @section('title', $campaign->name.' | Operasi')
 @if ($current && $current->status === 'running')
-    @push('head')<meta http-equiv="refresh" content="4">@endpush
+    @push('head')
+    <script>
+        setInterval(function () {
+            var d = document.getElementById('cp-drawer');
+            var b = document.getElementById('cp-open');
+            var a = document.activeElement;
+            if ((d && !d.hidden) || (b && b.getAttribute('aria-expanded') === 'true')) return;
+            if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT')) return;
+            window.location.reload();
+        }, 4000);
+    </script>
+    @endpush
 @endif
 @push('head')@vite('resources/js/assistant.js')@endpush
 @section('content')
@@ -35,8 +46,12 @@
     @if (count($current->plan))
         <ul>
         @foreach ($current->plan as $i => $e)
+            @php
+                $mTot = (360 + (int) ($e['minute'] ?? 0)) % 1440;
+                $mClock = sprintf('%02d:%02d', intdiv($mTot, 60), $mTot % 60);
+            @endphp
             <li>
-                {{ $e['asset'] }}: menit {{ $e['minute'] }}, {{ $e['duration_min'] }} menit. {{ $e['reason'] }} ({{ $e['actor_label'] }})
+                {{ $e['asset'] }}: pukul <span class="mono">{{ $mClock }}</span> (menit {{ $e['minute'] }}), {{ $e['duration_min'] }} menit. {{ $e['reason'] }} ({{ $e['actor_label'] }})
                 <form method="POST" action="{{ route('campaigns.cancel', [$campaign, $i]) }}" style="display:inline">@csrf @method('DELETE')<button type="submit">Batalkan</button></form>
             </li>
         @endforeach
@@ -44,16 +59,46 @@
     @else
         <p>Belum ada maintenance dijadwalkan untuk hari ini.</p>
     @endif
+    @php
+        $initMin = (int) old('start_min', 480);
+        $initClockTot = (360 + $initMin) % 1440;
+        $initClock = sprintf('%02d:%02d', intdiv($initClockTot, 60), $initClockTot % 60);
+    @endphp
     <form method="POST" action="{{ route('campaigns.plan', $campaign) }}" class="run-form">
         @csrf
         <label>Tangki
             <select name="asset">@foreach ($tanks as $t)<option value="{{ $t }}" @selected(old('asset') === $t)>{{ $t }}</option>@endforeach</select>
         </label>
-        <label>Mulai (menit ke-, 0 sampai 1439) <input type="number" name="start_min" value="{{ old('start_min', 480) }}" min="0" max="1439" required></label>
+        <label>Jam mulai (hari operasi 06:00–06:00)
+            <input type="time" id="maint-clock" value="{{ $initClock }}" aria-label="Jam mulai operasional">
+        </label>
+        <label>Mulai (menit ke-, 0 sampai 1439) <input type="number" id="maint-start-min" name="start_min" value="{{ $initMin }}" min="0" max="1439" required></label>
         <label>Durasi (menit, 15 sampai 720) <input type="number" name="duration_min" value="{{ old('duration_min', 120) }}" min="15" max="720" required></label>
         <label>Alasan <input type="text" name="reason" value="{{ old('reason') }}" minlength="5" maxlength="200" required></label>
         <button type="submit">Jadwalkan maintenance</button>
     </form>
+    <script>
+        (function () {
+            var clock = document.getElementById('maint-clock');
+            var minInput = document.getElementById('maint-start-min');
+            if (!clock || !minInput) return;
+            clock.addEventListener('input', function () {
+                var parts = (clock.value || '').split(':');
+                if (parts.length < 2) return;
+                var h = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+                if (isNaN(h) || isNaN(m)) return;
+                minInput.value = ((h * 60 + m - 360) + 1440) % 1440;
+            });
+            minInput.addEventListener('input', function () {
+                var v = parseInt(minInput.value, 10);
+                if (isNaN(v) || v < 0 || v > 1439) return;
+                var tot = (360 + v) % 1440;
+                var hh = String(Math.floor(tot / 60)).padStart(2, '0');
+                var mm = String(tot % 60).padStart(2, '0');
+                clock.value = hh + ':' + mm;
+            });
+        })();
+    </script>
     @if ($errors->hasAny(['asset', 'start_min', 'duration_min', 'reason']))<p class="err">{{ $errors->first() }}</p>@endif
 
     <form method="POST" action="{{ route('campaigns.start', $campaign) }}">

@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 970.3567499999999 3193.5140000000006" width="970.3567499999999" height="3193.5140000000006" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="A" data-to="B" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Truk berangkat" points="242.48275,76.9 242.48275,193.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="B" data-to="G1" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Tiba di Gerbang" points="242.48275,230.10000000000002 242.48275,346.40000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G1" data-to="H1" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Suhu &gt; 6°C / Surat Cacat" points="207.53208333333333,521.1533333333333 207.53208333333333,966.4009999999998 134.334,966.4009999999998 134.334,1046.7009999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G1" data-to="C" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Lolos" points="277.43341666666663,521.1533333333334 277.43341666666663,592.1039999999999 350.63149999999996,592.1039999999999 350.63149999999996,672.4039999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="C" data-to="G2" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Uji Lemak, Protein, Asam, Antibiotik" points="350.63149999999996,709.3039999999999 350.63149999999996,825.6039999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G2" data-to="H2" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Adulteran / Antibiotik +" points="319.01533333333333,983.6848333333332 319.01533333333333,1119.6009999999999 244.52050000000003,1119.6009999999999 244.52050000000003,1199.9009999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G2" data-to="D" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Lolos Spek Mutu" points="382.24766666666665,983.6848333333331 382.24766666666665,1051.301 456.7425,1051.301 456.74249999999995,1131.6009999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D" data-to="G3" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Bongkar ke Tangki" points="456.74249999999995,1168.501 456.7425,1284.801" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G3" data-to="H3" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Tangki belum CIP / Penuh" points="416.6048333333333,1485.4893333333332 416.6048333333333,2006.9150000000002 334.14425,2006.9150000000002 334.14425,2087.215" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G3" data-to="E" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Lolos" points="496.88016666666664,1485.4893333333332 496.88016666666664,1561.627 579.3407499999998,1561.627 579.34075,1641.927" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="E" data-to="F" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="579.34075,1678.827 579.3407500000001,1726.827" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="F" data-to="I" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="579.3407500000001,1763.727 579.3407499999998,1811.727" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="I" data-to="G4" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="579.3407499999998,1848.6270000000002 579.3407500000001,1896.6270000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G4" data-to="H4" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Susu Menginap Terlalu Lama" points="541.4260833333333,2086.2003333333337 541.4260833333333,2160.1150000000002 467.8574999999999,2160.1150000000002 467.85749999999996,2240.4150000000004" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G4" data-to="J" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Lolos" points="617.2554166666666,2086.2003333333337 617.2554166666666,2160.1150000000002 690.824,2160.1150000000002 690.824,2240.4150000000004" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="J" data-to="G5" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="690.824,2277.3150000000005 690.824,2325.3150000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G5" data-to="H5" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Suhu &lt; 137°C / Divert" points="652.6623333333333,2516.123333333334 652.6623333333333,2866.514 590.08525,2866.514 590.08525,2946.8140000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G5" data-to="K" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Steril Sempurna" points="728.9856666666667,2516.1233333333334 728.9856666666667,2590.2850000000003 791.56275,2590.2850000000003 791.56275,2670.5850000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="K" data-to="G6" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="791.56275,2707.4850000000006 791.5627499999998,2755.4850000000006" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G6" data-to="L" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="791.5627499999998,2983.7140000000004 791.5627499999998,3031.7140000000004" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="L" data-to="M" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="791.5627499999998,3068.6140000000005 791.5627499999998,3116.6140000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="A" data-to="B" data-label="Truk berangkat">
+  <rect x="196.48275" y="119.9" width="91.9" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="242.43275" y="135.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Truk berangkat</text>
+</g>
+<g class="edge-label" data-from="B" data-to="G1" data-label="Tiba di Gerbang">
+  <rect x="195.98275" y="273.1" width="92.49400000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="242.22975000000002" y="288.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Tiba di Gerbang</text>
+</g>
+<g class="edge-label" data-from="G1" data-to="H1" data-label="Suhu &gt; 6°C / Surat Cacat">
+  <rect x="67.834" y="973.4009999999998" width="132.88600000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="134.27700000000002" y="988.5509999999998" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Suhu &gt; 6°C / Surat Cacat</text>
+</g>
+<g class="edge-label" data-from="G1" data-to="C" data-label="Lolos">
+  <rect x="328.13149999999996" y="599.1039999999999" width="44.974" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="350.6185" y="614.2539999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Lolos</text>
+</g>
+<g class="edge-label" data-from="C" data-to="G2" data-label="Uji Lemak, Protein, Asam, Antibiotik">
+  <rect x="260.6315" y="752.3039999999999" width="179.218" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="350.2405" y="767.4539999999998" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Uji Lemak, Protein, Asam, Antibiotik</text>
+</g>
+<g class="edge-label" data-from="G2" data-to="H2" data-label="Adulteran / Antibiotik +">
+  <rect x="183.52050000000003" y="1126.6009999999999" width="121.00600000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="244.02350000000004" y="1141.751" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Adulteran / Antibiotik +</text>
+</g>
+<g class="edge-label" data-from="G2" data-to="D" data-label="Lolos Spek Mutu">
+  <rect x="408.2425" y="1058.301" width="96.65200000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="456.56850000000003" y="1073.451" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Lolos Spek Mutu</text>
+</g>
+<g class="edge-label" data-from="D" data-to="G3" data-label="Bongkar ke Tangki">
+  <rect x="402.7425" y="1211.501" width="107.93800000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="456.7115" y="1226.651" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Bongkar ke Tangki</text>
+</g>
+<g class="edge-label" data-from="G3" data-to="H3" data-label="Tangki belum CIP / Penuh">
+  <rect x="266.14425" y="2013.9150000000002" width="135.856" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="334.07225" y="2029.0650000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Tangki belum CIP / Penuh</text>
+</g>
+<g class="edge-label" data-from="G3" data-to="E" data-label="Lolos">
+  <rect x="556.8407499999998" y="1568.627" width="44.974" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="579.3277499999998" y="1583.777" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Lolos</text>
+</g>
+<g class="edge-label" data-from="G4" data-to="H4" data-label="Susu Menginap Terlalu Lama">
+  <rect x="389.85749999999996" y="2167.1150000000002" width="155.458" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="467.58649999999994" y="2182.2650000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Susu Menginap Terlalu Lama</text>
+</g>
+<g class="edge-label" data-from="G4" data-to="J" data-label="Lolos">
+  <rect x="668.324" y="2167.1150000000002" width="44.974" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="690.8109999999999" y="2182.2650000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Lolos</text>
+</g>
+<g class="edge-label" data-from="G5" data-to="H5" data-label="Suhu &lt; 137°C / Divert">
+  <rect x="532.58525" y="2873.514" width="114.47200000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="589.82125" y="2888.664" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Suhu &lt; 137°C / Divert</text>
+</g>
+<g class="edge-label" data-from="G5" data-to="K" data-label="Steril Sempurna">
+  <rect x="744.56275" y="2597.2850000000003" width="93.08800000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="791.10675" y="2612.4350000000004" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Steril Sempurna</text>
+</g>
+<g class="node" data-id="A" data-label="🚜 Peternakan (Farms)" data-shape="rectangle">
+  <rect x="154.07675" y="40" width="176.81199999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="242.48275" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚜 Peternakan (Farms)</text>
+</g>
+<g class="node" data-id="B" data-label="🚛 On The Way (Inbound Maps)" data-shape="rectangle">
+  <rect x="131.47625" y="193.2" width="222.013" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="242.48275" y="211.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚛 On The Way (Inbound Maps)</text>
+</g>
+<g class="node" data-id="G1" data-label="Gate G1: Suhu &amp; Dokumen" data-shape="diamond">
+  <polygon points="242.48275,346.40000000000003 347.33475,451.252 242.48275,556.104 137.63075000000003,451.252" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="242.48275" y="451.252" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G1: Suhu &amp; Dokumen</text>
+</g>
+<g class="node" data-id="H1" data-label="🚨 QA HOLD / Tolak Truk" data-shape="rectangle">
+  <rect x="40" y="1046.7009999999998" width="188.668" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="134.334" y="1065.1509999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚨 QA HOLD / Tolak Truk</text>
+</g>
+<g class="node" data-id="C" data-label="🧪 Lab QA: Sampling &amp; Uji" data-shape="rectangle">
+  <rect x="256.668" y="672.4039999999999" width="187.92699999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="350.63149999999996" y="690.8539999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🧪 Lab QA: Sampling &amp; Uji</text>
+</g>
+<g class="node" data-id="G2" data-label="Gate G2: Analisis Lab" data-shape="diamond">
+  <polygon points="350.63149999999996,825.6039999999998 445.47999999999996,920.4524999999999 350.63149999999996,1015.3009999999999 255.78299999999996,920.4524999999999" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="350.63149999999996" y="920.4524999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G2: Analisis Lab</text>
+</g>
+<g class="node" data-id="H2" data-label="🚨 REJECTED (Truk Ditolak)" data-shape="rectangle">
+  <rect x="138.70100000000005" y="1199.9009999999998" width="211.63899999999992" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="244.52050000000003" y="1218.3509999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚨 REJECTED (Truk Ditolak)</text>
+</g>
+<g class="node" data-id="D" data-label="🚚 Unloading di Bay" data-shape="rectangle">
+  <rect x="378.34" y="1131.6009999999999" width="156.805" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="456.74249999999995" y="1150.051" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚚 Unloading di Bay</text>
+</g>
+<g class="node" data-id="G3" data-label="Gate G3: Tangki Bersih &amp; Muat" data-shape="diamond">
+  <polygon points="456.7425,1284.801 577.1555,1405.214 456.7425,1525.627 336.3295,1405.214" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="456.7425" y="1405.214" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G3: Tangki Bersih &amp; Muat</text>
+</g>
+<g class="node" data-id="H3" data-label="⏳ Tunggu Antrean Bay" data-shape="rectangle">
+  <rect x="247.59075" y="2087.215" width="173.107" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="334.14425" y="2105.665" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">⏳ Tunggu Antrean Bay</text>
+</g>
+<g class="node" data-id="E" data-label="🥛 Raw Buffer (TK-RAW) -&gt; Degassing" data-shape="rectangle">
+  <rect x="448.69775" y="1641.927" width="261.28599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="579.34075" y="1660.377" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🥛 Raw Buffer (TK-RAW) -&gt; Degassing</text>
+</g>
+<g class="node" data-id="F" data-label="⚙️ Thermalization &amp; Separator" data-shape="rectangle">
+  <rect x="466.11125" y="1726.827" width="226.459" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="579.34075" y="1745.277" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">⚙️ Thermalization &amp; Separator</text>
+</g>
+<g class="node" data-id="I" data-label="🛢️ Storage Tanks (TK-STO)" data-shape="rectangle">
+  <rect x="473.15074999999996" y="1811.727" width="212.37999999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="579.34075" y="1830.1770000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🛢️ Storage Tanks (TK-STO)</text>
+</g>
+<g class="node" data-id="G4" data-label="Gate G4: Batas Holding Time" data-shape="diamond">
+  <polygon points="579.34075,1896.6270000000002 693.08475,2010.371 579.34075,2124.1150000000002 465.59674999999993,2010.371" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="579.34075" y="2010.371" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G4: Batas Holding Time</text>
+</g>
+<g class="node" data-id="H4" data-label="🚨 QA HOLD (Kualitas Turun)" data-shape="rectangle">
+  <rect x="362.40849999999995" y="2240.4150000000004" width="210.898" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="467.85749999999996" y="2258.8650000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🚨 QA HOLD (Kualitas Turun)</text>
+</g>
+<g class="node" data-id="J" data-label="🔥 UHT Sterilizer (STE)" data-shape="rectangle">
+  <rect x="601.3064999999999" y="2240.4150000000004" width="179.035" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="690.824" y="2258.8650000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🔥 UHT Sterilizer (STE)</text>
+</g>
+<g class="node" data-id="G5" data-label="Gate G5: Suhu &amp; Waktu Steril" data-shape="diamond">
+  <polygon points="690.824,2325.3150000000005 805.309,2439.8000000000006 690.824,2554.2850000000008 576.3389999999999,2439.8000000000006" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="690.824" y="2439.8000000000006" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G5: Suhu &amp; Waktu Steril</text>
+</g>
+<g class="node" data-id="H5" data-label="🔄 Emergency CIP" data-shape="rectangle">
+  <rect x="515.01725" y="2946.8140000000003" width="150.13599999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="590.08525" y="2965.264" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🔄 Emergency CIP</text>
+</g>
+<g class="node" data-id="K" data-label="🛡️ Aseptic Tanks (ASEP)" data-shape="rectangle">
+  <rect x="693.15325" y="2670.5850000000005" width="196.81899999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="791.5627499999999" y="2689.0350000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">🛡️ Aseptic Tanks (ASEP)</text>
+</g>
+<g class="node" data-id="G6" data-label="Gate G6: Aseptik &amp; Line Siap" data-shape="diamond">
+  <polygon points="791.5627499999999,2755.4850000000006 905.67725,2869.5995000000007 791.5627499999999,2983.714000000001 677.4482499999999,2869.5995000000007" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="791.5627499999999" y="2869.5995000000007" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gate G6: Aseptik &amp; Line Siap</text>
+</g>
+<g class="node" data-id="L" data-label="📦 Filling Machines (Pack 1000ml / 200ml)" data-shape="rectangle">
+  <rect x="652.76875" y="3031.7140000000004" width="277.58799999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="791.5627499999999" y="3050.164" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">📦 Filling Machines (Pack 1000ml / 200ml)</text>
+</g>
+<g class="node" data-id="M" data-label="✅ Finished Goods (Ready for Dispatch)" data-shape="rectangle">
+  <rect x="655.3622499999999" y="3116.6140000000005" width="272.40099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="791.5627499999998" y="3135.0640000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">✅ Finished Goods (Ready for Dispatch)</text>
+</g>
+</svg>

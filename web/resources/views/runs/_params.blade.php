@@ -11,12 +11,18 @@
 @endphp
 <details class="tw-card" id="params" @if ($errors->any()) open @endif>
     <summary><b>Parameter operasional</b> <span class="muted">{{ $custom ? "$custom diubah dari bawaan" : 'nilai bawaan' }} (nilai demo, bukan SOP)</span></summary>
-    <form method="POST" action="{{ route('runs.retest', $run) }}">
+    <form method="POST" action="{{ route('runs.retest', $run) }}" id="retest-form">
         @csrf
         @if ($errors->any())
             <div class="tw-card err" role="alert">@foreach ($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
         @endif
         <p class="muted">Hari yang sama (seed {{ $run->seed }}, volume, skenario, dan pabrik tetap). Uji ulang menjalankan A (FIFO) dan B (CP-SAT) dengan parameter ini, lalu membuka perbandingannya.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;">
+            <small class="muted"><b>Preset Uji Cepat PPIC:</b></small>
+            <button type="button" class="tw-btn" onclick="(function(f){f.querySelector('[name=&quot;params[orders][0][sku]&quot;]').value='UHT-CHOC-200';f.querySelector('[name=&quot;params[orders][0][ton]&quot;]').value='80';f.querySelector('[name=&quot;params[orders][1][sku]&quot;]').value='UHT-FULL-1000';f.querySelector('[name=&quot;params[orders][1][ton]&quot;]').value='120';})(this.form)"><span>Lonjakan Order Cokelat (80 t)</span></button>
+            <button type="button" class="tw-btn" onclick="(function(f){f.querySelector('[name=&quot;params[maintenance][0][asset]&quot;]').value='STE-1';f.querySelector('[name=&quot;params[maintenance][0][start_clock]&quot;]').value='08:00';f.querySelector('[name=&quot;params[maintenance][0][duration_min]&quot;]').value='120';})(this.form)"><span>Maintenance STE-1 (08:00 · 120 mnt)</span></button>
+            <button type="button" class="tw-btn" onclick="(function(f){var h=f.querySelector('#p-holding_max_min');if(h)h.value='180';var p=f.querySelector('#p-sku-policy');if(p)p.value='dedicated';})(this.form)"><span>Holding Ketat (180 mnt) + Dedicated Line</span></button>
+        </div>
         <div class="param-groups">
             @foreach (collect($fields)->groupBy('group', true) as $group => $items)
                 <fieldset class="param-group">

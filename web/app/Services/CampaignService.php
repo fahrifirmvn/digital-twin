@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Campaign;
 use App\Models\CampaignDay;
+use App\Models\OperationMaintenance;
 use App\Models\SimCommand;
 use App\Models\SimRun;
 use App\Models\User;
@@ -46,30 +47,20 @@ class CampaignService
         return $c->name === config('twin.operation.name') && $c->parent_campaign_id === null;
     }
 
-    /**
-     * Hari yang menerima keputusan maintenance. Kampanye biasa: hari yang sedang disusun. Operasi pabrik: hari
-     * berikutnya setelah yang ditonton (hari itu sudah dihitung di depan, tetapi belum dilihat siapa pun).
-     */
+    /** Hari berjalan atau hari berikutnya yang belum dimulai; hari tertutup tidak pernah direvisi. */
     public function targetDay(Campaign $c): CampaignDay
     {
-        if ($this->isOperation($c)) {
-            $day = $c->days()->where('day_no', (int) ($c->watch_day ?? 0) + 1)->first();
-            if ($day) {
-                return $day;
-            }
-        }
-
         return $this->currentDay($c);
     }
 
-    /** Hari target masih bisa diubah: belum dihitung, gagal, atau (operasi) sudah dihitung di depan tetapi belum ditonton. */
+    /** Rencana hanya dapat diedit sebelum hari dimulai. Hari aktif menerima perintah lewat jalur live. */
     public function canChange(Campaign $c, CampaignDay $day): bool
     {
         if (in_array($day->status, ['planned', 'failed'], true)) {
             return true;
         }
 
-        return $day->status === 'closed' && $this->isOperation($c) && $day->day_no > (int) ($c->watch_day ?? 0);
+        return false;
     }
 
     public function planMaintenance(Campaign $c, User $user, string $asset, float $startMin, float $duration, string $reason): CampaignDay
@@ -119,42 +110,7 @@ class CampaignService
             return $day;
         }
 
-        return $this->reviseAhead($c, $user, $day, $plan, $why);
-    }
-
-    /**
-     * Hari operasi yang sudah ditutup di depan hari yang ditonton belum pernah dilihat pengguna, jadi boleh dihitung
-     * ulang dengan rencana baru. Hari yang sudah ditonton tidak pernah berubah. Lewat jalur query langsung karena
-     * model menolak mengubah hari tertutup; jejaknya (hash lama, run lama) masuk audit log.
-     */
-    private function reviseAhead(Campaign $c, User $user, CampaignDay $day, array $plan, string $why): CampaignDay
-    {
-        DB::transaction(function () use ($c, $day, $plan) {
-            $fresh = Campaign::whereKey($c->id)->lockForUpdate()->firstOrFail();
-            if (! $this->canChange($fresh, $day)) {
-                throw ValidationException::withMessages(['day' => 'Hari ini baru saja ditonton; maintenance berlaku dari hari berikutnya.']);
-            }
-            $oldRun = $day->run_id ? SimRun::find($day->run_id) : null;
-            $after = $c->days()->where('day_no', '>', $day->day_no)->get();
-            if ($after->contains(fn (CampaignDay $d) => $d->status !== 'planned')) {
-                throw ValidationException::withMessages(['day' => 'Hari berikutnya sudah berjalan; maintenance tidak dapat diubah.']);
-            }
-            DB::table('campaign_days')->where('id', $day->id)->update([
-                'status' => 'planned', 'run_id' => null, 'checkpoint' => null, 'prev_hash' => '', 'hash' => null, 'closed_at' => null,
-                'error' => null, 'plan' => json_encode($plan, JSON_UNESCAPED_UNICODE), 'updated_at' => now(),
-            ]);
-            DB::table('campaign_days')->where('campaign_id', $c->id)->where('day_no', '>', $day->day_no)->where('status', 'planned')->delete();
-            DB::table('campaigns')->where('id', $c->id)->update(['current_day' => $day->day_no, 'updated_at' => now()]);
-            if ($oldRun) {
-                $snap = $oldRun->config_snapshot ?? [];
-                DB::table('sim_runs')->where('id', $oldRun->id)->update(['config_snapshot' => json_encode($snap + ['superseded' => true], JSON_UNESCAPED_UNICODE)]);
-            }
-        });
-        $this->audit->record('user', (string) $user->id, 'campaign.day_revised', [
-            'campaign_id' => $c->id, 'day' => $day->day_no, 'old_run_id' => $day->run_id, 'old_hash' => $day->hash, 'change' => $why,
-        ]);
-
-        return $this->startDay($c->refresh(), $user);
+        throw ValidationException::withMessages(['day' => 'Hari ini sudah berjalan atau ditutup. Gunakan perintah maintenance live pada hari aktif.']);
     }
 
     /**
@@ -200,7 +156,21 @@ class CampaignService
         if ($day->day_no > config('twin.campaign.max_days')) {
             throw ValidationException::withMessages(['day' => 'Kampanye sudah mencapai batas hari.']);
         }
-        [$commands] = $this->segments($day);
+        if ($this->isOperation($c)) {
+            $scheduled = OperationMaintenance::where('campaign_id', $c->id)->where('day_no', $day->day_no)->where('status', 'scheduled')->get();
+            $plan = array_values(array_filter($day->plan, fn ($e) => ! isset($e['request_id'])));
+            foreach ($scheduled as $entry) {
+                $plan[] = [
+                    'kind' => 'tank_down', 'asset' => $entry->asset, 'minute' => $entry->start_min,
+                    'duration_min' => $entry->duration_min, 'reason' => $entry->reason,
+                    'actor_id' => $entry->actor_id, 'actor_label' => $entry->actor_label, 'request_id' => $entry->id,
+                ];
+            }
+            $day->update(['plan' => $plan]);
+            $commands = [...$day->carry_in, ...$plan];
+        } else {
+            [$commands] = $this->segments($day);
+        }
         $params = $c->params + ['seed' => $c->daySeed($day->day_no)];
         // Keadaan akhir kemarin (SKU line, umur fouling, truk tertunda, stok) menjadi keadaan awal hari ini.
         $engineCarry = $day->day_no > 1
@@ -210,14 +180,18 @@ class CampaignService
         $run = DB::transaction(function () use ($c, $day, $user, $params, $commands) {
             $run = SimRun::create([
                 'kind' => 'campaign', 'seed' => $params['seed'], 'status' => 'pending', 'requested_by' => $user?->id,
-                'config_snapshot' => ['config' => $c->config, 'scenario' => $c->scenario, 'params' => $params],
+                'config_snapshot' => ['config' => $c->config, 'scenario' => $c->scenario, 'params' => $params, 'live' => $this->isOperation($c)],
             ]);
             foreach ($commands as $i => $cmd) {
                 SimCommand::create(['run_id' => $run->id, 'seq' => $i + 1, 'minute' => $cmd['minute'], 'kind' => 'tank_down',
-                    'args' => ['asset' => $cmd['asset'], 'duration_min' => $cmd['duration_min']],
+                    'args' => ['asset' => $cmd['asset'], 'duration_min' => $cmd['duration_min']] + (isset($cmd['request_id']) ? ['request_id' => $cmd['request_id']] : []),
                     'actor_id' => $cmd['actor_id'] ?? null, 'actor_label' => $cmd['actor_label'], 'reason' => $cmd['reason']]);
             }
             $day->update(['status' => 'running', 'run_id' => $run->id, 'error' => null]);
+            if ($this->isOperation($c)) {
+                OperationMaintenance::where('campaign_id', $c->id)->where('day_no', $day->day_no)
+                    ->where('status', 'scheduled')->update(['run_id' => $run->id]);
+            }
 
             return $run;
         });
@@ -228,7 +202,8 @@ class CampaignService
 
         try {
             $this->engine->startRun($run->id, $params + array_filter([
-                'config' => $c->config, 'scenario' => $c->scenario, 'speed' => $c->speed,
+                'config' => $c->config, 'scenario' => $c->scenario,
+                'speed' => $this->isOperation($c) ? ($c->speed ?? 1) : $c->speed, 'live' => $this->isOperation($c),
                 'day' => $day->day_no, 'date' => $c->dateOf($day->day_no), 'carry' => $engineCarry,
                 'commands' => $run->commands()->get()->map->toEngine()->all(),
             ], fn ($v) => $v !== null));
@@ -266,6 +241,14 @@ class CampaignService
         $c = $day->campaign;
         $kpi = json_decode((string) DB::table('scenarios')->where('id', $run->scenario_id)->value('kpi_result'), true) ?: [];
         [$commands, $carryOut] = $this->segments($day);
+        if ($this->isOperation($c)) {
+            $commands = $run->commands()->get()->map(fn ($cmd) => [
+                'kind' => $cmd->kind, 'asset' => $cmd->args['asset'], 'minute' => $cmd->minute,
+                'duration_min' => $cmd->args['duration_min'], 'reason' => $cmd->reason, 'actor_label' => $cmd->actor_label,
+            ])->all();
+            // Live maintenance is completed in this run, even if it extends into overtime.
+            $carryOut = [];
+        }
         $result = DB::table('sim_runs')->where('id', $run->id)->value('day_result');
         $result = $result ? json_decode($result, true) : [];
 
@@ -291,7 +274,7 @@ class CampaignService
         });
         $this->audit->record('system', 'campaign', 'campaign.day_closed', ['campaign_id' => $c->id, 'day' => $day->day_no, 'run_id' => $run->id, 'hash' => $day->hash]);
 
-        if ($next && $c->autoplay) {
+        if ($next && $c->autoplay && ! $this->isOperation($c)) {
             try {
                 $this->startDay($c->refresh(), null);
             } catch (ValidationException $e) {

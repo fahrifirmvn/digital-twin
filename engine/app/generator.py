@@ -65,7 +65,7 @@ class TankerSpec:
     lab_duration_min: float
     lab_results: dict[str, float | bool]
     farm_distance_km: float = 0.0
-    test_type: str = "standard"  # standard, extended (uji residu tambahan)
+    test_type: str = "standard"  # standard, extended (durasi uji lebih panjang)
     sku_code: str = "UHT-FULL-1000"
     announced: bool = True  # False: truk dadakan, baru diketahui perencana saat tiba
     plate: str = ""  # plat nomor sintetis, kosong bila spec dibuat di luar generate_day
@@ -97,32 +97,12 @@ def _plates(
     return out
 
 
-def _ph(res: dict[str, float | bool]) -> float:
-    """pH sintetis: turun saat keasaman naik. Stream acak sendiri (turunan nilai lab) agar data lain
-    dan seed baseline tidak bergeser."""
-    acidity = float(res["acidity_pct"])
-    noise = random.Random(f"ph:{res['fat_pct']:.6f}:{acidity:.6f}").gauss(0.0, 0.02)
-    return round(6.70 - (acidity - 0.15) * 4.0 + noise, 2)
-
-
 def _lab_results(rng: random.Random, fail: bool) -> dict[str, float | bool]:
-    res: dict[str, float | bool] = {
-        "fat_pct": rng.gauss(3.7, 0.25),
-        "protein_pct": rng.gauss(3.1, 0.12),
-        "acidity_pct": rng.gauss(0.15, 0.007),
-        "antibiotic_residue": False,
-        "adulterant": False,
-    }
     if fail:
-        kind = rng.choice(("antibiotic", "fat", "acidity"))
-        if kind == "antibiotic":
-            res["antibiotic_residue"] = True
-        elif kind == "fat":
-            res["fat_pct"] = rng.uniform(2.0, 2.9)
-        else:
-            res["acidity_pct"] = rng.uniform(0.19, 0.25)
-    res["ph"] = _ph(res)
-    return res
+        ph = rng.uniform(5.8, 6.4) if rng.random() < 0.5 else rng.uniform(6.9, 7.3)
+    else:
+        ph = min(6.84, max(6.56, rng.gauss(6.7, 0.04)))
+    return {"ph": round(ph, 2)}
 
 
 def _surge_trucks(

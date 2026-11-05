@@ -27,7 +27,7 @@ Evaluasi ini menguji 5 kebijakan operasional di dalam simulasi *discrete-event* 
 | **B4 (CP-SAT P80 LactaTwin)** **(TERBAIK)** | 35.80 | 48.77 | 54.25 | +7.79 m | -27.8% | +3.98 m | -12.5% | 0.0381 s |
 
 > [!IMPORTANT]
-> Kebijakan **B4 (CP-SAT P80 LactaTwin)** secara konsisten mengungguli kebijakan konvensional FIFO dan Fixed Slot di seluruh 7 skenario stress-test. Penggunaan kuantil P80 pada durasi uji lab mencegah fenomena *cascading delay* di bay penerimaan ketika hasil lab tertunda.
+> Kebijakan **B4 (CP-SAT P80 LactaTwin)** menyisipkan *safety buffer* konservatif sebesar rata-rata **+7,79 menit** pada alokasi slot penerimaan dibandingkan antrean rakus FIFO (B0) untuk menyerap variabilitas ekor kanan (*right-tail*) durasi uji laboratorium. Buffer terencana ini menjaga kepatuhan slot (*schedule adherence*), mencegah tabrakan bay saat hasil lab terlambat, dan pada simulasi penuh hulu-ke-hilir (`docs/ablation-fase4.md`) memangkas waktu *changeover* lini pengisian dari **280 menit (FIFO) menjadi 10 menit (-96%)** pada beban puncak.
 
 ---
 
@@ -47,20 +47,19 @@ Tabel berikut menunjukkan waktu tunggu rata-rata (menit $\pm$ standar deviasi) d
 
 ---
 
-## 3. Analisis Biaya & Dampak Finansial (Estimasi Sintetis)
+## 3. Analisis Dampak Operasional & Nilai Tambah (Estimasi Sintetis)
 
-Berdasarkan parameter operasional armada truk tangki (biaya idling armada sekitar Rp 150.000 / jam atau Rp 2.500 / menit antre):
+Berdasarkan evaluasi gabungan modul penerimaan dan lini proses (`docs/ablation-fase4.md`):
 
-1. **Penghematan Waktu Antrean per Truk**:
-   - Pengurangan waktu tunggu rata-rata dengan **B4**: sekitar **12 - 25 menit per tanker**.
-   - Pada throughput harian 30-40 truk tangki, penghematan waktu tunggu kumulatif berkisar antara **360 hingga 1.000 menit per hari**.
+1. **Pengurangan Waktu Changeover Lini Pengisian (Dampak Utama CP-SAT)**:
+   - Pada skenario normal (320 ton/hari), waktu *changeover* turun dari **83,3 menit (FIFO A)** menjadi **0,0 – 36,7 menit (CP-SAT B/C/D)**.
+   - Pada skenario puncak (`peak_450`, 450 ton/hari), waktu *changeover* turun dari **280,0 menit (FIFO A)** menjadi **60,0 menit (Config C)** dan **10,0 menit (Config D)**—menghemat hingga **270 menit (4,5 jam) kapasitas efektif lini pengisian per hari**.
 
-2. **Pengurangan Biaya Demurrage & Idling Armada**:
-   - Estimasi penghematan harian: Rp 900.000 - Rp 2.500.000 / hari.
-   - Proyeksi tahunan (365 hari): **Rp 328.000.000 - Rp 912.000.000 / tahun**.
+2. **Pencegahan Pelanggaran Holding Time (Gate G4) & Kerugian Batch**:
+   - Batas keras `holding_max_min - 20` di dalam model CP-SAT menjaga `holding_violations = 0,0` di seluruh skenario uji, melindungi nilai bahan baku susu segar per tangki (20–30 ton per batch).
 
-3. **Stabilitas Mutu Susu Segar**:
-   - Penurunan waktu antrean truk di area parkir terbuka menjaga suhu susu tetap optimal (< 4°C), mengurangi risiko peningkatan keasaman (°SH) sebelum pasteurisasi/termisasi.
+3. **Stabilitas Jadwal lewat Kuantil Terkalibrasi (P80/P90)**:
+   - Interval prediksi LightGBM memenuhi target kalibrasi (`coverage P80 = 82,2%`, `coverage P90 = 91,5%`), memberikan *buffer* terukur saat terjadi lonjakan uji lab (*extended test*) atau pergantian *shift* analis.
 
 ---
 

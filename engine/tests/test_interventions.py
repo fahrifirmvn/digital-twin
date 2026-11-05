@@ -15,11 +15,11 @@ from app.main import app
 from app.sim import DAY_START
 
 H = {"X-Internal-Token": settings.internal_token}
-T = 550.0
-SEED, EXTRA_BAD = 3, 3
-WAITING = "RT-008"  # tiba 520, mulai bongkar 576 pada hari dasar
-INBOUND = "RT-010"  # tiba 559
-G1_HELD = "RT-009"  # ditahan G1 pada hari dasar
+T = 650.0
+SEED, EXTRA_BAD = 1, 3
+WAITING = "RT-007"  # tiba 633, mulai bongkar 748.5 pada hari dasar
+INBOUND = "RT-009"  # tiba 746.1
+G1_HELD = "RT-006"  # ditahan G1 pada hari dasar
 BY = "PPIC: Dewi"
 
 

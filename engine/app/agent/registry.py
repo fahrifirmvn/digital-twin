@@ -45,6 +45,9 @@ class ToolEnv:
     whatifs: WhatIfStore = field(default_factory=WhatIfStore)
     whatif_runs: int = 0  # what-if turn ini; simulasi mahal, jadi dibatasi
     proposals: list[dict[str, Any]] = field(default_factory=list)  # usulan draf turn ini
+    exports: list[dict[str, Any]] = field(
+        default_factory=list
+    )  # unduhan hanya setelah klik pengguna
     cited: list[dict[str, Any]] = field(default_factory=list)
     evidence: list[str] = field(
         default_factory=list

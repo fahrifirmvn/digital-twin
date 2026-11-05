@@ -10,6 +10,7 @@ use App\Services\ProposalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -28,6 +29,10 @@ class AgentController extends Controller
             'history' => ['sometimes', 'array', 'max:20'],
             'history.*.role' => ['required', 'in:user,assistant'],
             'history.*.content' => ['required', 'string', 'max:2000'],
+            'ui_context' => ['sometimes', 'array'],
+            'ui_context.selected_code' => ['sometimes', 'nullable', 'string', 'max:32', 'regex:/^[A-Za-z0-9:_-]{2,32}$/'],
+            'ui_context.minute' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:2880'],
+            'ui_context.view' => ['sometimes', 'nullable', 'string', 'in:recv,process'],
         ]);
         $user = $request->user();
         $run = isset($data['run_id']) ? SimRun::find($data['run_id']) : null;
@@ -37,14 +42,19 @@ class AgentController extends Controller
         $run = $campaign && $run?->modeBadge()['key'] === 'live' ? null : $run;
         $conversation = $data['conversation_id'] ?? (string) Str::uuid();
 
+        $payload = [
+            'conversation_id' => $conversation, 'user_id' => $user->id, 'role' => $user->role->value, 'mode' => $mode,
+            'message' => $data['message'], 'run_id' => $run?->id, 'history' => $data['history'] ?? [],
+            'campaign' => $campaign ? $proposals->context($campaign, $user) : null,
+        ];
+        if (! empty($data['ui_context'])) {
+            $payload['ui_context'] = array_filter($data['ui_context'], fn ($v) => $v !== null && $v !== '');
+        }
+
         try {
-            $reply = $engine->agentTurn([
-                'conversation_id' => $conversation, 'user_id' => $user->id, 'role' => $user->role->value, 'mode' => $mode,
-                'message' => $data['message'], 'run_id' => $run?->id, 'history' => $data['history'] ?? [],
-                'campaign' => $campaign ? $proposals->context($campaign, $user) : null,
-            ]);
+            $reply = $engine->agentTurn($payload);
         } catch (RuntimeException $e) {
-            \Illuminate\Support\Facades\Log::warning('Engine agent tidak terjangkau', ['pesan' => $e->getMessage()]);
+            Log::warning('Engine agent tidak terjangkau', ['pesan' => $e->getMessage()]);
             $reply = ['status' => 'unavailable', 'text' => self::FALLBACK, 'mode' => $mode, 'label' => "DATA SINTETIS | mode {$mode}",
                 'error' => ['code' => 'engine_unreachable', 'message' => self::FALLBACK], 'sources' => [], 'audit' => []];
         }
@@ -53,12 +63,23 @@ class AgentController extends Controller
             ? $proposals->persistDrafts($campaign, $user, $conversation, $reply, $reply['proposals']) : [];
         $ids = collect($saved)->pluck('uuid')->all();
         $reply['audit'] = array_map(fn ($e) => ['proposal_id' => in_array($e['proposal_id'] ?? null, $ids, true) ? $e['proposal_id'] : null] + $e, $reply['audit'] ?? []);
+        $requestedExports = collect(($reply['status'] ?? '') === 'ok' ? ($reply['exports'] ?? []) : [])->filter(fn ($e) => is_array($e)
+            && (int) ($e['run_id'] ?? 0) > 0
+            && in_array($e['format'] ?? '', ['csv', 'pdf', 'docx'], true)
+        )->unique(fn ($e) => $e['run_id'].'|'.$e['format'])->values();
+        $exportRuns = SimRun::query()->whereIn('id', $requestedExports->pluck('run_id')->map(fn ($id) => (int) $id))
+            ->where('status', 'finished')->whereNotNull('result_payload')->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $reply['exports'] = $requestedExports->filter(fn ($e) => in_array((int) $e['run_id'], $exportRuns, true))->map(fn ($e) => [
+            'run_id' => (int) $e['run_id'],
+            'format' => $e['format'],
+            'url' => route('runs.report', ['run' => $e['run_id'], 'format' => $e['format']]),
+        ])->values()->all();
 
         $this->record($audit, $user->id, $user->role->value, $mode, $conversation, $data['message'], $reply);
 
         return response()->json(['conversation_id' => $conversation] + Arr::only($reply, [
             'status', 'text', 'mode', 'label', 'error', 'sources', 'provider', 'model', 'model_version',
-        ]) + ['proposals' => array_map(fn ($p) => $p->summary(), $saved), 'tools' => array_map(fn ($e) => ['tool' => $e['tool'] ?? '', 'ok' => (bool) ($e['ok'] ?? false)], $reply['audit'] ?? [])]);
+        ]) + ['proposals' => array_map(fn ($p) => $p->summary(), $saved), 'exports' => $reply['exports'], 'tools' => array_map(fn ($e) => ['tool' => $e['tool'] ?? '', 'ok' => (bool) ($e['ok'] ?? false), 'ms' => (int) ($e['ms'] ?? 0)], $reply['audit'] ?? [])]);
     }
 
     /** Peran, pengguna, dan percakapan diambil dari sesi, bukan dari balasan Engine (P7). */

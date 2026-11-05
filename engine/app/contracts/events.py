@@ -17,6 +17,7 @@ class TankerStatus(StrEnum):
     QUEUED = "queued"
     SAMPLING = "sampling"
     LAB_TEST = "lab_test"
+    QA_HOLD = "qa_hold"
     RELEASED = "released"
     REJECTED = "rejected"
     UNLOADING = "unloading"
@@ -251,12 +252,13 @@ class LabResult(Strict):
     analyst: str
     started_min: float = Field(description="Menit simulasi uji dimulai")
     duration_min: float = Field(gt=0)
-    fat_pct: float
-    protein_pct: float
-    acidity_pct: float
+    # Kolom legacy hanya untuk membaca snapshot lama; uji baru hanya menghasilkan pH.
+    fat_pct: float | None = None
+    protein_pct: float | None = None
+    acidity_pct: float | None = None
     ph: float | None = Field(default=None, description="Kosong bila hasil tidak memuat pH")
-    antibiotic_residue: bool
-    adulterant: bool
+    antibiotic_residue: bool | None = None
+    adulterant: bool | None = None
     test_type: str
     g2: Literal["pass", "hold"]
     g2_reason: str | None = None
@@ -272,6 +274,28 @@ class GateDecided(Strict):
     decided_by: str
 
 
+class QaFailure(Strict):
+    parameter: str
+    value: float | bool | None = None
+    minimum: float | None = None
+    maximum: float | None = None
+    reason: str
+
+
+class QaReview(Strict):
+    type: Literal["qa.review"] = "qa.review"
+    tanker_code: str
+    status: Literal["held", "testing", "confirmed", "released", "rejected"]
+    reason: str
+    actor: str
+    request_id: str | None = None
+    results: dict[str, float | bool | None] | None = None
+    failures: list[QaFailure]
+    category: Literal["incomplete", "quality", "hazard", "pass"]
+    disposition: Literal["return_supplier", "controlled_disposal", "unresolved_hold"] | None = None
+    expires_min: float
+
+
 class ScheduleReplanned(Strict):
     """Rencana disusun ulang saat berjalan (re-optimization bergulir). Usulan, bukan keputusan."""
 
@@ -284,6 +308,7 @@ class ScheduleReplanned(Strict):
 
 
 class CommandApplied(Strict):
+    request_id: str | None = None
     """Perintah pengguna (mode Simulasi) mulai berlaku. Dicatat di aliran event agar replay dan audit
     memuat siapa, kapan, apa, dan alasannya."""
 
@@ -315,6 +340,14 @@ class CommandApplied(Strict):
     gate: GateId | None = Field(
         default=None, description="Gate SOP yang dicoba dilewati (pelanggaran), bila ada"
     )
+
+
+class MaintenanceStatus(Strict):
+    type: Literal["maintenance.status"] = "maintenance.status"
+    request_id: str
+    asset: str
+    status: Literal["waiting_safe", "maintenance", "completed"]
+    duration_min: float = Field(gt=0)
 
 
 class DayStarted(Strict):
@@ -374,9 +407,11 @@ TwinPayload = Annotated[
     | FoulingExpiry
     | CipEvent
     | LabResult
+    | QaReview
     | GateDecided
     | ScheduleReplanned
-    | CommandApplied,
+    | CommandApplied
+    | MaintenanceStatus,
     Field(discriminator="type"),
 ]
 

@@ -48,6 +48,7 @@ class Command:
     bay: str | None = None  # plan_change: bay pilihan
     start_min: float | None = None  # plan_change: menit mulai bongkar pilihan
     asset: str | None = None  # tank_down: kode tangki (TK-RAW-n / TK-STO-n)
+    request_id: str | None = None
 
     def normalized(self, cfg: PlantConfig) -> "Command":
         """Isi nilai bawaan, buang argumen yang tidak berlaku, dan batasi pada jumlah aset nyata."""

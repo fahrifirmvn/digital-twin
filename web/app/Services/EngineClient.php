@@ -9,6 +9,33 @@ use RuntimeException;
 // Satu-satunya jalur Laravel memanggil Engine.
 class EngineClient
 {
+    public function live(int $runId, int $after = -1): array
+    {
+        return $this->liveRequest('GET', "/v1/runs/{$runId}/live", ['after' => $after]);
+    }
+
+    public function liveCommand(int $runId, string $kind, array $payload): array
+    {
+        return $this->liveRequest('POST', "/v1/runs/{$runId}/{$kind}", $payload);
+    }
+
+    private function liveRequest(string $method, string $url, array $payload): array
+    {
+        try {
+            $client = Http::baseUrl(config('services.engine.url'))
+                ->withHeaders(['X-Internal-Token' => (string) config('services.engine.token')])
+                ->timeout(10)->acceptJson();
+            $res = $method === 'GET' ? $client->get($url, $payload) : $client->post($url, $payload);
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('Engine live tidak dapat dihubungi. Coba ulang perintah dengan ID yang sama.', previous: $e);
+        }
+        if (! $res->successful() || ! is_array($res->json())) {
+            throw new RuntimeException((string) ($res->json('detail') ?? "Engine live menolak permintaan (HTTP {$res->status()})."), $res->status());
+        }
+
+        return $res->json();
+    }
+
     /** @param array{seed:int, volume_ton:float|int, extra_bad:int, speed?:float|int|null, plant?:array<string,int>, commands?:list<array<string,mixed>>} $params */
     public function startRun(int $runId, array $params): void
     {

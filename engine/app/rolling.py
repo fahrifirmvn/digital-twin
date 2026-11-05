@@ -33,6 +33,22 @@ class Replan:
     plan: Plan | None  # hanya truk yang direncanakan ulang
 
 
+def count_assignment_changes(prev: Plan | None, new: Plan | None) -> int:
+    """Hitung berapa truk di rencana baru yang bergeser penugasan asetnya (bay/sterilizer/line)."""
+    if prev is None or new is None:
+        return 0
+    changed = 0
+    for code, tp in new.trucks.items():
+        old = prev.trucks.get(code)
+        if old is not None and (old.bay, old.sterilizer, old.line) != (
+            tp.bay,
+            tp.sterilizer,
+            tp.line,
+        ):
+            changed += 1
+    return changed
+
+
 def _idx(code: str | None) -> int:
     return int(code.split("-")[1]) - 1 if code else 0
 
@@ -58,7 +74,9 @@ def build_state(
     live = [
         r
         for r in sim.tankers.values()
-        if r.outcome == "in_progress" and (r.arrived is not None or r.spec.announced)
+        if r.outcome == "in_progress"
+        and (r.arrived is not None or r.spec.announced)
+        and (r.spec.code not in sim.qa_reviews or sim.qa_reviews[r.spec.code].status == "released")
     ]
     specs = [r.spec for r in live]
     delay = predictor.forecast("eta_delay", specs)
@@ -77,13 +95,25 @@ def build_state(
             lab_d = max(lab_d, math.floor(sim.env.now - r.lab_start) + 1)
         jobs.append(Job(s.code, s.volume_ton, arrival, lab_d, SKU_BY_CODE[s.sku_code]))
         pins[s.code] = _pin(r)
-    downtimes = tuple(
+    ste_downs = [
         (_idx(d.asset), math.floor(d.start), math.ceil(d.end))
         for d in sim.downtimes
-        if d.end > sim.env.now
+        if d.end > sim.env.now and (d.asset or "").startswith("STE-")
+    ]
+    for ste_code, (c_start, c_end) in getattr(sim, "active_cips", {}).items():
+        if c_end > sim.env.now and ste_code.startswith("STE-"):
+            ste_downs.append((_idx(ste_code), math.floor(c_start), math.ceil(c_end)))
+    tank_downs = tuple(
+        (
+            "raw" if (d.asset or "").startswith("TK-RAW") else "sto",
+            math.floor(d.start),
+            math.ceil(d.start + d.duration),
+        )
+        for d in sim.disturbances
+        if d.kind == "tank_down" and d.start + d.duration > sim.env.now
     )
     line_sku = {_idx(code): sku for code, sku in sim.line_sku.items() if sku is not None}
-    frozen = Frozen(now, pins, downtimes, line_sku, sim.plan)
+    frozen = Frozen(now, pins, tuple(ste_downs), tank_downs, line_sku, sim.plan)
     return jobs, frozen
 
 

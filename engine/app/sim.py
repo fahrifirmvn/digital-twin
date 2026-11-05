@@ -9,7 +9,7 @@ import uuid
 from collections.abc import Callable, Generator
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import simpy
 
@@ -30,9 +30,11 @@ from app.contracts.events import (
     GateId,
     LabResult,
     LineChangeover,
+    MaintenanceStatus,
     OrdersEvaluated,
     PlantRoute,
     PlantRoutes,
+    QaReview,
     RouteBlock,
     SimClock,
     TankerStatus,
@@ -45,8 +47,10 @@ from app.contracts.events import (
     VolumeBalance,
 )
 from app.generator import APPROACH_MIN, DAY_START_HOUR, TankerSpec
+from app.live import LiveEnvironment
 from app.plan import Plan, TruckPlan
-from app.plant import SKUS, PlantConfig, Sku, changeover_minutes
+from app.plant import SKUS, PlantConfig, Sku, changeover_minutes, needs_flavour_cip
+from app.qa import Review, assess
 from app.routing import Routing
 from app.scenarios import Disturbance
 
@@ -236,6 +240,7 @@ class Tank:
     last_used: float = (
         -1.0
     )  # menit terakhir dipesan; tangki bersih yang paling lama menganggur dipilih dulu
+    active_batches: list[str] = field(default_factory=list)
 
 
 class TankPool:
@@ -245,9 +250,16 @@ class TankPool:
         self.sim = sim
         self.tanks = [Tank(f"{prefix}-{i + 1}", capacity_ton) for i in range(n)]
         self.changed = sim.env.event()
+        self._waiting: list[tuple[Key, int, simpy.Event]] = []
+        self._seq = 0
 
     def _notify(self) -> None:
-        ev, self.changed = self.changed, self.sim.env.event()
+        ev_c, self.changed = self.changed, self.sim.env.event()
+        ev_c.succeed()
+        if not self._waiting:
+            return
+        self._waiting.sort(key=lambda x: (x[0]() if callable(x[0]) else x[0], x[1]))
+        ev = self._waiting.pop(0)[2]
         ev.succeed()
 
     @staticmethod
@@ -255,7 +267,7 @@ class TankPool:
         return gates.TankState(t.status, t.clean, t.level_ton, t.reserved_ton, t.capacity_ton)
 
     def reserve(
-        self, volume_ton: float, object_type: str, object_id: str
+        self, volume_ton: float, object_type: str, object_id: str, key: Key = 0.0
     ) -> Generator[simpy.Event, Any, Tank]:
         waited = False
         while True:
@@ -271,6 +283,8 @@ class TankPool:
                     t.status = "filling"
                     t.last_used = self.sim.env.now
                     self.sim.record_gate(result, object_type, object_id)
+                    if self._waiting:
+                        self._notify()
                     return t
             if not waited:
                 waited = True
@@ -278,7 +292,10 @@ class TankPool:
                     gates.GateId.G3, False, "tidak ada tangki kosong dan bersih"
                 )
                 self.sim.record_gate(hold, object_type, object_id)
-            yield self.changed
+            ev = self.sim.env.event()
+            self._seq += 1
+            self._waiting.append((key, self._seq, ev))
+            yield ev
 
     def commit(self, t: Tank, volume_ton: float) -> None:
         t.reserved_ton -= volume_ton
@@ -288,6 +305,7 @@ class TankPool:
     def remove(self, t: Tank, volume_ton: float, draining: bool = False) -> None:
         t.level_ton = max(0.0, t.level_ton - volume_ton)
         if t.level_ton < 1e-6 and t.reserved_ton < 1e-6:
+            t.active_batches.clear()
             t.clean, t.status = False, "cip"
             self.sim.env.process(self._cip(t))
         else:
@@ -319,21 +337,41 @@ class TankPool:
         return step
 
     def maintain(
-        self, code: str, start: float, duration: float
+        self, code: str, start: float, duration: float, request_id: str | None = None
     ) -> Generator[simpy.Event, Any, None]:
         """Maintenance tangki: sejak `start` tidak menerima susu baru; begitu kosong dan bersih berstatus
         tidak tersedia sampai `start + duration`, lalu dipakai lagi."""
-        yield self.sim.env.timeout(start)
+        yield self.sim.env.timeout(max(0.0, start - self.sim.env.now))
         t = next(x for x in self.tanks if x.code == code)
         t.down = True
+        if request_id:
+            self.sim.emit(
+                MaintenanceStatus(
+                    request_id=request_id, asset=code, status="waiting_safe", duration_min=duration
+                )
+            )
         while t.status != "idle" or t.level_ton > 1e-6 or t.reserved_ton > 1e-6:
             yield self.changed
         t.status = "maintenance"
         self.sim.status(t.code, AssetStatus.UNAVAILABLE, 0.0, t.capacity_ton)
-        yield self.sim.env.timeout(max(0.0, start + duration - self.sim.env.now))
+        if request_id:
+            self.sim.emit(
+                MaintenanceStatus(
+                    request_id=request_id, asset=code, status="maintenance", duration_min=duration
+                )
+            )
+        yield self.sim.env.timeout(
+            duration if request_id else max(0.0, start + duration - self.sim.env.now)
+        )
         t.down, t.status = False, "idle"
         self.sim.serviced[code] = self.sim.env.now
         self.sim.status(t.code, AssetStatus.IDLE, 0.0, t.capacity_ton)
+        if request_id:
+            self.sim.emit(
+                MaintenanceStatus(
+                    request_id=request_id, asset=code, status="completed", duration_min=duration
+                )
+            )
         self._notify()
 
     def _cip(self, t: Tank) -> Generator[simpy.Event, Any, None]:
@@ -387,6 +425,7 @@ class TwinSimulation:
         self.downtimes: list[Downtime] = []
         self.overrides: dict[str, Override] = {}
         self.holds: dict[str, Hold] = {}
+        self.qa_reviews: dict[str, Review] = {}
         self.replan_signal = self.env.event()
         # Riwayat versi rencana: (waktu berlaku, pemicu, rencana). Dipakai untuk KPI kepatuhan jadwal.
         self.plan_log: list[tuple[float, str, Plan]] = [(0.0, "initial", plan)] if plan else []
@@ -432,6 +471,11 @@ class TwinSimulation:
         }
         self.aseptic_sterile = {k: True for k in self.lines}
         self.aseptic = {k: Aseptic() for k in self.lines}
+        self.ste_run_min: dict[str, float] = {
+            f"STE-{k}": float(self.carry.fouling_min.get(f"STE-{k}", 0.0))
+            for k in range(1, c.n_sterilizers + 1)
+        }
+        self.active_cips: dict[str, tuple[float, float]] = {}
         self._seq = 0
         self._counters = {"INT": 0, "FG": 0}
 
@@ -536,24 +580,125 @@ class TwinSimulation:
         self, spec: TankerSpec, analyst: str, started: float, g2: gates.GateResult
     ) -> None:
         r = spec.lab_results
-        num = lambda k: float(r[k]) if isinstance(r.get(k), int | float) else 0.0  # noqa: E731
+
+        def num(key: str, digits: int) -> float | None:
+            value = gates._num(r.get(key))
+            return round(value, digits) if value is not None else None
+
         self.emit(
             LabResult(
                 tanker_code=spec.code,
                 analyst=analyst,
                 started_min=round(started, 2),
                 duration_min=round(spec.lab_duration_min, 2),
-                fat_pct=round(num("fat_pct"), 3),
-                protein_pct=round(num("protein_pct"), 3),
-                acidity_pct=round(num("acidity_pct"), 4),
-                ph=round(num("ph"), 2) if "ph" in r else None,
-                antibiotic_residue=r.get("antibiotic_residue") is not False,
-                adulterant=r.get("adulterant") is not False,
+                ph=num("ph", 2),
                 test_type=spec.test_type,
                 g2=g2.decision,
                 g2_reason=g2.reason,
             )
         )
+
+    def _qa_event(
+        self,
+        code: str,
+        actor: str,
+        reason: str,
+        request_id: str | None = None,
+        disposition: Literal["return_supplier", "controlled_disposal", "unresolved_hold"]
+        | None = None,
+    ) -> None:
+        review = self.qa_reviews[code]
+        self.emit(
+            QaReview(
+                tanker_code=code,
+                status=review.status,
+                actor=actor,
+                reason=reason,
+                request_id=request_id,
+                results=review.results,
+                failures=review.failures,
+                category=review.category,
+                disposition=disposition,
+                expires_min=review.expires_min,
+            )
+        )
+
+    def qa_control(self, payload: dict[str, Any]) -> dict[str, Any]:
+        code = payload["truck"]
+        review = self.qa_reviews.get(code)
+        if (
+            not review
+            or review.status not in {"held", "confirmed"}
+            or self.env.now >= review.expires_min
+        ):
+            raise ValueError(
+                "Truk tidak sedang menunggu keputusan QA atau batas waktunya berakhir."
+            )
+        action = payload["action"]
+        if action == "retest":
+            if review.category == "hazard":
+                raise ValueError(
+                    "Indikasi bahaya tidak dapat dilepas atau diuji ulang untuk meloloskan penerimaan."
+                )
+            if review.attempts >= 1:
+                raise ValueError(
+                    "Uji konfirmasi hanya satu kali; hasil tidak boleh diulang sampai lolos."
+                )
+            if payload.get("results") is None:
+                raise ValueError("Uji konfirmasi wajib menyertakan seluruh hasil sampel.")
+            review.status = "testing"
+            review.attempts += 1
+            self._qa_event(code, payload["actor"], payload["reason"], payload["request_id"])
+            self.env.process(self._qa_retest(code, payload))
+        elif action == "release":
+            category, _ = assess(review.results, self.cfg.thresholds)
+            if review.status != "confirmed" or category != "pass":
+                raise ValueError(
+                    "Pelepasan membutuhkan hasil konfirmasi lengkap yang lolos semua batas; override dilarang."
+                )
+            review.status = "released"
+            self._qa_event(code, payload["actor"], payload["reason"], payload["request_id"])
+            review.signal.succeed("released")
+            self.signal("qa_released")
+        elif action == "reject":
+            if payload.get("disposition") not in {"return_supplier", "controlled_disposal"}:
+                raise ValueError("Pilih pengembalian pemasok atau disposisi terkendali.")
+            review.status = "rejected"
+            self._qa_event(
+                code,
+                payload["actor"],
+                payload["reason"],
+                payload["request_id"],
+                payload["disposition"],
+            )
+            review.signal.succeed("rejected")
+            self.signal("qa_rejected")
+        else:
+            raise ValueError("Keputusan QA tidak dikenal.")
+        return {
+            "request_id": payload["request_id"],
+            "status": "accepted",
+            "minute": float(self.env.now),
+        }
+
+    def _qa_retest(self, code: str, payload: dict[str, Any]):
+        review = self.qa_reviews[code]
+        rec = self.tankers[code]
+        analyst = yield self.analysts.get()
+        try:
+            if review.status != "testing":
+                return
+            self._tanker_status(rec, TankerStatus.LAB_TEST)
+            yield self.env.timeout(rec.spec.lab_duration_min)
+            if review.status != "testing":
+                return
+            review.results = dict(payload["results"])
+            review.category, review.failures = assess(review.results, self.cfg.thresholds)
+            review.status = "confirmed" if review.category == "pass" else "held"
+            self._qa_event(code, payload["actor"], payload["reason"], payload["request_id"])
+            self._tanker_status(rec, TankerStatus.QA_HOLD)
+        finally:
+            self.analysts.put(analyst)
 
     def transfer(self, src: str, dst: str, batch: str, vol: float) -> None:
         self.transfers.append(Transfer(src, dst, batch, round(vol, 2), self.env.now))
@@ -684,7 +829,15 @@ class TwinSimulation:
                 self.env.process(self._ster_down(d))
             elif d.kind == "tank_down":
                 pool = self.raw if (d.asset or "").startswith("TK-RAW") else self.storage
-                self.env.process(pool.maintain(d.asset or "", d.start, d.duration))
+                request_id = next(
+                    (
+                        c.request_id
+                        for c in self.commands
+                        if c.kind == "tank_down" and c.asset == d.asset and c.minute == d.start
+                    ),
+                    None,
+                )
+                self.env.process(pool.maintain(d.asset or "", d.start, d.duration, request_id))
         self.env.run()
         self.t_end = self._last_t if self.rolling else float(self.env.now)
         self.emit(
@@ -711,10 +864,11 @@ class TwinSimulation:
         )
 
     def _command(self, command_id: int, c: Command) -> Generator[simpy.Event, Any, None]:
-        yield self.env.timeout(c.minute)
+        yield self.env.timeout(max(0.0, c.minute - self.env.now))
         blocked, gate = self._intervene(c) if c.kind in INTERVENTION_KINDS else (None, None)
         self.emit(
             CommandApplied(
+                request_id=c.request_id,
                 command_id=command_id,
                 kind=c.kind,
                 actor=c.actor,
@@ -840,17 +994,50 @@ class TwinSimulation:
         self.analysts.put(analyst)
         g2 = gates.g2_lab_result(spec.lab_results, th)
         self._emit_lab_result(spec, analyst, rec.lab_start, g2)
-        if not self.record_gate(g2, "tanker", spec.code):
-            rec.outcome = "rejected_g2"
-            self._tanker_status(rec, TankerStatus.REJECTED)
-            return
+        passed = self.record_gate(g2, "tanker", spec.code)
+        category, failures = assess(spec.lab_results, th)
+        if not passed or (isinstance(self.env, LiveEnvironment) and category != "pass"):
+            review = Review(
+                self.env.event(),
+                dict(spec.lab_results),
+                failures,
+                category,
+                max(1440.0, float(self.env.now) + 120),
+            )
+            self.qa_reviews[spec.code] = review
+            self._tanker_status(rec, TankerStatus.QA_HOLD)
+            self._qa_event(spec.code, "gate_engine", g2.reason or "Hasil QA belum lengkap.")
+            self.signal("qa_hold")
+            if isinstance(self.env, LiveEnvironment):
+                result = yield review.signal | self.env.timeout(review.expires_min - self.env.now)
+                released = review.signal in result and result[review.signal] == "released"
+            else:
+                released = False
+            if not released:
+                if review.status != "rejected":
+                    review.status = "rejected"
+                    self._qa_event(
+                        spec.code,
+                        "system",
+                        "Belum ada pelepasan QA; penerimaan tetap diblokir pada penutupan run.",
+                        disposition="unresolved_hold",
+                    )
+                rec.outcome = "rejected_g2"
+                self._tanker_status(rec, TankerStatus.REJECTED)
+                return
+            self.record_gate(
+                gates.GateResult(GateId.G2, True, "Dilepas QA setelah konfirmasi"),
+                "tanker",
+                spec.code,
+            )
         rec.released = self.env.now
         self._tanker_status(rec, TankerStatus.RELEASED)
 
         # Susu hanya dibongkar setelah Released, ke tangki yang lolos G3.
-        raw_tank = yield from self.raw.reserve(spec.volume_ton, "tanker", spec.code)
+        unl_key = self._pq(spec.code, "bay")[0]
+        raw_tank = yield from self.raw.reserve(spec.volume_ton, "tanker", spec.code, key=unl_key)
         bay = yield self.bays.get(*self._pq(spec.code, "bay"))
-        deg = yield self.degassing.get()
+        deg = yield self.degassing.get(unl_key)
         rec.bay = bay
         self.status(bay, AssetStatus.IN_USE)
         self.status(deg, AssetStatus.IN_USE)
@@ -892,9 +1079,19 @@ class TwinSimulation:
         inter = self._new_batch("intermediate", "INT", int_vol, [raw.code], tanker=raw.tanker)
 
         # Thermal dan separator berjalan serentak. Tangki tujuan dipesan dulu agar ada tempat.
-        sto_tank = yield from self.storage.reserve(int_vol, "batch", inter.code)
-        thm = yield self.thermal.get()
-        sep = yield self.separators.get()
+        prc_key = self._pq(rec.spec.code, "sterilizer")[0]
+        sto_tank = yield from self.storage.reserve(int_vol, "batch", inter.code, key=prc_key)
+        commingled = [
+            c
+            for c in sto_tank.active_batches
+            if c not in (inter.code, "INT-0001")
+            and c in self.batches
+            and self.batches[c].status == "active"
+        ]
+        if inter.code != "INT-0001" and inter.code not in sto_tank.active_batches:
+            sto_tank.active_batches.append(inter.code)
+        thm = yield self.thermal.get(prc_key)
+        sep = yield self.separators.get(prc_key)
         rec.proc_start = self.env.now
         self.status(thm, AssetStatus.IN_USE)
         self.status(sep, AssetStatus.IN_USE)
@@ -927,8 +1124,9 @@ class TwinSimulation:
         rec.sterilizer = ste
         self.status(ste, AssetStatus.IN_USE)
         self.transfer(sto_tank.code, ste, inter.code, inter.volume_ton)
+        ster_dur = inter.volume_ton / cfg.sterilizer_tph * 60
         yield from self._ramp(
-            inter.volume_ton / cfg.sterilizer_tph * 60,
+            ster_dur,
             self.storage.drainer(sto_tank, inter.volume_ton),
         )
         # Common random numbers: hasil G5 terikat ke truk, bukan ke urutan eksekusi,
@@ -940,23 +1138,46 @@ class TwinSimulation:
         if not self.record_gate(g5, "batch", inter.code):
             self._to_qa_hold(rec, inter, ste)
             # Sterilisasi gagal: sterilizer wajib CIP darurat sebelum dipakai lagi.
+            self.ste_run_min[ste] = 0.0
             self.env.process(self._emergency_cip(ste))
             return
-        self.status(ste, AssetStatus.IDLE)
-        self.sterilizers.put(ste)
+        self.ste_run_min[ste] = self.ste_run_min.get(ste, 0.0) + ster_dur
+        if self.ste_run_min[ste] >= cfg.fouling_max_min:
+            self.ste_run_min[ste] = 0.0
+            self.env.process(self._scheduled_ste_cip(ste))
+        else:
+            self.status(ste, AssetStatus.IDLE)
+            self.sterilizers.put(ste)
         self.transfer(ste, f"ASEP-{k}", inter.code, inter.volume_ton)
         self.aseptic[k].lots.append([inter.code, inter.volume_ton, self.env.now, None])
         self.aseptic_level(k)
 
-        yield from self._fill(rec, inter, k)
+        yield from self._fill(rec, inter, k, commingled)
 
     def _emergency_cip(self, ste: str) -> Generator[simpy.Event, Any, None]:
         start = self.env.now
+        dur = self.cip_duration()
+        self.active_cips[ste] = (start, start + dur)
         self.emit(CipEvent(type="cip.started", asset_code=ste, is_scheduled=False))
         self.status(ste, AssetStatus.CIP)
-        yield self.env.timeout(self.cip_duration())
+        yield self.env.timeout(dur)
+        self.active_cips.pop(ste, None)
         self.cips.append(CipRecord(ste, start, self.env.now, scheduled=False))
         self.emit(CipEvent(type="cip.finished", asset_code=ste, is_scheduled=False))
+        self.status(ste, AssetStatus.IDLE)
+        self.sterilizers.put(ste)
+
+    def _scheduled_ste_cip(self, ste: str) -> Generator[simpy.Event, Any, None]:
+        start = self.env.now
+        dur = self.cip_duration()
+        self.active_cips[ste] = (start, start + dur)
+        self.signal("ster_cip")
+        self.emit(CipEvent(type="cip.started", asset_code=ste, is_scheduled=True))
+        self.status(ste, AssetStatus.CIP)
+        yield self.env.timeout(dur)
+        self.active_cips.pop(ste, None)
+        self.cips.append(CipRecord(ste, start, self.env.now, scheduled=True))
+        self.emit(CipEvent(type="cip.finished", asset_code=ste, is_scheduled=True))
         self.status(ste, AssetStatus.IDLE)
         self.sterilizers.put(ste)
 
@@ -974,7 +1195,9 @@ class TwinSimulation:
         batch.status = "held"
         rec.outcome = "held_qa"
 
-    def _fill(self, rec: TankerRecord, inter: Batch, k: int) -> Generator[simpy.Event, Any, None]:
+    def _fill(
+        self, rec: TankerRecord, inter: Batch, k: int, commingled: list[str] | None = None
+    ) -> Generator[simpy.Event, Any, None]:
         pool = self.lines[k]
         available = pool.available()
         g6 = gates.g6_ready_to_fill(self.aseptic_sterile[k], available, False)
@@ -998,6 +1221,7 @@ class TwinSimulation:
             if prev
             else 0.0
         )
+        flavour_cip = needs_flavour_cip(prev, sku)
         self.line_sku[line] = sku
         rec.line, rec.fill_start = line, self.env.now + co
         self.status(line, AssetStatus.IN_USE)
@@ -1010,13 +1234,21 @@ class TwinSimulation:
             self.emit(
                 LineChangeover(asset_code=line, from_sku=prev.code, to_sku=sku.code, minutes=co)
             )
+            cip_start = self.env.now
+            if flavour_cip:
+                self.emit(CipEvent(type="cip.started", asset_code=line, is_scheduled=True))
+                self.status(line, AssetStatus.CIP)
             yield self.env.timeout(co)
+            if flavour_cip:
+                self.cips.append(CipRecord(line, cip_start, self.env.now, scheduled=True))
+                self.emit(CipEvent(type="cip.finished", asset_code=line, is_scheduled=True))
+                self.status(line, AssetStatus.IN_USE)
         lot = next(x for x in tank.lots if x[0] == inter.code)
         lot[3] = self.env.now
         self.aseptic_level(k)
-        fg_vol = inter.volume_ton * YIELD
+        fg_vol = round(inter.volume_ton * YIELD, 2)
         # Pengisian dibagi empat bagian agar level tangki tampak turun; total durasi tetap.
-        end = self.env.now + fg_vol / self.cfg.filling_tph * 60
+        end = self.env.now + (inter.volume_ton * YIELD) / self.cfg.filling_tph * 60
         step = (end - self.env.now) / 4
         for i in range(3):
             yield self.env.timeout(step)
@@ -1026,8 +1258,25 @@ class TwinSimulation:
         tank.lots.remove(lot)
         tank.busy -= 1
         self.aseptic_level(k)
-        fg = self._new_batch("fg", "FG", fg_vol, [inter.code], tanker=inter.tanker, sku=sku.code)
-        self.transfer(line, PACK_OUT, fg.code, fg.volume_ton)
+        active_commingled = [
+            c
+            for c in (commingled or [])
+            if c in self.batches and self.batches[c].status == "active"
+        ]
+        if active_commingled:
+            v1 = round(fg_vol * 0.6, 2)
+            v2 = round(fg_vol - v1, 2)
+            fg = self._new_batch("fg", "FG", v1, [inter.code], tanker=inter.tanker, sku=sku.code)
+            self.transfer(line, PACK_OUT, fg.code, fg.volume_ton)
+            fg_mix = self._new_batch(
+                "fg", "FG", v2, [inter.code, *active_commingled], tanker=inter.tanker, sku=sku.code
+            )
+            self.transfer(line, PACK_OUT, fg_mix.code, fg_mix.volume_ton)
+        else:
+            fg = self._new_batch(
+                "fg", "FG", fg_vol, [inter.code], tanker=inter.tanker, sku=sku.code
+            )
+            self.transfer(line, PACK_OUT, fg.code, fg.volume_ton)
         self.status(line, AssetStatus.IDLE)
         pool.put(line)
         rec.fill_end = self.env.now

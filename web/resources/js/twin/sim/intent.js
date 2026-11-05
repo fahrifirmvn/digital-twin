@@ -65,7 +65,7 @@ export function placeTrucks(state, layout) {
             continue;
         } else if (t.status === 'queued') {
             groups.queue.push(t);
-        } else if (t.status === 'sampling' || t.status === 'lab_test') {
+        } else if (t.status === 'sampling' || t.status === 'lab_test' || t.status === 'qa_hold') {
             groups.lab.push(t);
         } else if (t.status === 'released') {
             groups.pad.push(t);

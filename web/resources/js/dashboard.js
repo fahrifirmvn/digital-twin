@@ -2,12 +2,12 @@
 import '../css/twin.css';
 import { TwinCanvas } from './twin/canvas.js';
 import { Gantt } from './twin/gantt.js';
-import { fetchReplay, saveMinute, savedMinute } from './twin/load.js';
+import { fetchReplay, followLive, isLiveOperation, readOnlyLiveControls, saveMinute, savedMinute } from './twin/load.js';
 import { Replay, buildGantt, buildModel } from './twin/state.js';
 import { chipEl, h } from './twin/ui/dom.js';
 import { clock, fmtL } from './twin/ui/format.js';
 import { icon } from './twin/ui/icons.js';
-import { decisions, labPrep, liveStats, truckRows } from './twin/ui/live.js';
+import { decisions, labHistory, labPrep, liveStats, truckRows } from './twin/ui/live.js';
 import { initShell, setStatus } from './twin/ui/shell.js';
 
 const root = document.getElementById('tw');
@@ -37,6 +37,10 @@ let gantt = null;
 initShell(root, { onTheme: () => gantt?.retheme() });
 
 function renderKpi(k) {
+    if (!k) {
+        $('kpi-body').replaceChildren(h('tr', {}, h('td', { colspan: 2 }, 'KPI akhir tersedia setelah hari operasi ditutup.')));
+        return;
+    }
     $('kpi-body').replaceChildren(...KPI_ROWS.map(([label, fn, tip]) => h('tr', { title: tip }, h('td', {}, label), h('td', { class: 'mono' }, String(fn(k))))));
 }
 
@@ -50,15 +54,16 @@ function fill(listId, sig, items) {
 }
 
 function start(data) {
-    const model = buildModel(data.events);
-    const total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
-    const replay = new Replay(model);
+    let active = isLiveOperation(data);
+    let model = buildModel(data.events);
+    let total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
+    let replay = new Replay(model, { live: active });
     const preview = new TwinCanvas($('twin-preview'));
     const scrub = $('scrub');
     const playBtn = $('play');
     let speed = Number($('speed').value);
-    let playing = true;
-    let minute = Math.min(savedMinute(runId), model.endMin);
+    let playing = !active;
+    let minute = active ? data.live.minute : Math.min(savedMinute(runId), model.endMin);
     let lastDom = -1;
     scrub.max = Math.ceil(model.endMin);
 
@@ -69,12 +74,18 @@ function start(data) {
         playBtn.title = m[1];
     }
 
-    gantt = new Gantt($('gantt'), buildGantt(model), model.endMin, (m) => {
-        playing = false;
-        setPlaying('pause');
-        minute = m;
-        render(true);
-    });
+    function initGantt() {
+        gantt = new Gantt($('gantt'), buildGantt(model), model.endMin, (m) => {
+            if (active) return;
+            playing = false;
+            setPlaying('pause');
+            minute = m;
+            render(true);
+        });
+    }
+    $('gantt').hidden = active;
+    if (!active) initGantt();
+    readOnlyLiveControls(root, active);
 
     function renderPanels(s) {
         const k = liveStats(s, total);
@@ -94,9 +105,12 @@ function start(data) {
             chipEl({ tone: d.tone, icon: 'alert', label: d.label }),
         )));
 
-        const prep = labPrep(s);
+        const prep = [
+            ...labPrep(s).map((p) => ({ code: p.code, sub: `${p.farm} · ${fmtL(p.volume)} · ${p.ago} mnt`, chip: p.chip })),
+            ...labHistory(s).map((p) => ({ code: p.code, sub: `${p.farm} · ${fmtL(p.volume)} · ${p.ph} · ${p.doneClock}`, chip: p.chip })),
+        ];
         fill('d-prep', JSON.stringify(prep), prep.map((p) => h('li', { class: 'row-item' },
-            h('div', {}, h('b', {}, p.code), h('small', {}, `${p.farm} · ${fmtL(p.volume)} · ${p.ago} mnt`)),
+            h('div', {}, h('b', {}, p.code), h('small', {}, p.sub)),
             chipEl(p.chip),
         )));
 
@@ -107,6 +121,7 @@ function start(data) {
             body.dataset.sig = sig;
             body.replaceChildren(...rows.map((r) => h('tr', {},
                 h('td', {}, h('b', {}, r.code)), h('td', {}, r.farm), h('td', {}, fmtL(r.volume)),
+                h('td', { class: 'mono' }, r.ph ?? '-'),
                 h('td', {}, chipEl(r.chip)), h('td', {}, r.bay ?? '-'), h('td', {}, r.wait == null ? '-' : `${r.wait} mnt`),
             )));
         }
@@ -123,7 +138,7 @@ function start(data) {
         const s = replay.seek(minute);
         scrub.value = Math.floor(minute);
         $('clock').textContent = clock(minute);
-        gantt.draw(minute);
+        gantt?.draw(minute);
         const now = performance.now();
         if (force || now - lastDom > 250) {
             lastDom = now;
@@ -135,7 +150,7 @@ function start(data) {
     function frame(now) {
         const dt = (now - last) / 1000;
         last = now;
-        if (playing) {
+        if (playing && !active) {
             minute = Math.min(model.endMin, minute + dt * speed);
             if (minute >= model.endMin) {
                 playing = false;
@@ -149,18 +164,37 @@ function start(data) {
     }
 
     playBtn.addEventListener('click', () => {
+        if (active) return;
         if (minute >= model.endMin) minute = 0;
         playing = !playing;
         setPlaying(playing ? 'play' : 'pause');
     });
-    $('speed').addEventListener('change', (e) => { speed = Number(e.target.value); });
+    $('speed').addEventListener('change', (e) => { if (!active) speed = Number(e.target.value); });
     scrub.addEventListener('input', () => {
+        if (active) return;
         playing = false;
         setPlaying('pause');
         minute = Number(scrub.value);
         render(true);
     });
-    addEventListener('pagehide', () => saveMinute(runId, minute));
+    const stop = active ? followLive(root.dataset.replayUrl, data, (next, transition) => {
+        active = transition.active;
+        model = transition.model;
+        minute = transition.minute;
+        replay = new Replay(model, { live: active });
+        total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
+        scrub.max = Math.ceil(Math.max(model.endMin, minute));
+        readOnlyLiveControls(root, active);
+        if (!active) {
+            $('gantt').hidden = false;
+            initGantt();
+            renderKpi(next.kpi);
+            setPlaying('ended');
+        }
+        render(true);
+        setStatus(root, active ? 'langsung' : 'selesai', 'ok');
+    }, () => setStatus(root, 'langsung terputus', 'bad')) : () => {};
+    addEventListener('pagehide', () => { stop(); if (!active) saveMinute(runId, minute); });
 
     setPlaying('play');
     renderKpi(data.kpi);
@@ -168,9 +202,9 @@ function start(data) {
     requestAnimationFrame(frame);
 }
 
-fetchReplay(root.dataset.replayUrl, (status) => setStatus(root, status))
+fetchReplay(root.dataset.replayUrl, (status) => setStatus(root, status), { allowLive: true })
     .then((data) => {
-        setStatus(root, 'selesai', 'ok');
+        setStatus(root, isLiveOperation(data) ? 'langsung' : 'selesai', 'ok');
         start(data);
     })
     .catch((e) => {

@@ -122,6 +122,7 @@ class CommandIn(BaseModel):
     """Perintah mode Simulasi. Argumen yang tidak berlaku untuk jenisnya diabaikan."""
 
     model_config = ConfigDict(extra="forbid")
+    request_id: str | None = None
 
     minute: float = Field(ge=0, lt=1440, description="Menit sejak awal hari")
     kind: CommandKind
@@ -152,9 +153,10 @@ class CommandIn(BaseModel):
 
 
 class RunRequest(BaseModel):
+    live: bool = False
     run_id: int = Field(ge=1, description="Dialokasikan Laravel (sim_runs.id)")
     seed: int = 1
-    volume_ton: float = Field(default=320.0, ge=50, le=600)
+    volume_ton: float = Field(default=320.0, ge=50, le=1000)
     extra_bad: int = Field(default=0, ge=0, le=10)
     config: Literal["A", "B", "C", "D"] = Field(
         default="A",
@@ -244,10 +246,92 @@ def start_run(body: RunRequest, runs: Annotated[RunManager, Depends(manager)]) -
             body.day,
             body.carry,
             body.date,
+            body.live,
         )
     except DuplicateRunError as exc:
         raise HTTPException(status_code=409, detail="run_id sudah dipakai") from exc
     return _info(run)
+
+
+class LiveMaintenanceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(pattern=r"^[a-fA-F0-9-]{36}$")
+    asset: str = Field(pattern=r"^TK-(RAW|STO)-\d{1,2}$")
+    start_min: float | None = Field(default=None, ge=0, lt=1440)
+    duration_min: float = Field(ge=15, le=720)
+    actor: str = Field(min_length=1, max_length=80)
+    reason: str = Field(min_length=5, max_length=200)
+
+
+class LiveSpeedIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    speed: Literal[1, 5, 20, 60]
+
+
+class QaResultsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ph: float = Field(ge=0, le=14, allow_inf_nan=False, strict=True)
+
+
+class LiveQaIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(pattern=r"^[0-9a-fA-F-]{36}$")
+    truck: str = Field(pattern=r"^[A-Z]{2}-\d{3,}$")
+    action: Literal["retest", "release", "reject"]
+    actor: str = Field(min_length=1, max_length=80)
+    reason: str = Field(min_length=5, max_length=200)
+    results: QaResultsIn | None = None
+    disposition: Literal["return_supplier", "controlled_disposal"] | None = None
+
+    @model_validator(mode="after")
+    def require_details(self) -> "LiveQaIn":
+        if self.action == "retest" and self.results is None:
+            raise ValueError("Uji konfirmasi membutuhkan hasil lengkap.")
+        if self.action == "reject" and self.disposition is None:
+            raise ValueError("Penolakan membutuhkan disposisi.")
+        if self.action != "retest" and self.results is not None:
+            raise ValueError("Hasil hanya untuk uji konfirmasi.")
+        return self
+
+
+def _control(runs: RunManager, run_id: int, action: str, payload: dict) -> dict:
+    try:
+        return runs.control(_get(runs, run_id), action, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except TimeoutError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/runs/{run_id}/maintenance")
+def live_maintenance(
+    run_id: int, body: LiveMaintenanceIn, runs: Annotated[RunManager, Depends(manager)]
+) -> dict:
+    return _control(runs, run_id, "maintenance", body.model_dump())
+
+
+@router.post("/runs/{run_id}/speed")
+def live_speed(
+    run_id: int, body: LiveSpeedIn, runs: Annotated[RunManager, Depends(manager)]
+) -> dict:
+    return _control(runs, run_id, "speed", body.model_dump())
+
+
+@router.post("/runs/{run_id}/qa")
+def live_qa(run_id: int, body: LiveQaIn, runs: Annotated[RunManager, Depends(manager)]) -> dict:
+    return _control(runs, run_id, "qa", body.model_dump())
+
+
+@router.get("/runs/{run_id}/live")
+def live_state(
+    run_id: int,
+    runs: Annotated[RunManager, Depends(manager)],
+    after: int = Query(default=-1, ge=-1),
+) -> dict:
+    try:
+        return runs.snapshot(_get(runs, run_id), after)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get("/predictor/metrics")

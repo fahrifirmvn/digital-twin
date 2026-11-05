@@ -69,6 +69,22 @@ class AgentTest extends TestCase
         $this->assertSame(['LIVE', 'SIMULASI'], $modes);
     }
 
+    public function test_export_request_is_returned_as_same_origin_approval_card_only_for_finished_runs(): void
+    {
+        Http::fake(['engine.test/*' => Http::response($this->engineReply(['exports' => [
+            ['run_id' => 7, 'format' => 'pdf'], ['run_id' => 8, 'format' => 'exe'],
+        ]]))]);
+        $this->as(Role::Ppic);
+        SimRun::forceCreate(['id' => 7, 'kind' => 'live', 'seed' => 1, 'status' => 'finished', 'result_payload' => ['status' => 'finished']]);
+        SimRun::forceCreate(['id' => 8, 'kind' => 'live', 'seed' => 1, 'status' => 'running']);
+
+        $this->postJson('/agent/turn', ['message' => 'Ekspor laporan'])->assertOk()
+            ->assertJsonCount(1, 'exports')
+            ->assertJsonPath('exports.0.run_id', 7)
+            ->assertJsonPath('exports.0.format', 'pdf')
+            ->assertJsonPath('exports.0.url', route('runs.report', ['run' => 7, 'format' => 'pdf']));
+    }
+
     public function test_audit_uses_session_actor_and_never_trusts_engine_echo(): void
     {
         Http::fake(['engine.test/*' => Http::response($this->engineReply())]);

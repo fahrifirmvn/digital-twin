@@ -1,6 +1,6 @@
 // Logika murni tampilan Twin: status -> nada/ikon/label, daftar pin, dan isi sheet detail. Tanpa DOM dan tanpa three.js.
 import { capacityOf } from '../state.js';
-import { clock, fmtL } from './format.js';
+import { assetDualLabel, clock, fmtL } from './format.js';
 
 export const MAX_PINS = 16;
 const TONE_RANK = { bad: 0, warn: 1, lab: 2, brand: 3, ok: 4, mute: 5 };
@@ -18,6 +18,7 @@ const TRUCK = {
     queued: ['mute', 'Antre'],
     sampling: ['lab', 'Sampling'],
     lab_test: ['lab', 'Uji lab'],
+    qa_hold: ['bad', 'Ditahan QA'],
     released: ['ok', 'Rilis'],
     unloading: ['brand', 'Bongkar'],
     rejected: ['bad', 'Ditolak'],
@@ -57,6 +58,7 @@ export function assetChip(a, m, code = '') {
 }
 
 export function truckStatus(t) {
+    if (t.status === 'qa_hold') return { tone: 'bad', label: 'Ditahan QA', icon: 'alert' };
     if (t.held && t.status !== 'rejected') return { tone: 'bad', label: `Ditahan ${t.held}`, icon: 'alert' };
     const [tone, label] = TRUCK[t.status] ?? ['mute', t.status];
     return { tone, label, icon: iconOf(tone, 'truck') };
@@ -77,7 +79,7 @@ export function gateChips(t) {
 }
 
 /** Pin hanya untuk yang perlu perhatian (aset CIP/tidak tersedia, truk ditahan/ditolak); status biasa terbaca dari warna aset. */
-export function pinsOf(state, hasAnchor) {
+export function pinsOf(state, hasAnchor, isRead = () => false) {
     const pins = [];
     for (const [code, a] of Object.entries(state.assets)) {
         if (!hasAnchor(code)) continue;
@@ -88,7 +90,7 @@ export function pinsOf(state, hasAnchor) {
     }
     for (const t of Object.values(state.tankers)) {
         const s = truckStatus(t);
-        if (s.tone !== 'bad') continue;
+        if (s.tone !== 'bad' || isRead(t)) continue;
         pins.push({ key: t.code, kind: 'truck', code: t.code, ...s, text: `${t.code}${t.plate ? ` (${t.plate})` : ''} · ${s.label}` });
     }
     pins.sort((x, y) => TONE_RANK[x.tone] - TONE_RANK[y.tone] || x.key.localeCompare(y.key));
@@ -163,7 +165,7 @@ export function detections(state) {
 }
 
 // Batas mutu demo; sama dengan Thresholds di engine/app/plant.py (G1 suhu, G2 hasil lab).
-export const LAB_LIMITS = { tempMax: 6.0, fatMin: 3.0, proteinMin: 2.8, acidity: [0.12, 0.18], ph: [6.55, 6.85] };
+export const LAB_LIMITS = { tempMax: 6.0, ph: [6.55, 6.85] };
 
 const dec = (n, d) => Number(n).toFixed(d).replace('.', ',');
 const outside = (v, [lo, hi]) => v < lo || v > hi;
@@ -179,19 +181,14 @@ export function labRows(t, m) {
     const bad = (cond) => (cond ? 'bad' : null);
     return [
         ['Analis', `${l.analyst} \u00b7 ${l.testType === 'extended' ? 'uji diperpanjang' : 'uji standar'} \u00b7 ${Math.round(l.durationMin)} mnt`],
-        ['Lemak', `${dec(l.fat, 2)} %`, bad(l.fat < LAB_LIMITS.fatMin)],
-        ['Protein', `${dec(l.protein, 2)} %`, bad(l.protein < LAB_LIMITS.proteinMin)],
-        ['Keasaman', `${dec(l.acidity, 3)} %`, bad(outside(l.acidity, LAB_LIMITS.acidity))],
-        ...(l.ph != null ? [['pH', dec(l.ph, 2), bad(outside(l.ph, LAB_LIMITS.ph))]] : []),
-        ['Antibiotik', l.antibiotic ? 'positif' : 'negatif', bad(l.antibiotic)],
-        ['Adulteran', l.adulterant ? 'positif' : 'negatif', bad(l.adulterant)],
+        ['pH', l.ph == null ? '-' : dec(l.ph, 2), bad(l.ph != null && outside(l.ph, LAB_LIMITS.ph))],
         ['Keputusan G2', l.g2 === 'pass' ? 'lolos' : `tahan${l.g2Reason ? `: ${l.g2Reason}` : ''}`, bad(l.g2 !== 'pass')],
     ];
 }
 
-const DONE_LIMIT = 8;
+const DONE_LIMIT = 50;
 
-/** Antrean dan riwayat singkat laboratorium dari state: sedang diuji, menunggu analis, dan hasil terbaru. */
+/** Antrean dan riwayat laboratorium dari state: sedang diuji, menunggu analis, dan riwayat truk yang sudah diuji hari ini. */
 export function labPanel(state) {
     const all = Object.values(state.tankers);
     const mk = (t, phase, tone, note) => ({ code: t.code, farm: t.farm, plate: t.plate, volume: fmtL(t.volume), phase, tone, note });
@@ -199,15 +196,19 @@ export function labPanel(state) {
         .map((t) => mk(t, 'Diuji', 'lab', `${Math.max(0, Math.round(state.m - (t.labStartAt ?? t.since)))} mnt`));
     const waiting = all.filter((t) => t.status === 'sampling').sort((a, b) => (a.samplingAt ?? a.since) - (b.samplingAt ?? b.since))
         .map((t, i) => mk(t, 'Antre', 'mute', `#${i + 1} \u00b7 ${Math.max(0, Math.round(state.m - (t.samplingAt ?? t.since)))} mnt`));
+    const qaHolds = all.filter((t) => t.status === 'qa_hold').sort((a, b) => (a.since ?? 0) - (b.since ?? 0))
+        .map((t) => mk(t, 'Ditahan QA', 'bad', t.qa?.reason ?? (t.qa?.status === 'confirmed' ? 'Menunggu rilis QA' : 'Menunggu keputusan QA')));
     const finished = all.filter((t) => t.lab).sort((a, b) => b.lab.doneAt - a.lab.doneAt);
     const done = finished.slice(0, DONE_LIMIT).map((t) => {
         const ok = t.lab.g2 === 'pass';
-        const note = ok ? (t.lab.ph != null ? `pH ${dec(t.lab.ph, 2)} \u00b7 lemak ${dec(t.lab.fat, 1)}%` : `lemak ${dec(t.lab.fat, 1)}%`) : (t.lab.g2Reason ?? 'ditolak');
+        const phText = t.lab.ph != null ? `pH ${dec(t.lab.ph, 2)}` : 'pH belum diuji';
+        const res = ok ? phText : `${phText}${t.lab.g2Reason ? ` \u00b7 ${t.lab.g2Reason}` : ' \u00b7 ditolak'}`;
+        const note = `${clock(t.lab.doneAt)} \u00b7 ${res}`;
         return mk(t, ok ? 'Lolos' : 'Ditolak', ok ? 'ok' : 'bad', note);
     });
     return {
-        testing, waiting, done,
-        counts: { testing: testing.length, waiting: waiting.length, passed: finished.filter((t) => t.lab.g2 === 'pass').length, rejected: finished.filter((t) => t.lab.g2 !== 'pass').length },
+        testing, waiting, qaHolds, done,
+        counts: { testing: testing.length, waiting: waiting.length, qaHolds: qaHolds.length, passed: finished.filter((t) => t.lab.g2 === 'pass').length, rejected: finished.filter((t) => t.lab.g2 !== 'pass').length },
     };
 }
 
@@ -217,13 +218,14 @@ function labDetail(state, code) {
     const rows = [
         ['Sedang diuji', `${n.testing} truk`],
         ['Antre analis', `${n.waiting} truk`],
+        ['Ditahan QA', `${n.qaHolds} truk`, n.qaHolds ? 'bad' : null],
         ['Lolos G2', `${n.passed} truk`],
         ['Ditolak G2', `${n.rejected} truk`, n.rejected ? 'bad' : null],
     ];
-    const chip = n.testing + n.waiting ? { tone: 'lab', label: `${n.testing} diuji \u00b7 ${n.waiting} antre`, icon: 'flask' } : { tone: 'mute', label: 'Lab kosong', icon: 'clock' };
+    const chip = n.qaHolds ? { tone: 'bad', label: `${n.qaHolds} ditahan QA`, icon: 'alert' } : n.testing + n.waiting ? { tone: 'lab', label: `${n.testing} diuji \u00b7 ${n.waiting} antre`, icon: 'flask' } : { tone: 'mute', label: 'Lab kosong', icon: 'clock' };
     return {
         kind: 'lab', code, title: 'Laboratorium', chip, rows,
-        queue: [['Sedang diuji', p.testing], ['Antre analis', p.waiting], ['Hasil terbaru', p.done]].filter(([, list]) => list.length),
+        queue: [['Sedang diuji', p.testing], ['Antre analis', p.waiting], ['Hasil terbaru', p.done], ['Ditahan QA', p.qaHolds]].filter(([, list]) => list.length),
     };
 }
 
@@ -295,5 +297,5 @@ export function detailOf(state, code) {
     if (a.changeover && a.changeover.until > state.m) rows.push(['Changeover', `ke ${a.changeover.to} sampai ${clock(a.changeover.until)}`]);
     const unloading = Object.values(state.tankers).find((x) => x.status === 'unloading' && x.bay === code);
     if (unloading) rows.push(['Truk', unloading.code]);
-    return { kind: 'asset', code, title: code, chip: assetChip(a, state.m, code), rows };
+    return { kind: 'asset', code, title: assetDualLabel(code), chip: assetChip(a, state.m, code), rows };
 }

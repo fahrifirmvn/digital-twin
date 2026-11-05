@@ -1,13 +1,17 @@
 @php
     $rows = [
+        ['Truk selesai (truk)', fn ($k) => $k['completed'] ?? null],
         ['Tunggu truk, rata-rata (mnt)', fn ($k) => $k['truck_wait_min']['mean'] ?? null],
         ['Tunggu truk, P90 (mnt)', fn ($k) => $k['truck_wait_min']['p90'] ?? null],
         ['Tunggu lab, rata-rata (mnt)', fn ($k) => $k['lab_wait_min']['mean'] ?? null],
         ['Dwell tangki, rata-rata (mnt)', fn ($k) => $k['tank_dwell_min']['mean'] ?? null],
+        ['Kepatuhan jadwal (%)', fn ($k) => $k['schedule_adherence_pct'] ?? null],
+        ['Makespan / durasi selesai (mnt)', fn ($k) => isset($k['makespan_min']) ? round((float) $k['makespan_min'], 1) : null],
         ['Changeover (kali)', fn ($k) => $k['changeover_count'] ?? null],
         ['Changeover (menit)', fn ($k) => $k['changeover_min'] ?? null],
         ['CIP darurat', fn ($k) => $k['unscheduled_cip'] ?? null],
         ['FG keluar (L)', fn ($k) => isset($k['fg_ton']) ? \App\Support\Volume::liters($k['fg_ton']) : null],
+        ['Cakupan silsilah traceability (%)', fn ($k) => $k['trace_coverage_pct'] ?? null],
         ['Pelanggaran holding', fn ($k) => $k['holding_violations'] ?? null],
         ['False accept', fn ($k) => $k['false_accept'] ?? null],
     ];

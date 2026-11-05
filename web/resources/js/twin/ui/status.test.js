@@ -8,12 +8,14 @@ const base = (extra = {}) => ({ m: 100, assets: {}, tankers: {}, ...extra });
 const truck = (code, over = {}) => ({ code, farm: 'FRM-01', volume: 22.5, temp: 4.2, status: 'queued', bay: null, held: null, arrivedAt: 40, ...over });
 const any = () => true;
 
-test('clock memformat jam dan hari', () => {
-    assert.equal(clock(0), '06:00');
-    assert.equal(clock(185), '09:05');
-    assert.equal(clock(720), '18:00');
-    assert.equal(clock(1080), 'H+1 00:00');
-    assert.equal(clock(1440 + 61), 'H+1 07:01');
+test('clock memformat jam 24 jam WIB tanpa penanda H+', () => {
+    assert.equal(clock(0), '06:00 WIB');
+    assert.equal(clock(185), '09:05 WIB');
+    assert.equal(clock(420), '13:00 WIB');
+    assert.equal(clock(720), '18:00 WIB');
+    assert.equal(clock(1080), '00:00 WIB');
+    assert.equal(clock(1140), '01:00 WIB');
+    assert.equal(clock(1440 + 61), '07:01 WIB');
 });
 
 test('setiap nada status punya ikon dan label', () => {
@@ -21,7 +23,7 @@ test('setiap nada status punya ikon dan label', () => {
         const v = assetStatus(s);
         assert.ok(v.label && icon(v.icon), s);
     }
-    for (const s of ['queued', 'sampling', 'lab_test', 'released', 'unloading', 'rejected', 'stored']) {
+    for (const s of ['queued', 'sampling', 'lab_test', 'qa_hold', 'released', 'unloading', 'rejected', 'stored']) {
         const v = truckStatus(truck('T', { status: s }));
         assert.ok(v.label && icon(v.icon), s);
     }
@@ -30,6 +32,7 @@ test('setiap nada status punya ikon dan label', () => {
 
 test('truk ditahan G1 bernada bad; ditolak tidak ditimpa label tahan', () => {
     assert.equal(truckStatus(truck('T', { held: 'G1' })).label, 'Ditahan G1');
+    assert.equal(truckStatus(truck('T', { status: 'qa_hold' })).label, 'Ditahan QA');
     assert.equal(truckStatus(truck('T', { held: 'G1', status: 'rejected' })).label, 'Ditolak');
 });
 
@@ -47,7 +50,7 @@ test('pin hanya untuk perhatian (bad/warn), urut menurut urgensi', () => {
     });
     const pins = pinsOf(s, (c) => !c.startsWith('DEG'));
     assert.deepEqual(pins.map((p) => p.key), ['RT-2', 'TK-STO-1', 'TK-STO-3']);
-    assert.equal(pins[1].text, 'TK-STO-1 · Maintenance · 11.650 L');
+    assert.equal(pins[1].text, 'TK-STO-1 · Maintenance · 12.000 L');
     assert.equal(pins[0].kind, 'truck');
 });
 
@@ -77,7 +80,7 @@ test('detail aset: isi tangki dan truk yang sedang bongkar di bay', () => {
         assets: { 'TK-STO-1': { status: 'filling', level: 30 }, 'BAY-1': { status: 'in_use', level: null } },
         tankers: { 'RT-9': truck('RT-9', { status: 'unloading', bay: 'BAY-1' }) },
     });
-    assert.deepEqual(detailOf(s, 'TK-STO-1').rows[0], ['Isi', '29.126 L (50%)']);
+    assert.deepEqual(detailOf(s, 'TK-STO-1').rows[0], ['Isi', '30.000 L (50%)']);
     assert.deepEqual(detailOf(s, 'BAY-1').rows, [['Truk', 'RT-9']]);
     assert.equal(detailOf(base(), 'BAY-3').chip.label, 'Siaga');
     assert.equal(detailOf(base(), 'XYZ'), null);
@@ -131,7 +134,7 @@ test('aseptic tank: panel memuat isi, lot, umur, dan sisa holding', () => {
     const d = detailOf(base({ m: 150, assets: { 'ASEP-1': asep() } }), 'ASEP-1');
     const rows = Object.fromEntries(d.rows);
     assert.equal(rows.Jenis, 'Aseptic tank');
-    assert.equal(rows.Isi, '12.136 L (25%)');
+    assert.equal(rows.Isi, '12.500 L (25%)');
     assert.equal(rows['Lot tertua'], 'INT-0007');
     assert.equal(rows['Mulai isi'], clock(90));
     assert.equal(rows['Umur isi'], '90 mnt');
@@ -202,7 +205,7 @@ test('lencana: persen isi semua tangki (kosong 0%) dan status singkat unit aktif
     const by = Object.fromEntries(b.map((x) => [x.key, x]));
     assert.deepEqual([by['TK-RAW-2'].text, by['TK-RAW-2'].tone], ['0%', 'mute']);
     assert.deepEqual([by['TK-RAW-1'].text, by['TK-RAW-1'].tone, by['TK-RAW-1'].kind], ['50%', 'brand', 'level']);
-    assert.equal(by['TK-RAW-1'].title, 'TK-RAW-1 · 14.563 L / 29.126 L (50%)');
+    assert.equal(by['TK-RAW-1'].title, 'TK-RAW-1 · 15.000 L / 30.000 L (50%)');
     assert.equal(by['TK-RAW-10'].tone, 'warn');
     assert.equal(by['ASEP-1'].tone, 'warn');
     assert.equal(by['STE-1'].text, 'Aktif');
@@ -236,15 +239,14 @@ test('tangki tidak tersedia ditampilkan sebagai Maintenance, unit lain tetap Tid
 });
 
 test('detail truk menampilkan hasil lab dan menandai nilai di luar batas', () => {
-    const lab = { analyst: 'AN-1', durationMin: 42, doneAt: 90, testType: 'standard', fat: 3.71, protein: 3.1, acidity: 0.2, ph: 6.5, antibiotic: false, adulterant: false, g2: 'hold', g2Reason: 'keasaman 0.200% di luar 0.12-0.18%' };
+    const lab = { analyst: 'AN-1', durationMin: 42, doneAt: 90, testType: 'standard', fat: 3.71, protein: 3.1, acidity: 0.2, ph: 6.5, antibiotic: false, adulterant: false, g2: 'hold', g2Reason: 'pH 6.50 di luar 6.55-6.85' };
     const s = base({ tankers: { A: truck('A', { status: 'rejected', lab }) } });
     const rows = Object.fromEntries(detailOf(s, 'A').rows.map(([k, v, tone]) => [k, [v, tone]]));
-    assert.equal(rows.Lemak[0], '3,71 %');
-    assert.equal(rows.Lemak[1], null);
-    assert.equal(rows.Keasaman[1], 'bad');
+    for (const removed of ['Lemak', 'Protein', 'Keasaman', 'Antibiotik', 'Adulteran']) {
+        assert.equal(rows[removed], undefined);
+    }
     assert.equal(rows.pH[0], '6,50');
     assert.equal(rows.pH[1], 'bad');
-    assert.equal(rows.Antibiotik[0], 'negatif');
     assert.equal(rows['Keputusan G2'][1], 'bad');
 });
 
@@ -253,6 +255,16 @@ test('detail truk yang masih diuji tidak mengarang hasil', () => {
     const labels = detailOf(s, 'A').rows.map(([k]) => k);
     assert.ok(labels.includes('Uji lab'));
     assert.ok(!labels.includes('pH') && !labels.includes('Lemak'));
+});
+
+test('hasil lab awal nullable tidak mengarang angka nol atau hasil negatif', () => {
+    const lab = { analyst: 'AN-1', durationMin: 30, doneAt: 80, testType: 'standard', fat: null, protein: null, acidity: null, ph: null, antibiotic: null, adulterant: null, g2: 'hold', g2Reason: 'Hasil belum lengkap' };
+    const rows = detailOf(base({ tankers: { A: truck('A', { status: 'qa_hold', lab }) } }), 'A').rows;
+    for (const label of ['pH']) {
+        assert.deepEqual(rows.find(([key]) => key === label), [label, '-', null]);
+    }
+    const panel = detailOf(base({ tankers: { A: truck('A', { status: 'released', lab: { ...lab, g2: 'pass' } }) } }), 'LAB1');
+    assert.match(panel.queue.flatMap(([, list]) => list).find((row) => row.code === 'A').note, /pH belum diuji/);
 });
 
 test('panel lab: antrean, uji, hasil terbaru, dan hitungan', () => {
@@ -264,17 +276,21 @@ test('panel lab: antrean, uji, hasil terbaru, dan hitungan', () => {
             T1: truck('T1', { status: 'lab_test', labStartAt: 85 }),
             D1: truck('D1', { status: 'released', lab: done('pass') }),
             D2: truck('D2', { status: 'rejected', lab: done('hold') }),
+            Q1: truck('Q1', { status: 'qa_hold', qa: { status: 'held', reason: 'Konfirmasi mutu diperlukan' } }),
             Q: truck('Q'),
         },
     });
     const p = detailOf(s, 'LAB1');
     assert.equal(p.kind, 'lab');
     assert.equal(p.title, 'Laboratorium');
-    const [testing, waiting, recent] = p.queue.map(([, list]) => list);
+    const [testing, waiting, recent, qaHolds] = p.queue.map(([, list]) => list);
     assert.deepEqual(testing.map((r) => r.code), ['T1']);
     assert.deepEqual(waiting.map((r) => r.code), ['W1', 'W2']);
     assert.match(waiting[0].note, /^#1/);
     assert.equal(recent.find((r) => r.code === 'D2').tone, 'bad');
     assert.match(recent.find((r) => r.code === 'D1').note, /pH 6,70/);
     assert.ok(p.rows.some(([k, v]) => k === 'Antre analis' && v === '2 truk'));
+    assert.deepEqual(qaHolds.map((r) => r.code), ['Q1']);
+    assert.equal(qaHolds[0].note, 'Konfirmasi mutu diperlukan');
+    assert.ok(p.rows.some(([k, v]) => k === 'Ditahan QA' && v === '1 truk'));
 });

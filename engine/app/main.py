@@ -17,7 +17,7 @@ from app.runs import RunManager
 log = logging.getLogger("engine")
 
 
-def _build_agent(runs: RunManager) -> Agent | None:
+def _build_agent(source: RunManagerSource) -> Agent | None:
     """None bila LLM belum dikonfigurasi; antarmuka tetap bisa memakai Panel Skenario."""
     try:
         provider = build_provider()
@@ -26,7 +26,7 @@ def _build_agent(runs: RunManager) -> Agent | None:
         return None
     return Agent(
         provider,
-        RunManagerSource(runs),
+        source,
         Policy(RateLimiter(settings.agent_rate_per_min)),
         max_steps=settings.agent_max_steps,
         step_timeout=settings.agent_step_timeout,
@@ -46,8 +46,13 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.runs = RunManager(relay)
-    app.state.agent = _build_agent(app.state.runs)
+    app.state.agent_source = RunManagerSource(
+        app.state.runs, settings.web_url, settings.internal_token
+    )
+    app.state.agent = _build_agent(app.state.agent_source)
     yield
+    app.state.runs.close()
+    app.state.agent_source.close()
     if relay:
         relay.close()
 

@@ -138,3 +138,61 @@ def test_api_accepts_config_d_with_scenario_and_rejects_unknown():
         assert result["config"] == "D" and result["scenario"] == "truck_surge"
         assert result["monte_carlo"]["chosen"] in {"B", "C80", "C90"}
         assert result["kpi"]["false_accept"] == 0
+
+
+def test_replan_stability_and_ster_cip_trigger():
+    from dataclasses import replace
+
+    from app.plant import with_params
+    from app.rolling import count_assignment_changes
+
+    specs = generate_day(1, 150)
+    pred = get_predictor()
+    p1 = make_plan(specs, CFG, "C", pred, time_limit=2.0)
+    assert count_assignment_changes(p1, p1) == 0
+    first_code = next(iter(p1.trucks))
+    old_tp = p1.trucks[first_code]
+    alt_bay = "BAY-2" if old_tp.bay != "BAY-2" else "BAY-1"
+    p2 = replace(p1, trucks={**p1.trucks, first_code: replace(old_tp, bay=alt_bay)})
+    assert count_assignment_changes(p1, p2) == 1
+
+    cfg_foul = with_params(CFG, fouling_max_min=60.0)
+    sim, _ = simulate("D", 1, 200, time_limit=1.5, cfg=cfg_foul)
+    sim.run()
+    assert any(r.trigger == "ster_cip" for r in sim.replans)
+
+
+def test_optimizer_depth_cd01_to_cd05():
+    from app.plan import explain_truck_binding
+
+    specs = generate_day(1, 150)
+    pred = get_predictor()
+    plan = make_plan(specs, CFG, "C", pred, time_limit=2.0)
+    assert "optimality_gap_pct" in plan.diagnostics
+    assert "soft_slack_used_min" in plan.diagnostics
+    assert plan.diagnostics["soft_slack_used_min"] == 0
+
+    first_tp = next(iter(plan.trucks.values()))
+    reason = explain_truck_binding(
+        first_tp,
+        prev_bay_truck="RT-001",
+        prev_line_truck="RT-001",
+        same_sku_on_line=True,
+        holding_slack_min=30.0,
+    )
+    assert "jaga batas holding G4" in reason
+    assert "kampanye SKU sama" in reason
+
+    # Soft-slack recovery & tank_downtimes under tight pinned state:
+    jobs = build_jobs(specs, "C", pred)
+    l0 = int(first_tp.lab_start)
+    u0 = int(first_tp.unload_start)
+    frozen = Frozen(
+        now=u0 + 260,
+        pins={first_tp.code: Pin(lab=(l0, 0), unl=(u0, 0))},
+        tank_downtimes=(("raw", u0 + 260, u0 + 380), ("sto", u0 + 280, u0 + 400)),
+        prev=plan,
+    )
+    re_plan = solve(jobs, CFG, "C", time_limit=3.0, frozen=frozen)
+    assert re_plan.status in {"optimal", "feasible"}
+    assert "optimality_gap_pct" in re_plan.diagnostics

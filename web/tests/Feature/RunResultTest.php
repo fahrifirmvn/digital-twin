@@ -50,6 +50,7 @@ class RunResultTest extends TestCase
 
         $run = SimRun::find(1);
         $this->assertSame('finished', $run->status);
+        $this->assertSame(json_decode(json_encode($r), true), $run->result_payload);
         $this->assertNotNull($run->scenario_id);
         $this->assertSame(count($r['tankers']), DB::table('tankers')->count());
         $this->assertSame(count($r['batches']), DB::table('batches')->count());
@@ -67,6 +68,20 @@ class RunResultTest extends TestCase
             collect($r['transfers'])->pluck('batch_code')->unique()->count(),
             DB::table('transfer_events')->distinct()->count('batch_id'),
         );
+    }
+
+    public function test_internal_result_get_requires_token_and_returns_persisted_payload(): void
+    {
+        $this->makeRun();
+        $result = $this->sample();
+        $this->postJson('/internal/runs/1/result', $result, self::TOKEN)->assertOk();
+
+        $this->getJson('/internal/runs/1/result')->assertUnauthorized();
+        $this->getJson('/internal/runs/1/result', self::TOKEN)
+            ->assertOk()
+            ->assertJsonPath('run_id', 1)
+            ->assertJsonPath('status', 'finished')
+            ->assertJsonPath('tankers.0.code', $result['tankers'][0]['code']);
     }
 
     public function test_persists_ai_predictions_and_rejects_invalid_probability(): void

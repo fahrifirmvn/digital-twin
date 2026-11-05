@@ -40,7 +40,8 @@ Gaya percakapan (aturan di atas tetap berlaku):
 8. Pertanyaan tentang keadaan pabrik, run, atau kampanye dijawab dari alat dulu. Ingat percakapan sebelumnya dan rujuk apa yang sudah dibahas.
 9. Bila permintaan kurang jelas (tangki, jam, atau durasi tidak disebut), ajukan satu pertanyaan balik yang singkat, jangan menebak.
 10. Pengguna dapat menanggapi usulan yang masih terbuka (mis. "geser sejam", "pakai tangki lain", "kenapa lebih buruk?"). Panggil campaign_state dan lihat open_proposals. Untuk menjelaskan, kutip selisih yang ada di sana. Untuk merevisi, hitung jendela baru dari ucapan pengguna dan jendela lama, jalankan run_whatif, lalu create_proposal dengan supersedes berisi id usulan lama. Jangan menyebut hasil konversi satuan sendiri sebagai fakta; pakai angka dari alat atau dari pengguna. Revisi hanya menjadi draf baru; pengajuan dan persetujuan tetap oleh manusia.
-11. Bila campaign_state menunjukkan tanks_due tidak kosong, sebutkan tangki itu (siklus dan batasnya persis dari alat) dan tawarkan usulan maintenance; tunggu pengguna setuju sebelum menjalankan run_whatif dan create_proposal. Pilih jam mulai di luar jam sibuk hanya bila pengguna menyerahkannya padamu dan tetap lewat what-if; tanpa itu tanyakan jam dan durasinya. Perubahan baru berlaku mulai hari operasi berikutnya dan hanya diterapkan setelah pengguna yang berwenang menekan Izinkan pada kartu usulan."""
+11. Bila campaign_state menunjukkan tanks_due tidak kosong, sebutkan tangki itu (siklus dan batasnya persis dari alat) dan tawarkan usulan maintenance; tunggu pengguna setuju sebelum menjalankan run_whatif dan create_proposal. Pilih jam mulai di luar jam sibuk hanya bila pengguna menyerahkannya padamu dan tetap lewat what-if; tanpa itu tanyakan jam dan durasinya. Perubahan baru berlaku mulai hari operasi berikutnya dan hanya diterapkan setelah pengguna yang berwenang menekan Izinkan pada kartu usulan.
+12. Untuk merangkum laporan, gunakan summarize_report. Untuk ekspor, panggil prepare_report_export lalu minta pengguna menekan tombol unduh; alat tidak membuat atau mengunduh berkas sendiri."""
 
 
 @dataclass
@@ -79,6 +80,7 @@ class AgentReply:
     error: dict[str, str] | None = None
     sources: list[dict[str, Any]] = field(default_factory=list)
     proposals: list[dict[str, Any]] = field(default_factory=list)
+    exports: list[dict[str, Any]] = field(default_factory=list)
     audit: list[AuditEntry] = field(default_factory=list)
     provider: str = ""
     model: str = ""
@@ -129,6 +131,8 @@ class Agent:
         history: list[ChatTurn],
         run_id: int | None = None,
         campaign: CampaignContext | None = None,
+        *,
+        ui_context: dict[str, Any] | None = None,
     ) -> AgentReply:
         reply = AgentReply("ok", "", mode=mode, label=f"{DATA_LABEL} | mode {mode}")
         reply.provider = self.provider.name
@@ -143,6 +147,16 @@ class Agent:
         env = ToolEnv(self.source, run_id, campaign, self.whatifs)
         specs = tuple(t.spec() for t in tools_for(self.registry, role, mode))
         context = f"Peran pengguna: {role}. Mode: {mode}. Run yang dibuka: {run_id if run_id else 'tidak ada'}."
+        if ui_context:
+            parts = []
+            if ui_context.get("selected_code"):
+                parts.append(f"objek terpilih di layar: {ui_context['selected_code']}")
+            if ui_context.get("minute") is not None:
+                parts.append(f"menit tampilan: {ui_context['minute']}")
+            if ui_context.get("view"):
+                parts.append(f"zona: {ui_context['view']}")
+            if parts:
+                context += f" Konteks layar aktif ({', '.join(parts)})."
         if campaign:
             context += f" Kampanye {campaign.campaign_id}, hari {campaign.day_no}."
             if campaign.tanks_due:
@@ -212,6 +226,7 @@ class Agent:
             reply.error = {"code": "llm_unavailable", "message": FALLBACK}
         reply.sources = env.cited
         reply.proposals = env.proposals
+        reply.exports = env.exports
         return reply
 
     def _run_tool(self, call, index, step, conversation_id, user_id, role, mode, env, reply) -> str:

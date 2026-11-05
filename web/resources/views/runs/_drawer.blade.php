@@ -28,6 +28,7 @@
     <div id="cp-empty" hidden></div><div id="cp-plist" hidden></div>
     @endisset
     <div id="cp-log" class="as-log" role="log" aria-live="polite"></div>
+    <div id="cp-ctx" class="as-ctx" hidden></div>
     <div id="cp-chips" class="as-chips" aria-label="Contoh pertanyaan"></div>
     <form id="cp-form" class="as-form">
         <label for="cp-input" class="sr-only">Pertanyaan untuk asisten</label>

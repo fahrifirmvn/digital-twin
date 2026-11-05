@@ -10,7 +10,7 @@ const COLORS = {
     cip: '#f59e0b', unavailable: '#475569',
 };
 export const STATUS_COLORS = {
-    ...COLORS, queued: '#94a3b8', sampling: '#a78bfa', lab_test: '#7c3aed', released: '#14b8a6', unloading: '#2563eb',
+    ...COLORS, queued: '#94a3b8', sampling: '#a78bfa', lab_test: '#7c3aed', qa_hold: '#dc2626', released: '#14b8a6', unloading: '#2563eb',
 };
 
 function column(codes, x, y0, y1, w, h) {
@@ -44,7 +44,7 @@ const TITLES = [
     [592, 'Separator'], [706, 'Storage'], [826, 'Sterilizer'], [930, 'Filling'], [1060, 'Keluar (FG)'],
 ];
 
-export const QUEUE_STATES = ['queued', 'sampling', 'lab_test', 'released'];
+export const QUEUE_STATES = ['queued', 'sampling', 'lab_test', 'qa_hold', 'released'];
 
 export function center(code) {
     // Aseptic tank tidak punya node sendiri: alirannya digambar dari sterilizer pasangannya.
@@ -185,7 +185,8 @@ export class TwinCanvas {
             c.roundRect(10, y, 120, 17, 4);
             c.fill();
             c.fillStyle = '#fff';
-            c.fillText(`${t.code}  ${t.status === 'lab_test' ? 'uji lab' : t.status}`, 16, y + 9);
+            const label = { lab_test: 'uji lab', qa_hold: 'tahan QA' }[t.status] ?? t.status;
+            c.fillText(`${t.code}  ${label}`, 16, y + 9);
         });
         if (waiting.length > 26) {
             c.fillStyle = '#64748b';

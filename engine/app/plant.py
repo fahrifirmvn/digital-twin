@@ -20,6 +20,7 @@ class Sku:
     code: str
     size_ml: int
     flavor: str
+    paper: str = "regular"
 
 
 SKUS = (
@@ -30,12 +31,31 @@ SKUS = (
 )
 
 
-def changeover_minutes(a: Sku, b: Sku, size_min: float = 40.0, flavor_min: float = 30.0) -> float:
-    """Changeover bergantung urutan SKU: beda ukuran dan/atau rasa."""
+def needs_flavour_cip(prev: Sku | None, curr: Sku) -> bool:
+    """Brief SOP: transisi dari varian rasa (cokelat/stroberi) ke putih (full cream/low fat) memicu CIP."""
+    if prev is None or prev.code == curr.code:
+        return False
+    return prev.flavor in ("chocolate", "strawberry") and curr.flavor in ("full_cream", "low_fat")
+
+
+def changeover_minutes(
+    a: Sku,
+    b: Sku,
+    size_min: float = 40.0,
+    flavor_min: float = 30.0,
+    paper_min: float = 20.0,
+) -> float:
+    """Changeover bergantung urutan SKU: beda ukuran, rasa, atau paper.
+    Sesuai brief SOP: pergantian paper tidak ditambahkan saat terjadi pergantian ukuran (size)."""
     if a.code == b.code:
         return 0.0
-    return (size_min if a.size_ml != b.size_ml else 0.0) + (
-        flavor_min if a.flavor != b.flavor else 0.0
+    size_diff = a.size_ml != b.size_ml
+    flavor_diff = a.flavor != b.flavor
+    paper_diff = a.paper != b.paper
+    return (
+        (size_min if size_diff else 0.0)
+        + (flavor_min if flavor_diff else 0.0)
+        + (paper_min if (paper_diff and not size_diff) else 0.0)
     )
 
 

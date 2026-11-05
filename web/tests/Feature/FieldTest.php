@@ -146,4 +146,17 @@ class FieldTest extends TestCase
     {
         $this->as(Role::Observer)->postJson('/field/confirmations', ['items' => [$this->item('check_in', 'RT-001')]])->assertForbidden();
     }
+
+    public function test_manifest_and_check_in_work_on_running_run(): void
+    {
+        SimRun::where('id', 1)->update(['status' => 'running']);
+        $json = $this->as(Role::Driver)->getJson('/field/manifest')->assertOk()->json();
+        $this->assertSame(1, $json['run']['id']);
+        $this->assertSame('running', $json['run']['status']);
+
+        $code = DB::table('tankers')->value('code');
+        $item = $this->item('check_in', $code);
+        $this->postJson('/field/confirmations', ['items' => [$item]])
+            ->assertOk()->assertJsonPath("results.{$item['uuid']}", 'recorded');
+    }
 }

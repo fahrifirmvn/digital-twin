@@ -83,7 +83,7 @@
                     <h2 id="h-trucks">Daftar truk</h2>
                     <div class="tw-table-scroll tall" tabindex="0" aria-label="Daftar truk, dapat digulir">
                         <table>
-                            <thead><tr><th>Truk</th><th>Asal</th><th>Volume</th><th>Status</th><th>Bay</th><th>Tunggu</th></tr></thead>
+                            <thead><tr><th>Truk</th><th>Asal</th><th>Volume</th><th>pH</th><th>Status</th><th>Bay</th><th>Tunggu</th></tr></thead>
                             <tbody id="d-trucks"></tbody>
                         </table>
                     </div>
@@ -112,9 +112,9 @@
                 </section>
 
                 <section class="tw-card" aria-labelledby="h-prep">
-                    <h2 id="h-prep">Persiapan uji mutu</h2>
+                    <h2 id="h-prep">Uji mutu &amp; riwayat lab hari ini</h2>
                     <ul id="d-prep" class="plain"></ul>
-                    <p id="d-prep-empty" class="tw-hint">Tidak ada truk di tahap uji.</p>
+                    <p id="d-prep-empty" class="tw-hint">Belum ada truk diuji di laboratorium hari ini.</p>
                 </section>
 
                 <section class="tw-card" aria-labelledby="h-preview">

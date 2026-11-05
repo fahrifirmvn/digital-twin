@@ -1,6 +1,7 @@
 // Panggung Twin: pin status (overlay DOM) dan sheet detail. Tidak menyimpan state simulasi; tema dan mode tidak di sini.
 import { icon } from './icons.js';
 import { anomalyMarks, detailOf, detections, levelBadges, pinsOf } from './status.js';
+import { readWarnings } from './warnings.js';
 
 const WIDE = '(min-width: 701px)';
 
@@ -14,6 +15,13 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
     const pinEls = new Map();
     const boxEls = new Map();
     const badgeEls = new Map();
+    let storage;
+    try {
+        storage = window.sessionStorage;
+    } catch (error) {
+        console.warn('Penyimpanan notifikasi tidak tersedia; status dibaca hanya berlaku di halaman ini.', error);
+    }
+    const warnings = readWarnings(root.dataset.runId, storage);
     let scene = null;
     let projector = null;
     let state = null;
@@ -21,6 +29,11 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
     let backTo = null;
     let returnTo = null;
     let pinSig = '';
+
+    function refreshWarnings() {
+        syncPins(state && projector ? pinsOf(state, (c) => projector.has(c), warnings.has) : []);
+        placePins();
+    }
 
     function buildPin(p) {
         const el = document.createElement('button');
@@ -223,6 +236,12 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         }));
     }
 
+    function emitContext() {
+        document.dispatchEvent(new CustomEvent('twin:context', {
+            detail: { selected, minute: state ? Math.round(state.m) : null },
+        }));
+    }
+
     function select(code) {
         if (!code) return close();
         if (!state || !detailOf(state, code)) return;
@@ -234,11 +253,14 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         selected = code;
         renderSheet();
         sheet.hidden = false;
+        if (!wasOpen) returnTo = document.activeElement;
+        warnings.mark(state.tankers[code]);
+        refreshWarnings();
         if (!wasOpen) {
-            returnTo = document.activeElement;
             sheetClose.focus({ preventScroll: true });
         }
         scene?.focus(code, { inset: window.matchMedia(WIDE).matches ? sheet.offsetWidth + 32 : 0 });
+        emitContext();
         onSelect(code);
     }
 
@@ -248,13 +270,22 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         selected = null;
         backTo = null;
         scene?.resetFocus();
-        if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+        (returnTo?.isConnected ? returnTo : $('#view-recv')).focus({ preventScroll: true });
         returnTo = null;
+        emitContext();
         onSelect(null);
     }
 
     sheetClose.addEventListener('click', close);
     $('#tw-sheet-back').addEventListener('click', () => backTo && select(backTo));
+    $('#tw-sheet-ask')?.addEventListener('click', () => {
+        if (!selected) return;
+        const isTruck = Boolean(state?.tankers?.[selected]);
+        const prompt = isTruck
+            ? `Jelaskan status, hasil uji, dan riwayat truk ${selected}.`
+            : `Bagaimana status, aktivitas, dan saran operasi untuk aset ${selected}?`;
+        document.dispatchEvent(new CustomEvent('assistant:ask', { detail: { code: selected, text: prompt } }));
+    });
     root.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !sheet.hidden) {
             e.preventDefault();
@@ -276,18 +307,23 @@ export function createStage(root, { onSelect = () => {}, anomaly = null } = {}) 
         setProjector(p) {
             projector = p;
             pinSig = '';
-            syncPins(state && p ? pinsOf(state, (c) => p.has(c)) : []);
+            syncPins(state && p ? pinsOf(state, (c) => p.has(c), warnings.has) : []);
             syncBoxes(state && p ? detections(state) : []);
             syncBadges(state && p ? levelBadges(state, (c) => p.has(c), marks) : []);
             placePins();
         },
         /** Dipanggil tiap state berubah. */
         update(next) {
+            const prevMin = state ? Math.round(state.m) : null;
             state = next;
-            syncPins(projector ? pinsOf(next, (c) => projector.has(c)) : []);
+            if (!sheet.hidden) {
+                renderSheet();
+                warnings.mark(state.tankers[selected]);
+            }
+            if (selected && Math.round(next.m) !== prevMin) emitContext();
+            syncPins(projector ? pinsOf(next, (c) => projector.has(c), warnings.has) : []);
             syncBoxes(projector ? detections(next) : []);
             syncBadges(projector ? levelBadges(next, (c) => projector.has(c), marks) : []);
-            if (!sheet.hidden) renderSheet();
             placePins();
         },
         refresh: placePins,

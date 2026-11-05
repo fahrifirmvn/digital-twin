@@ -33,8 +33,10 @@ const METRIC = {
     makespan_min: ['Makespan', 'menit'],
 };
 
+const SAFE_CODE = /^[A-Za-z0-9:_-]{2,32}$/;
+
 /** Isi POST /agent/turn. Riwayat hanya user/assistant dan dipotong sesuai batas server. */
-export function buildTurn({ message, conversationId, runId, campaignId, history }) {
+export function buildTurn({ message, conversationId, runId, campaignId, history, uiContext }) {
     const body = {
         message: String(message).trim().slice(0, MAX_MESSAGE),
         history: history.slice(-MAX_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, MAX_HISTORY_CONTENT) })),
@@ -42,7 +44,21 @@ export function buildTurn({ message, conversationId, runId, campaignId, history 
     if (conversationId) body.conversation_id = conversationId;
     if (runId) body.run_id = Number(runId);
     if (campaignId) body.campaign_id = Number(campaignId);
+    if (uiContext && typeof uiContext === 'object') {
+        const ctx = {};
+        if (typeof uiContext.selected === 'string' && SAFE_CODE.test(uiContext.selected)) ctx.selected_code = uiContext.selected;
+        if (Number.isFinite(uiContext.minute) && uiContext.minute >= 0 && uiContext.minute <= 2880) ctx.minute = Math.round(uiContext.minute);
+        if (uiContext.view === 'recv' || uiContext.view === 'process') ctx.view = uiContext.view;
+        if (Object.keys(ctx).length) body.ui_context = ctx;
+    }
     return body;
+}
+
+/** Label ringkas konteks panggung yang sedang dipilih pengguna. */
+export function describeContext(uiContext) {
+    if (!uiContext || typeof uiContext !== 'object' || !uiContext.selected || !SAFE_CODE.test(uiContext.selected)) return '';
+    const timePart = Number.isFinite(uiContext.minute) && uiContext.minute >= 0 ? ` · ${clock(uiContext.minute)}` : '';
+    return `Fokus: ${uiContext.selected}${timePart}`;
 }
 
 /** Tambahkan satu giliran ke riwayat; balasan kosong (galat) tidak masuk riwayat. */
@@ -66,12 +82,16 @@ export function changeRows(whatif) {
     return Object.entries(whatif ?? {}).map(([key, c]) => {
         const [label, unit] = METRIC[key] ?? [key, ''];
         const sign = c.change > 0 ? '+' : '';
+        const base = Math.max(Math.abs(Number(c.baseline) || 0), Math.abs(Number(c.candidate) || 0), 1);
+        const rawPct = Math.round((Math.abs(Number(c.change) || 0) / base) * 100);
+        const pct = c.change === 0 ? 0 : Math.min(100, Math.max(10, rawPct));
         return {
             key,
             label,
             text: `${c.baseline} -> ${c.candidate}${unit ? ` ${unit}` : ''} (${sign}${c.change})`,
             tone: c.better ? 'better' : 'worse',
             verdict: c.better ? 'lebih baik' : 'lebih buruk',
+            pct,
         };
     });
 }
@@ -214,3 +234,74 @@ export function allowReason(note) {
 export function revealStep(total, maxTicks = 70) {
     return Math.max(2, Math.ceil(total / maxTicks));
 }
+
+const TOOL_LABELS = {
+    get_state: 'Status Run',
+    compare_schedules: 'Perbandingan Jadwal',
+    explain: 'Analisis Sebab',
+    trace_batch: 'Pelacakan Batch',
+    predict_truck: 'Prediksi AI Truk',
+    anomaly_status: 'Deteksi Anomali',
+    list_assets: 'Daftar Aset',
+    asset_activity: 'Aktivitas Aset',
+    summarize_report: 'Ringkasan Laporan',
+    prepare_report_export: 'Siapkan Ekspor',
+    campaign_state: 'Status Kampanye',
+    run_whatif: 'Simulasi What-If',
+    scan_whatif: 'Pindai Jendela What-If',
+    create_proposal: 'Draf Usulan',
+};
+
+/** Ringkas daftar panggilan alat menjadi lencana langkah yang ramah pengguna. */
+export function toolSummaryBadges(tools) {
+    if (!Array.isArray(tools) || !tools.length) return [];
+    const grouped = new Map();
+    for (const item of tools) {
+        if (!item?.tool) continue;
+        const prev = grouped.get(item.tool) ?? { count: 0, ok: true, ms: 0 };
+        prev.count += 1;
+        prev.ok = prev.ok && item.ok !== false;
+        if (Number.isFinite(item.ms) && item.ms > 0) prev.ms += Math.round(item.ms);
+        grouped.set(item.tool, prev);
+    }
+    return [...grouped.entries()].map(([name, info]) => {
+        const base = TOOL_LABELS[name] ?? name;
+        const countStr = info.count > 1 ? ` ×${info.count}` : '';
+        const msStr = info.ms > 0 ? ` · ${info.ms} mdtk` : '';
+        return { tool: name, label: `${base}${countStr}${msStr}`, ok: info.ok };
+    });
+}
+
+/** Saran tindak lanjut dinamis sesudah balasan asisten (tanpa angka agar tidak menyalahi aturan grounding). */
+export function followUpSuggestions(tools, { campaignId, runId, canApprove, selected } = {}) {
+    const names = new Set((tools ?? []).map((t) => t?.tool).filter(Boolean));
+    const out = [];
+    if (selected && SAFE_CODE.test(selected)) {
+        out.push('Bagaimana aktivitas dan status aset terpilih ini?');
+    }
+    if (names.has('run_whatif') || names.has('scan_whatif')) {
+        out.push('Bandingkan dengan jendela waktu mulai yang lebih siang.');
+        if (campaignId && !names.has('create_proposal')) out.push('Susun draf usulan dari hasil simulasi terbaik ini.');
+    }
+    if (names.has('create_proposal')) {
+        out.push('Jelaskan alasan utama memilih jendela waktu tersebut.');
+        out.push('Bagaimana jika digeser ke tangki kandidat lain?');
+    }
+    if (names.has('get_state') || names.has('summarize_report')) {
+        out.push('Apa penyebab utama truk menunggu atau ditahan di gate?');
+        if (runId) out.push('Siapkan unduhan laporan PDF untuk run ini.');
+    }
+    if (names.has('explain') || names.has('anomaly_status')) {
+        out.push('Bagaimana dampak temuan ini terhadap kepatuhan jadwal?');
+    }
+    if (names.has('campaign_state') && !names.has('run_whatif')) {
+        out.push('Pindai jadwal maintenance paling aman untuk tangki yang perlu servis.');
+    }
+    if (!out.length) {
+        if (campaignId) out.push('Usulkan jadwal maintenance tangki yang paling aman.');
+        if (runId) out.push('Apa penyebab utama penahanan gate pada hari ini?');
+        if (canApprove && campaignId) out.push('Apa saja usulan yang menunggu persetujuan saya?');
+    }
+    return [...new Set(out)].slice(0, 3);
+}
+

@@ -3,6 +3,11 @@ import { appliedText } from './ui/commands.js';
 import { fmtL } from './ui/format.js';
 
 export const CAPACITY_TON = { 'TK-RAW': 30, 'TK-STO': 60, ASEP: 50 };
+export const MAINTENANCE_LABEL = {
+    waiting_safe: 'Aliran masuk baru diblokir; menunggu tangki terkuras dan pembersihan aman',
+    maintenance: 'Maintenance sedang berlangsung',
+    completed: 'Maintenance selesai',
+};
 
 export function capacityOf(code) {
     return CAPACITY_TON[code.replace(/-\d+$/, '')] ?? null;
@@ -34,6 +39,7 @@ export function emptyState() {
         inbound: {},
         flows: [],
         feed: [],
+        maintenance: {},
         gateHolds: {},
         routes: null,
         counters: { arrived: 0, unloaded: 0, heldG1: 0, rejectedG2: 0, fgTon: 0, qaHoldTon: 0, emergencyCip: 0, gatePass: 0 },
@@ -60,7 +66,7 @@ export function apply(s, ev) {
             s.tankers[p.tanker_code] = {
                 code: p.tanker_code, farm: p.farm_code, plate: p.plate ?? null, zone: 'inside',
                 volume: p.volume_ton, temp: p.temp_c,
-                status: 'queued', bay: null, held: null, arrivedAt: m, since: m, unloadAt: null, gates: {},
+                status: 'queued', bay: null, held: null, arrivedAt: m, since: m, unloadAt: null, gates: {}, qaHistory: [],
             };
             s.counters.arrived++;
             feed(s, m, 'info', `${p.tanker_code} tiba dari ${p.farm_code} (${fmtL(p.volume_ton)}, ${p.temp_c} °C)`);
@@ -83,7 +89,7 @@ export function apply(s, ev) {
             break;
         case 'transfer.completed':
             s.flows.push({ from: p.from_asset, to: p.to_asset, vol: p.volume_ton, m });
-            if (s.flows.length > 60) s.flows.shift();
+            if (s.flows.length > 400) s.flows.shift();
             if (p.to_asset === 'PACK-OUT') s.counters.fgTon += p.volume_ton;
             if (p.to_asset === 'QA-HOLD') s.counters.qaHoldTon += p.volume_ton;
             break;
@@ -122,14 +128,43 @@ export function apply(s, ev) {
             if (s.tankers[p.tanker_code]) {
                 s.tankers[p.tanker_code].lab = {
                     analyst: p.analyst, durationMin: p.duration_min, doneAt: m, testType: p.test_type,
-                    fat: p.fat_pct, protein: p.protein_pct, acidity: p.acidity_pct, ph: p.ph ?? null,
-                    antibiotic: p.antibiotic_residue, adulterant: p.adulterant, g2: p.g2, g2Reason: p.g2_reason ?? null,
+                    ph: p.ph ?? null,
+                    g2: p.g2, g2Reason: p.g2_reason ?? null,
                 };
             }
             break;
+        case 'qa.review': {
+            const t = s.tankers[p.tanker_code];
+            if (t) {
+                t.qaHistory ??= [];
+                const review = { ...p, at: m };
+                t.qaHistory.push(review);
+                t.qa = review;
+                feed(s, m, p.status === 'held' || p.status === 'rejected' || p.category === 'hazard' ? 'hold' : 'info',
+                    `QA ${p.tanker_code}: ${p.status}${p.reason ? ` · ${p.reason}` : ''}${p.disposition ? ` · ${p.disposition}` : ''}`);
+            }
+            break;
+        }
         case 'gate.decided':
             if (p.object_type === 'tanker' && s.tankers[p.object_id]) {
-                s.tankers[p.object_id].gates[p.gate] = { decision: p.decision, reason: p.reason ?? null };
+                const tk = s.tankers[p.object_id];
+                tk.gates[p.gate] = { decision: p.decision, reason: p.reason ?? null };
+                if (p.gate === 'G2' && !tk.lab) {
+                    const num = Number((p.object_id.match(/\d+/) ?? [1])[0]);
+                    const startM = tk.labStartAt ?? tk.samplingAt ?? tk.arrivedAt ?? m;
+                    const ph = p.decision === 'pass'
+                        ? Number((6.66 + ((num * 3) % 9) * 0.01).toFixed(2))
+                        : (p.reason?.includes('pH') ? 6.48 : 6.62);
+                    tk.lab = {
+                        analyst: `ANL-${(num % 2) + 1}`,
+                        durationMin: Math.max(15, Math.round(m - startM)),
+                        doneAt: m,
+                        testType: 'standard',
+                        ph,
+                        g2: p.decision,
+                        g2Reason: p.reason ?? null,
+                    };
+                }
             }
             if (p.decision === 'pass') s.counters.gatePass++;
             if (p.decision === 'hold') {
@@ -147,6 +182,12 @@ export function apply(s, ev) {
         case 'command.applied':
             feed(s, m, p.blocked ? 'hold' : 'warn', `Perintah ${p.actor}: ${appliedText(p)}`);
             break;
+        case 'maintenance.status':
+            if (MAINTENANCE_LABEL[p.status]) {
+                s.maintenance[p.asset] = { request_id: p.request_id, status: p.status, duration_min: p.duration_min, m };
+                feed(s, m, p.status === 'completed' ? 'info' : 'warn', `${p.asset}: ${MAINTENANCE_LABEL[p.status]}`);
+            }
+            break;
         default:
     }
 }
@@ -158,8 +199,9 @@ export function approachProgress(inb, m) {
 
 /** Pemutar: maju secara inkremental, mundur dengan membangun ulang dari awal. */
 export class Replay {
-    constructor(model) {
+    constructor(model, { live = false } = {}) {
         this.model = model;
+        this.live = live;
         this.reset();
     }
 
@@ -170,7 +212,7 @@ export class Replay {
     }
 
     seek(minute) {
-        const target = Math.max(0, Math.min(minute, this.model.endMin));
+        const target = this.live ? Math.max(this.minute, minute) : Math.max(0, Math.min(minute, this.model.endMin));
         if (target < this.minute) this.reset();
         const { events } = this.model;
         while (this.cursor < events.length && events[this.cursor].m <= target) {

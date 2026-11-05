@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\Campaign;
 use App\Models\CampaignDay;
+use App\Models\OperationMaintenance;
 use App\Models\SimRun;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 // Operasi pabrik: satu kampanye tunggal yang berjalan hari demi hari. Hari yang sudah lewat tersimpan (checkpoint + hash)
-// dan dapat diputar ulang kapan saja; hari berikutnya disiapkan satu langkah di depan hari yang sedang ditonton.
+// dan dapat diputar ulang kapan saja; hari aktif dijalankan live, tidak dihitung terlebih dahulu.
 class OperationService
 {
     public function __construct(private CampaignService $campaigns) {}
@@ -29,12 +31,16 @@ class OperationService
         ])->refresh();
     }
 
-    /** Run hari yang sedang ditonton, bila sudah selesai dihitung. */
+    /** Hari aktif diutamakan; bila tidak ada, tampilkan hari terakhir yang ditonton. */
     public function watchRun(): ?SimRun
     {
         $c = $this->current();
-        if (! $c || ! $c->watch_day) {
+        if (! $c) {
             return null;
+        }
+        $active = $c->days()->where('status', 'running')->first();
+        if ($active?->run_id) {
+            return SimRun::find($active->run_id);
         }
         $day = $c->days()->where('day_no', $c->watch_day)->where('status', 'closed')->first();
 
@@ -58,29 +64,35 @@ class OperationService
     public function advance(User $user): array
     {
         $c = $this->ensure($user);
-        $target = ($c->watch_day ?? 0) + 1;
-        $day = $c->days()->where('day_no', $target)->first();
+        $failure = null;
+        DB::transaction(function () use ($c, $user, &$failure) {
+            $c = Campaign::whereKey($c->id)->lockForUpdate()->firstOrFail();
+            if ($c->days()->where('status', 'running')->exists()) {
+                return;
+            }
+            // Data lama yang sudah dihitung tetap dianggap riwayat; tidak direvisi.
+            $target = (int) ($c->watch_day ?? 0) + 1;
+            $day = $c->days()->where('day_no', $target)->first();
+            if ($day?->status === 'closed') {
+                $c->update(['watch_day' => $target]);
 
-        if ($day?->status === 'closed') {
-            $c->update(['watch_day' => $target]);
-            $this->prepareNext($c->refresh(), $user);
-        } elseif (in_array($day?->status, ['planned', 'failed'], true)) {
-            $this->campaigns->startDay($c, $user);
+                return;
+            }
+            $day = $this->campaigns->currentDay($c);
+            if (in_array($day->status, ['planned', 'failed'], true)) {
+                $c->update(['watch_day' => $day->day_no, 'speed' => $c->speed ?? 1, 'autoplay' => false]);
+                try {
+                    $this->campaigns->startDay($c, $user);
+                } catch (ValidationException $e) {
+                    $failure = $e;
+                }
+            }
+        });
+        if ($failure) {
+            throw $failure;
         }
 
         return $this->state($c->refresh());
-    }
-
-    private function prepareNext(Campaign $c, User $user): void
-    {
-        $next = $c->days()->where('day_no', $c->current_day)->first();
-        if ($next && $next->status === 'planned' && $c->current_day === ($c->watch_day ?? 0) + 1) {
-            try {
-                $this->campaigns->startDay($c, $user);
-            } catch (ValidationException) {
-                // Disiapkan ulang saat pengguna maju; kegagalan engine tidak boleh menggagalkan pergantian hari.
-            }
-        }
     }
 
     /** @return array<string, mixed> */
@@ -92,15 +104,18 @@ class OperationService
         }
         $watch = (int) ($c->watch_day ?? 0);
         $target = $c->days()->where('day_no', $watch + 1)->first();
+        $active = $c->days()->where('status', 'running')->first();
+        $target = $active ?? $target ?? $this->campaigns->currentDay($c);
 
         return [
             'exists' => true,
             'campaign_id' => $c->id,
             'watch_day' => $watch,
-            'target_day' => $watch + 1,
+            'target_day' => $target->day_no,
             'target_status' => $target?->status,
             'target_error' => $target?->status === 'failed' ? $target->error : null,
             'days' => $this->history($c),
+            'live' => $active ? ['run_id' => $active->run_id, 'day' => $active->day_no, 'status' => $active->status] : null,
             'integrity' => $this->campaigns->verify($c),
             'maintenance' => $this->maintenance($c),
         ];
@@ -121,7 +136,9 @@ class OperationService
             'open' => ! $busy && $this->campaigns->canChange($c, $day),
             'tanks' => $this->campaigns->tankService($c),
             'planned' => array_map(fn ($e) => ['asset' => $e['asset'], 'minute' => (float) $e['minute'], 'duration_min' => (float) $e['duration_min']], $day->plan),
-            'limits' => ['minute' => [0, CampaignService::DAY_MIN - 1], 'duration_min' => config('twin.campaign.maintenance_minutes')],
+            'schedules' => OperationMaintenance::where('campaign_id', $c->id)->where('day_no', '>=', $day->day_no)
+                ->orderBy('day_no')->orderBy('start_min')->get(['id', 'asset', 'day_no', 'start_min', 'duration_min', 'status', 'error'])->toArray(),
+            'limits' => ['minute' => [0, CampaignService::DAY_MIN - 1], 'duration_min' => config('twin.campaign.maintenance_minutes'), 'day' => [$day->day_no, config('twin.campaign.max_days')]],
         ];
     }
 

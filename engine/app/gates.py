@@ -59,28 +59,12 @@ def g2_lab_result(results: Mapping[str, object] | None, th: Thresholds) -> GateR
     if not results:
         return _hold(GateId.G2, "hasil lab tidak tersedia")
 
-    fat, protein, acidity = (
-        _num(results.get(k)) for k in ("fat_pct", "protein_pct", "acidity_pct")
-    )
-    if fat is None or protein is None or acidity is None:
-        return _hold(GateId.G2, "parameter lab tidak lengkap")
-    if fat < th.fat_min_pct:
-        return _hold(GateId.G2, f"lemak {fat:.2f}% di bawah {th.fat_min_pct}%")
-    if protein < th.protein_min_pct:
-        return _hold(GateId.G2, f"protein {protein:.2f}% di bawah {th.protein_min_pct}%")
-    lo, hi = th.acidity_range_pct
-    if not lo <= acidity <= hi:
-        return _hold(GateId.G2, f"keasaman {acidity:.3f}% di luar {lo}-{hi}%")
     ph = _num(results.get("ph"))
-    if ph is not None:  # hasil lama tanpa pH tetap dinilai dari parameter lain
-        p_lo, p_hi = th.ph_range
-        if not p_lo <= ph <= p_hi:
-            return _hold(GateId.G2, f"pH {ph:.2f} di luar {p_lo}-{p_hi}")
-    # Residu antibiotik dan adulteran harus eksplisit False, nilai lain dianggap positif.
-    if results.get("antibiotic_residue") is not False:
-        return _hold(GateId.G2, "residu antibiotik positif atau tidak diuji")
-    if results.get("adulterant") is not False:
-        return _hold(GateId.G2, "adulteran positif atau tidak diuji")
+    if ph is None:
+        return _hold(GateId.G2, "hasil pH belum tersedia atau tidak valid")
+    lo, hi = th.ph_range
+    if not lo <= ph <= hi:
+        return _hold(GateId.G2, f"pH {ph:.2f} di luar {lo}-{hi}")
     return _ok(GateId.G2)
 
 

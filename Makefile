@@ -1,4 +1,4 @@
-.PHONY: test lint contracts up
+.PHONY: test lint contracts evidence up
 
 test:
 	cd web && php artisan test
@@ -12,5 +12,10 @@ lint:
 contracts:
 	cd engine && uv run python -m scripts.export_contracts
 
+evidence:
+	cd engine && uv run python -u -m scripts.ablation --volume 320 --seeds 3 --scenario all --time-limit 1.5
+	cd engine && uv run python -u -m scripts.sensitivity
+
 up:
 	docker compose up --build
+

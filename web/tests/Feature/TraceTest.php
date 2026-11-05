@@ -51,12 +51,24 @@ class TraceTest extends TestCase
         $this->assertContains('G1', array_column($t['gates'], 'gate'));
     }
 
-    public function test_forward_from_raw_reaches_fg(): void
+    public function test_forward_from_raw_and_tanker_code_reaches_fg_with_edges_and_dwell(): void
     {
-        $t = app(TraceService::class)->trace(1, 'RAW-RT-001');
+        $t0 = hrtime(true);
+        $t = app(TraceService::class)->trace(1, 'RT-001');
+        $elapsedMs = (hrtime(true) - $t0) / 1e6;
 
+        $this->assertNotNull($t);
+        $this->assertLessThan(50.0, $elapsedMs, 'Trace query must complete under 50 ms');
+        $this->assertSame('RT-001', $t['resolved_from_tanker']);
+        $this->assertSame('RAW-RT-001', $t['batch']['code']);
         $this->assertSame([], $t['upstream']);
         $this->assertSame(['INT-0001' => 1, 'FG-0001' => 2], collect($t['downstream'])->pluck('depth', 'code')->all());
+        $this->assertNotEmpty($t['edges']);
+        $this->assertGreaterThan(0, $t['mass_summary']['raw_ton']);
+        $this->assertNotEmpty($t['batch']['tanks']);
+        $this->assertStringContainsString('WIB', $t['transfers'][0]->clock_wib);
+        $dwells = array_values(array_filter(array_map(fn ($tr) => $tr->dwell_min, $t['transfers']), fn ($v) => $v !== null));
+        $this->assertNotEmpty($dwells);
     }
 
     public function test_merge_graph_has_no_duplicates_and_stays_in_run(): void
@@ -68,7 +80,7 @@ class TraceTest extends TestCase
         ]);
         $mix = $mk('MIX-1', 'intermediate');
         $fg = $mk('FG-MERGE', 'fg');
-        $link = fn (int $p, int $c) => DB::table('batch_lineage')->insert(['parent_batch_id' => $p, 'child_batch_id' => $c, 'volume_ton' => 10]);
+        $link = fn (int $p, int $c) => DB::table('batch_lineage')->insert(['parent_batch_id' => $p, 'child_batch_id' => $c, 'volume_ton' => 5]);
         $link($this->batchId('INT-0001'), $mix);
         $link($this->batchId('INT-0002'), $mix);
         $link($mix, $fg);
@@ -79,6 +91,9 @@ class TraceTest extends TestCase
         $this->assertSame(count($codes), count(array_unique($codes)));
         $this->assertEqualsCanonicalizing(['MIX-1', 'INT-0001', 'INT-0002', 'RAW-RT-001', 'RAW-RT-002'], $codes);
         $this->assertSame(['RT-001', 'RT-002'], array_column($t['tankers'], 'code'));
+        $mixEdges = array_values(array_filter($t['edges'], fn ($e) => $e['child_code'] === 'MIX-1'));
+        $this->assertCount(2, $mixEdges);
+        $this->assertSame(50.0, $mixEdges[0]['share_pct']);
 
         $fwd = app(TraceService::class)->trace(1, 'RAW-RT-002');
         $this->assertContains('FG-MERGE', array_column($fwd['downstream'], 'code'));
@@ -93,8 +108,18 @@ class TraceTest extends TestCase
     public function test_page_shows_trace_for_allowed_roles_only(): void
     {
         $this->as(Role::Qa)->get('/trace?run=1&code=fg-0001')
-            ->assertOk()->assertSee('RAW-RT-001')->assertSee('RT-001')->assertSee('Keputusan gate');
-        $this->as(Role::Ppic)->get('/trace')->assertOk()->assertSee('Contoh kode FG');
+            ->assertOk()
+            ->assertSee('RAW-RT-001')
+            ->assertSee('RT-001')
+            ->assertSee('Peta Aliran Silsilah Batch')
+            ->assertSee('Jam Operasional (06:00–06:00)')
+            ->assertSee('Keputusan gate');
+        $this->as(Role::Qa)->get('/trace?run=1&code=rt-001')
+            ->assertOk()
+            ->assertSee('Forward Trace')
+            ->assertSee('RAW-RT-001')
+            ->assertSee('FG-0001');
+        $this->as(Role::Ppic)->get('/trace')->assertOk()->assertSee('Contoh kode FG')->assertSee('Telusur maju dari truk');
         $this->as(Role::Qa)->get('/trace?run=1&code=NOPE')->assertOk()->assertSee('tidak ditemukan');
         $this->as(Role::Qa)->get('/trace?run=1&code=a%27b')->assertSessionHasErrors('code');
 

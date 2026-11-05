@@ -59,8 +59,12 @@ def simulate(
         specs, late = split_late(specs)
         deferred = tuple(late)
         specs = inject_late(specs, carry)
-    announced = [s for s in specs if s.announced]
     cfg = cfg or PlantConfig()
+    if cfg.orders:
+        from app.orders import allocate_specs_to_orders
+
+        specs = allocate_specs_to_orders(specs, cfg)
+    announced = [s for s in specs if s.announced]
     commands, cmd_disturbances, cmd_specs = expand(commands, cfg, seed, specs)
     specs = specs + cmd_specs
     maintenance = tuple(

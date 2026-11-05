@@ -2,7 +2,7 @@
 import '../css/twin.css';
 import { GEO_GEOMETRY } from './twin/map/geo-real.js';
 import { inboundList, mapStats, recentArrivals } from './twin/map/geo.js';
-import { fetchReplay, saveMinute, savedMinute } from './twin/load.js';
+import { fetchReplay, followLive, isLiveOperation, readOnlyLiveControls, saveMinute, savedMinute } from './twin/load.js';
 import { Replay, buildModel } from './twin/state.js';
 import { chipEl, h } from './twin/ui/dom.js';
 import { clock } from './twin/ui/format.js';
@@ -29,10 +29,11 @@ function twinLink(code) {
 }
 
 async function start(data) {
-    const model = buildModel(data.events);
-    const total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
-    const hasTrips = model.events.some((e) => e.p.type === 'truck.dispatched');
-    const replay = new Replay(model);
+    let active = isLiveOperation(data);
+    let model = buildModel(data.events);
+    let total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
+    let hasTrips = model.events.some((e) => e.p.type === 'truck.dispatched');
+    let replay = new Replay(model, { live: active });
     const canvas = $('map');
     canvas.hidden = false;
     const { GeoMap } = await import('./twin/map/geomap.js');
@@ -43,13 +44,14 @@ async function start(data) {
     const scrub = $('scrub');
     const playBtn = $('play');
     let speed = Number($('speed').value);
-    let playing = true;
-    let minute = Math.min(savedMinute(runId), model.endMin);
+    let playing = !active;
+    let minute = active ? data.live.minute : Math.min(savedMinute(runId), model.endMin);
     let selected = null;
     let rowsSig = '';
 
     scrub.max = Math.ceil(model.endMin);
     $('m-nodata').hidden = hasTrips;
+    readOnlyLiveControls(root, active);
 
     function setPlaying(kind) {
         const m = { play: ['pause', 'Jeda'], pause: ['play', 'Putar'], ended: ['replay', 'Ulangi'] }[kind];
@@ -138,7 +140,7 @@ async function start(data) {
     function frame(now) {
         const dt = (now - last) / 1000;
         last = now;
-        if (playing) {
+        if (playing && !active) {
             minute = Math.min(model.endMin, minute + dt * speed);
             if (minute >= model.endMin) {
                 playing = false;
@@ -150,27 +152,43 @@ async function start(data) {
     }
 
     playBtn.addEventListener('click', () => {
+        if (active) return;
         if (minute >= model.endMin) minute = 0;
         playing = !playing;
         setPlaying(playing ? 'play' : 'pause');
     });
-    $('speed').addEventListener('change', (e) => { speed = Number(e.target.value); });
+    $('speed').addEventListener('change', (e) => { if (!active) speed = Number(e.target.value); });
     scrub.addEventListener('input', () => {
+        if (active) return;
         playing = false;
         setPlaying('pause');
         minute = Number(scrub.value);
         render();
     });
-    addEventListener('pagehide', () => saveMinute(runId, minute));
+    const stop = active ? followLive(root.dataset.replayUrl, data, (next, transition) => {
+        active = transition.active;
+        model = transition.model;
+        minute = transition.minute;
+        replay = new Replay(model, { live: active });
+        total = model.events.filter((e) => e.p.type === 'truck.arrived').length;
+        hasTrips = model.events.some((e) => e.p.type === 'truck.dispatched');
+        $('m-nodata').hidden = hasTrips;
+        scrub.max = Math.ceil(Math.max(model.endMin, minute));
+        readOnlyLiveControls(root, active);
+        if (!active) setPlaying('ended');
+        render();
+        setStatus(root, active ? 'langsung' : 'selesai', 'ok');
+    }, () => setStatus(root, 'langsung terputus', 'bad')) : () => {};
+    addEventListener('pagehide', () => { stop(); if (!active) saveMinute(runId, minute); });
 
     setPlaying('play');
     render();
     requestAnimationFrame(frame);
 }
 
-fetchReplay(root.dataset.replayUrl, (status) => setStatus(root, status))
+fetchReplay(root.dataset.replayUrl, (status) => setStatus(root, status), { allowLive: true })
     .then((data) => {
-        setStatus(root, 'selesai', 'ok');
+        setStatus(root, isLiveOperation(data) ? 'langsung' : 'selesai', 'ok');
         $('tw-loading').hidden = true;
         return start(data);
     })

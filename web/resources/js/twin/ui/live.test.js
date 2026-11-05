@@ -18,14 +18,16 @@ test('liveStats: antre, rata-rata tunggu hanya dari truk yang sudah mulai bongka
         truck('B', { status: 'stored', arrivedAt: 20, unloadAt: 80 }),
         truck('C', { status: 'sampling' }),
         truck('D', { status: 'lab_test' }),
+        truck('Q', { status: 'qa_hold' }),
         truck('E'),
     ]);
     const k = liveStats(s, 9);
     assert.equal(k.avgWaitMin, 45);
-    assert.equal(k.waiting, 3);
+    assert.equal(k.waiting, 4);
     assert.equal(k.labQueue, 1);
     assert.equal(k.labTesting, 1);
-    assert.equal(k.inTransit, 4);
+    assert.equal(k.qaHolds, 1);
+    assert.equal(k.inTransit, 3);
 });
 
 test('liveStats: tanpa data -> null, kepatuhan gate dari lolos vs tahan', () => {
@@ -39,17 +41,19 @@ test('decisions: ditahan dan ditolak, terbaru dulu, dengan alasan gate', () => {
     const s = state([
         truck('A', { held: 'G1', since: 30, gates: { G1: { decision: 'hold', reason: 'suhu tinggi' } } }),
         truck('B', { status: 'rejected', since: 60 }),
+        truck('Q', { status: 'qa_hold', since: 50, qa: { reason: 'Konfirmasi mutu diperlukan' } }),
         truck('C'),
     ]);
     const d = decisions(s);
-    assert.deepEqual(d.map((x) => x.code), ['B', 'A']);
-    assert.equal(d[1].reason, 'suhu tinggi');
+    assert.deepEqual(d.map((x) => x.code), ['B', 'Q', 'A']);
+    assert.equal(d[1].reason, 'Konfirmasi mutu diperlukan');
+    assert.equal(d[1].label, 'Ditahan QA');
     assert.equal(d[0].label, 'Ditolak');
 });
 
 test('labPrep mengurutkan yang paling lama menunggu', () => {
-    const s = state([truck('A', { status: 'lab_test', since: 50 }), truck('B', { status: 'sampling', since: 20 }), truck('C')]);
-    assert.deepEqual(labPrep(s).map((x) => x.code), ['B', 'A']);
+    const s = state([truck('A', { status: 'lab_test', since: 50 }), truck('B', { status: 'sampling', since: 20 }), truck('Q', { status: 'qa_hold', since: 30 }), truck('C')]);
+    assert.deepEqual(labPrep(s).map((x) => x.code), ['B', 'Q', 'A']);
     assert.equal(labPrep(s)[0].ago, 80);
 });
 
@@ -67,18 +71,28 @@ test('trackerSteps menandai langkah, bad saat ditahan atau ditolak', () => {
     assert.deepEqual(states(truck('A', { status: 'stored' })), ['done', 'done', 'done', 'done', 'done']);
     assert.deepEqual(states(truck('A', { status: 'rejected' })), ['done', 'bad', 'todo', 'todo', 'todo']);
     assert.deepEqual(states(truck('A', { held: 'G1' })), ['bad', 'todo', 'todo', 'todo', 'todo']);
+    assert.deepEqual(states(truck('A', { status: 'qa_hold', qa: { status: 'held' } })), ['done', 'done', 'bad', 'todo', 'todo']);
+    assert.deepEqual(states(truck('A', { status: 'qa_hold', qa: { status: 'confirmed' } })), ['done', 'done', 'current', 'todo', 'todo']);
 });
 
-test('assetRows: bay dengan truk bongkar, silo dengan isi, lab dari truk uji', () => {
+test('assetRows: bay dengan truk bongkar, silo dengan isi, lab dari truk uji dan riwayat lab hari itu', () => {
     const layout = { halls: [{ bays: ['BAY-1', 'BAY-2'] }], silos: [{ code: 'TK-STO-1' }] };
     const codes = layoutCodes(layout);
-    const s = state([truck('A', { status: 'unloading', bay: 'BAY-1' }), truck('B', { status: 'sampling' })], {
+    const s = state([
+        truck('A', { status: 'unloading', bay: 'BAY-1', lab: { doneAt: 60, ph: 6.72, g2: 'pass' } }),
+        truck('B', { status: 'sampling' }),
+        truck('C', { status: 'stored', lab: { doneAt: 90, ph: 6.68, g2: 'pass' } }),
+    ], {
         assets: { 'TK-STO-1': { status: 'filling', level: 30 } },
     });
     const bays = assetRows(s, 'bay', codes);
     assert.deepEqual(bays.map((r) => [r.code, r.detail]), [['BAY-1', 'A'], ['BAY-2', '-']]);
-    assert.equal(assetRows(s, 'silo', codes)[0].detail, '29.126 L / 58.252 L');
-    assert.equal(assetRows(s, 'lab', codes)[0].code, 'B');
+    assert.equal(assetRows(s, 'silo', codes)[0].detail, '30.000 L / 60.000 L');
+    const labRows = assetRows(s, 'lab', codes);
+    assert.deepEqual(labRows.map((r) => r.code), ['B', 'C', 'A']);
+    assert.equal(labRows[1].chip.label, 'Lolos G2');
+    assert.match(labRows[1].detail, /pH 6,68/);
+    assert.equal(assetRows(state([truck('Q', { status: 'qa_hold' })]), 'lab', codes)[0].chip.label, 'Ditahan QA');
 });
 
 test('assetRows: tab proses memuat unit hilir dengan status; layout lama tanpa units aman', () => {
@@ -86,7 +100,7 @@ test('assetRows: tab proses memuat unit hilir dengan status; layout lama tanpa u
     const s = state([], { assets: { 'STE-1': { status: 'cip', level: null } } });
     const rows = assetRows(s, 'proc', codes);
     assert.deepEqual(rows.map((r) => r.code), ['DEG-1', 'STE-1', 'ASEP-1']);
-    assert.equal(assetRows(state([], { assets: { 'ASEP-1': { status: 'holding', level: 20 } } }), 'proc', codes)[2].detail, '19.417 L / 48.544 L');
+    assert.equal(assetRows(state([], { assets: { 'ASEP-1': { status: 'holding', level: 20 } } }), 'proc', codes)[2].detail, '20.000 L / 50.000 L');
     assert.deepEqual(layoutCodes({ halls: [], silos: [] }).proc, []);
 });
 

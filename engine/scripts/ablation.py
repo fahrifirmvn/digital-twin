@@ -12,20 +12,35 @@ import statistics
 
 from app.experiment import CONFIGS, simulate
 from app.kpi import evaluate
+from app.rolling import count_assignment_changes
 from app.scenarios import SCENARIO_KEYS
 
 METRICS = {
-    "truck_wait_mean": lambda k: k.truck_wait_min.mean,
-    "truck_wait_p90": lambda k: k.truck_wait_min.p90,
-    "tank_dwell_mean": lambda k: k.tank_dwell_min.mean,
-    "changeover_min": lambda k: k.changeover_min,
-    "unscheduled_cip": lambda k: k.unscheduled_cip,
-    "fg_ton": lambda k: k.fg_ton,
-    "held_qa": lambda k: k.held_qa,
-    "holding_violations": lambda k: k.holding_violations,
-    "schedule_adherence": lambda k: k.schedule_adherence_pct,
+    "truck_wait_mean": lambda k, _s, _p: k.truck_wait_min.mean,
+    "truck_wait_p90": lambda k, _s, _p: k.truck_wait_min.p90,
+    "tank_dwell_mean": lambda k, _s, _p: k.tank_dwell_min.mean,
+    "changeover_min": lambda k, _s, _p: k.changeover_min,
+    "unscheduled_cip": lambda k, _s, _p: k.unscheduled_cip,
+    "fg_ton": lambda k, _s, _p: k.fg_ton,
+    "held_qa": lambda k, _s, _p: k.held_qa,
+    "holding_violations": lambda k, _s, _p: k.holding_violations,
+    "schedule_adherence": lambda k, _s, _p: k.schedule_adherence_pct,
+    "solve_seconds": lambda _k, _s, p: None if p is None else p.solve_seconds,
+    "replan_changes": lambda _k, s, p: _replan_changes(s, p),
 }
 HIGHER_IS_BETTER = {"fg_ton", "schedule_adherence"}
+
+
+def _replan_changes(sim, initial_plan) -> float | None:
+    if not sim.replans:
+        return None
+    prev = initial_plan
+    total = 0
+    for rp in sim.replans:
+        if rp.status != "failed" and rp.plan is not None:
+            total += count_assignment_changes(prev, rp.plan)
+            prev = rp.plan
+    return float(total)
 
 
 def run(
@@ -34,13 +49,13 @@ def run(
     table: dict[str, dict[str, list[float | None]]] = {c: {m: [] for m in METRICS} for c in CONFIGS}
     for seed in range(1, seeds + 1):
         for config in CONFIGS:
-            sim, _ = simulate(
+            sim, plan = simulate(
                 config, seed, volume, extra_bad, time_limit=time_limit, scenario=scenario
             )
             sim.run()
             k = evaluate(sim)
             for name, fn in METRICS.items():
-                v = fn(k)
+                v = fn(k, sim, plan)
                 table[config][name].append(None if v is None else float(v))
     return table
 

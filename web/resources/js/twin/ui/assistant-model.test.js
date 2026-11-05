@@ -47,7 +47,7 @@ test('pushHistory tidak menyimpan balasan galat', () => {
 });
 
 test('describeWindow memakai jam dan durasi', () => {
-    assert.equal(describeWindow({ asset: 'TK-RAW-1', minute: 0, duration_min: 180 }), 'TK-RAW-1, 06:00 - 09:00 (180 menit)');
+    assert.equal(describeWindow({ asset: 'TK-RAW-1', minute: 0, duration_min: 180 }), 'TK-RAW-1, 06:00 WIB - 09:00 WIB (180 menit)');
 });
 
 test('changeRows memberi kata pembeda selain warna', () => {
@@ -144,3 +144,33 @@ test('modelNote menandai mock sebagai mode demo dan menampilkan model sungguhan'
     assert.equal(modelNote({ provider: 'gemini', model: 'gemini-2.5-flash' }), 'model: gemini-2.5-flash');
     assert.equal(modelNote({}), '');
 });
+
+test('buildTurn menyertakan ui_context yang valid dan describeContext memformat label fokus', async () => {
+    const { describeContext } = await import('./assistant-model.js');
+    const body = buildTurn({
+        message: 'Status ini?',
+        conversationId: null,
+        runId: 3,
+        campaignId: '',
+        history: [],
+        uiContext: { selected: 'TK-RAW-1', minute: 120, view: 'recv' },
+    });
+    assert.deepEqual(body.ui_context, { selected_code: 'TK-RAW-1', minute: 120, view: 'recv' });
+    assert.equal(describeContext({ selected: 'TK-RAW-1', minute: 120 }), 'Fokus: TK-RAW-1 · 08:00 WIB');
+    assert.equal(describeContext({ selected: '<script>' }), '');
+});
+
+test('toolSummaryBadges dan followUpSuggestions bebas angka dan sesuai alat', async () => {
+    const { toolSummaryBadges, followUpSuggestions } = await import('./assistant-model.js');
+    const badges = toolSummaryBadges([
+        { tool: 'run_whatif', ok: true, ms: 120 },
+        { tool: 'run_whatif', ok: true, ms: 80 },
+        { tool: 'create_proposal', ok: true, ms: 15 },
+    ]);
+    assert.equal(badges.length, 2);
+    assert.match(badges[0].label, /Simulasi What-If ×2 · 200 mdtk/);
+    const next = followUpSuggestions([{ tool: 'run_whatif', ok: true }], { campaignId: 2, runId: 5, selected: 'TK-RAW-2' });
+    assert.ok(next.length >= 2 && next.length <= 3);
+    for (const s of next) assert.ok(!/\d/.test(s));
+});
+

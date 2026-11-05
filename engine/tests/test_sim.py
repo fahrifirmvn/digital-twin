@@ -10,15 +10,7 @@ SCENARIOS = [(320, 1, 0), (320, 3, 0), (450, 2, 0), (450, 5, 4), (320, 9, 6)]
 def unsafe(spec) -> bool:
     """Oracle independen dari Gate Engine."""
     r = spec.lab_results
-    return (
-        spec.temp_c > 6.0
-        or not spec.docs_ok
-        or r["fat_pct"] < 3.0
-        or r["protein_pct"] < 2.8
-        or not 0.12 <= r["acidity_pct"] <= 0.18
-        or r["antibiotic_residue"] is not False
-        or r["adulterant"] is not False
-    )
+    return spec.temp_c > 6.0 or not spec.docs_ok or not 6.55 <= r["ph"] <= 6.85
 
 
 def run(volume, seed, bad):

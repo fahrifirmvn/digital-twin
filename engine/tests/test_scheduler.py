@@ -87,3 +87,22 @@ def test_scheduled_configs_cut_changeovers_vs_fifo():
 def test_unknown_config_rejected():
     with pytest.raises(ValueError):
         simulate("Z", 1, 100)
+
+
+def test_40_truck_scalability_and_dedicated_routing():
+    from app.plant import with_params
+    from app.routing import Routing
+
+    specs_40 = generate_day(1, 900)
+    assert len(specs_40) >= 38
+    plan_40 = make_plan(specs_40, CFG, "C", get_predictor(), time_limit=2.0)
+    assert plan_40.status in {"optimal", "feasible"}
+    assert set(plan_40.trucks) == {s.code for s in specs_40}
+
+    cfg_ded = with_params(CFG, sku_policy="dedicated")
+    routing = Routing(cfg_ded, "dedicated")
+    specs_ded = generate_day(1, 320)
+    plan_ded = make_plan(specs_ded, cfg_ded, "C", get_predictor(), time_limit=2.0)
+    sku_by_truck = {s.code: s.sku_code for s in specs_ded}
+    for code, tp in plan_ded.trucks.items():
+        assert routing.allows(tp.line, sku_by_truck[code])

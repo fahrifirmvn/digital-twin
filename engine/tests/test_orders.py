@@ -99,3 +99,13 @@ def test_simulation_emits_one_orders_event_before_the_final_clock():
         ev[0].seq == sim.events[-4].seq
     )  # disusul neraca volume, fouling/umur simpan, dan SimClock terakhir
     assert ev[0].payload.orders
+
+
+def test_dynamic_order_allocation_in_simulation():
+    cfg = with_params(PlantConfig(), orders=(("UHT-CHOC-200", 120.0),))
+    sim, _ = simulate("A", 3, 240, time_limit=2.0, cfg=cfg)
+    sim.run()
+    ev = [e.payload for e in sim.events if isinstance(e.payload, OrdersEvaluated)][0]
+    assert ev.source == "manual"
+    assert ev.orders[0].sku == "UHT-CHOC-200"
+    assert ev.orders[0].feasible is True

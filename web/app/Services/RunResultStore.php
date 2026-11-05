@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\CampaignDay;
+use App\Models\OperationMaintenance;
+use App\Models\SimCommand;
 use App\Models\SimRun;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 // Menyimpan hasil run dari Engine secara atomik: seluruhnya masuk atau tidak sama sekali.
@@ -21,6 +25,7 @@ class RunResultStore
     public function storeFinished(SimRun $run, array $r): void
     {
         DB::transaction(function () use ($run, $r) {
+            $this->syncMaintenanceEvents($run->id, $r['events']);
             $farms = DB::table('farms')->pluck('id', 'code');
             $skus = DB::table('skus')->pluck('id', 'code');
             $now = now();
@@ -65,6 +70,7 @@ class RunResultStore
                         'updated_at' => $now,
                     ]);
                 }
+
             }
 
             if (($r['plan'] ?? null) !== null) {
@@ -92,11 +98,22 @@ class RunResultStore
                 ]);
             }
             foreach ($r['batches'] as $b) {
-                foreach ($b['parents'] as $parent) {
+                $parents = $b['parents'] ?? [];
+                $nParents = count($parents);
+                $accTon = 0.0;
+                foreach ($parents as $idx => $parent) {
+                    if ($nParents <= 1) {
+                        $edgeTon = (float) $b['volume_ton'];
+                    } elseif ($idx < $nParents - 1) {
+                        $edgeTon = round((float) $b['volume_ton'] / $nParents, 2);
+                        $accTon += $edgeTon;
+                    } else {
+                        $edgeTon = round((float) $b['volume_ton'] - $accTon, 2);
+                    }
                     DB::table('batch_lineage')->insert([
                         'parent_batch_id' => $batchIds[$parent],
                         'child_batch_id' => $batchIds[$b['code']],
-                        'volume_ton' => $b['volume_ton'],
+                        'volume_ton' => $edgeTon,
                     ]);
                 }
             }
@@ -141,6 +158,7 @@ class RunResultStore
             DB::table('sim_runs')->where('id', $run->id)->update([
                 'scenario_id' => $scenarioId,
                 'status' => 'finished',
+                'result_payload' => json_encode($r['result_payload'] ?? ['status' => 'finished'] + $r, JSON_THROW_ON_ERROR),
                 'ai_result' => isset($r['ai']) ? json_encode($r['ai']) : null,
                 'day_result' => ($r['day'] ?? null) ? json_encode(['day' => $r['day'], 'summary' => $r['day_summary'] ?? null, 'carry_out' => $r['carry_out'] ?? null]) : null,
                 'sim_start' => $r['sim_start'],
@@ -205,6 +223,35 @@ class RunResultStore
             'created_at' => $now,
             'updated_at' => $now,
         ], $rows, array_keys($rows));
+    }
+
+    public function syncMaintenanceEvents(int $runId, array $events): void
+    {
+        foreach ($events as $event) {
+            $payload = $event['payload'];
+            if (! in_array($payload['type'], ['maintenance.status', 'command.applied'], true) || empty($payload['request_id'])) {
+                continue;
+            }
+            $entry = OperationMaintenance::whereKey($payload['request_id'])->where('run_id', $runId)->first();
+            if (! $entry) {
+                continue;
+            }
+            if ($payload['type'] === 'maintenance.status') {
+                $order = ['scheduled' => 0, 'pending' => 0, 'uncertain' => 0, 'accepted' => 1, 'waiting_safe' => 2, 'maintenance' => 3, 'completed' => 4];
+                $prior = array_keys(array_filter($order, fn ($rank) => $rank < $order[$payload['status']]));
+                OperationMaintenance::whereKey($entry->id)->whereIn('status', $prior)->update(['status' => $payload['status'], 'error' => null]);
+            } else {
+                $day = CampaignDay::where('run_id', $runId)->firstOrFail();
+                $start = $day->campaign->dateOf($day->day_no).'T06:00:00Z';
+                $minute = Carbon::parse($start)->diffInSeconds(Carbon::parse($event['sim_time'])) / 60;
+                $entry->update(['start_min' => $minute]);
+                SimCommand::firstOrCreate(['run_id' => $runId, 'seq' => $payload['command_id']], [
+                    'minute' => $minute, 'kind' => 'tank_down',
+                    'args' => ['asset' => $entry->asset, 'duration_min' => $entry->duration_min, 'request_id' => $entry->id],
+                    'actor_id' => $entry->actor_id, 'actor_label' => $entry->actor_label, 'reason' => $entry->reason,
+                ]);
+            }
+        }
     }
 
     public function storeFailed(SimRun $run, string $error): void

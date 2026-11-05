@@ -1,10 +1,11 @@
 // Ringkasan murni untuk Dashboard dan panel Twin: statistik langsung, antrean keputusan, uji mutu, tracker truk, tabel aset.
 // Tanpa DOM; semua dihitung dari state hasil reducer pada menit tertentu.
 import { capacityOf } from '../state.js';
-import { fmtL } from './format.js';
+import { clock, fmtL } from './format.js';
 import { assetStatus, truckStatus } from './status.js';
 
-const WAITING = new Set(['queued', 'sampling', 'lab_test', 'released']);
+const dec = (n, d) => Number(n).toFixed(d).replace('.', ',');
+const WAITING = new Set(['queued', 'sampling', 'lab_test', 'qa_hold', 'released']);
 const DONE = new Set(['stored', 'rejected']);
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -23,6 +24,7 @@ export function liveStats(state, total = 0) {
         detected: state.counters.arrived,
         labQueue: trucks.filter((t) => t.status === 'sampling').length,
         labTesting: trucks.filter((t) => t.status === 'lab_test').length,
+        qaHolds: trucks.filter((t) => t.status === 'qa_hold').length,
         unloading: trucks.filter((t) => t.status === 'unloading').length,
         holds,
         gatePassPct: passes + holds ? (passes / (passes + holds)) * 100 : null,
@@ -34,11 +36,11 @@ const minutesIn = (state, t) => Math.max(0, Math.round(state.m - t.since));
 /** Truk yang butuh keputusan manusia: ditahan atau ditolak, terbaru dulu. */
 export function decisions(state) {
     return Object.values(state.tankers)
-        .filter((t) => t.held || t.status === 'rejected')
+        .filter((t) => t.held || t.status === 'qa_hold' || t.status === 'rejected')
         .map((t) => {
             const gate = Object.entries(t.gates ?? {}).find(([, g]) => g.decision === 'hold');
-            const label = t.status === 'rejected' ? 'Ditolak' : `Ditahan ${t.held}`;
-            return { code: t.code, farm: t.farm, label, reason: gate?.[1].reason ?? null, tone: 'bad', since: t.since, ago: minutesIn(state, t) };
+            const label = t.status === 'rejected' ? 'Ditolak' : t.status === 'qa_hold' ? 'Ditahan QA' : `Ditahan ${t.held}`;
+            return { code: t.code, farm: t.farm, label, reason: t.qa?.reason ?? gate?.[1].reason ?? null, tone: 'bad', since: t.since, ago: minutesIn(state, t) };
         })
         .sort((a, b) => b.since - a.since);
 }
@@ -46,9 +48,35 @@ export function decisions(state) {
 /** Truk dalam tahap uji mutu (sampling/lab), yang paling lama menunggu lebih dulu. */
 export function labPrep(state) {
     return Object.values(state.tankers)
-        .filter((t) => t.status === 'sampling' || t.status === 'lab_test')
+        .filter((t) => t.status === 'sampling' || t.status === 'lab_test' || t.status === 'qa_hold')
         .sort((a, b) => a.since - b.since)
-        .map((t) => ({ code: t.code, farm: t.farm, volume: t.volume, chip: truckStatus(t), ago: minutesIn(state, t) }));
+        .map((t) => ({
+            code: t.code,
+            farm: t.farm,
+            volume: t.volume,
+            ph: t.lab?.ph != null ? `pH ${dec(t.lab.ph, 2)}` : null,
+            chip: truckStatus(t),
+            ago: minutesIn(state, t),
+        }));
+}
+
+/** Riwayat truk yang telah selesai diuji di laboratorium pada hari itu (terbaru selesai lebih dulu). */
+export function labHistory(state) {
+    return Object.values(state.tankers)
+        .filter((t) => t.lab && t.status !== 'sampling' && t.status !== 'lab_test' && t.status !== 'qa_hold')
+        .sort((a, b) => (b.lab.doneAt ?? 0) - (a.lab.doneAt ?? 0) || a.code.localeCompare(b.code))
+        .map((t) => {
+            const ok = t.lab.g2 === 'pass';
+            const ph = t.lab.ph != null ? `pH ${dec(t.lab.ph, 2)}` : 'pH -';
+            return {
+                code: t.code,
+                farm: t.farm,
+                volume: t.volume,
+                ph,
+                doneClock: clock(t.lab.doneAt ?? t.since),
+                chip: ok ? { tone: 'ok', icon: 'check', label: 'Lolos G2' } : { tone: 'bad', icon: 'x', label: 'Ditolak G2' },
+            };
+        });
 }
 
 /** Seluruh truk (terbaru tiba dulu) untuk tabel; dibatasi limit. */
@@ -60,19 +88,20 @@ export function truckRows(state, limit = 40) {
             code: t.code,
             farm: t.farm,
             volume: t.volume,
+            ph: t.lab?.ph != null ? dec(t.lab.ph, 2) : null,
             chip: truckStatus(t),
             bay: t.bay,
             wait: t.unloadAt != null ? Math.round(t.unloadAt - t.arrivedAt) : DONE.has(t.status) ? null : Math.round(state.m - t.arrivedAt),
         }));
 }
 
-const STEPS = ['Antre', 'Uji lab', 'Rilis', 'Bongkar', 'Selesai'];
-const STEP_OF = { queued: 0, sampling: 1, lab_test: 1, released: 2, unloading: 3, stored: 4, rejected: 1 };
+const STEPS = ['Antre', 'Uji lab', 'Keputusan QA', 'Bongkar', 'Selesai'];
+const STEP_OF = { queued: 0, sampling: 1, lab_test: 1, qa_hold: 2, released: 2, unloading: 3, stored: 4, rejected: 1 };
 
 /** Langkah pelacakan satu truk: done/current/todo, bad bila ditahan atau ditolak di langkah itu. */
 export function trackerSteps(t) {
     const at = STEP_OF[t.status] ?? 0;
-    const bad = t.status === 'rejected' || (t.held && !DONE.has(t.status));
+    const bad = t.status === 'rejected' || (t.status === 'qa_hold' && t.qa?.status !== 'confirmed') || (t.held && !DONE.has(t.status));
     return STEPS.map((label, i) => {
         let st = i < at ? 'done' : i === at ? 'current' : 'todo';
         if (t.status === 'stored') st = 'done';
@@ -95,7 +124,9 @@ export function layoutCodes(layout) {
 /** Baris tabel aset untuk tab bay | silo | proc | lab. */
 export function assetRows(state, tab, codes) {
     if (tab === 'lab') {
-        return labPrep(state).map((r) => ({ code: r.code, detail: `${r.farm} · ${fmtL(r.volume)}`, chip: r.chip, extra: `${r.ago} mnt` }));
+        const active = labPrep(state).map((r) => ({ code: r.code, detail: `${r.farm} · ${fmtL(r.volume)}`, chip: r.chip, extra: `${r.ago} mnt` }));
+        const done = labHistory(state).map((r) => ({ code: r.code, detail: `${r.farm} · ${r.ph}`, chip: r.chip, extra: r.doneClock }));
+        return [...active, ...done];
     }
     return (codes[tab] ?? []).map((code) => {
         const a = state.assets[code] ?? { status: 'idle', level: null };

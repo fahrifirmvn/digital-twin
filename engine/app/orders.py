@@ -3,7 +3,7 @@ selesai diisi per SKU dibandingkan dengan kebutuhan susu tiap order. Pemakaian s
 (full cream 100%, rasa 90%) adalah parameter demo. Premix/mixing belum dimodelkan, jadi bahan non-susu
 dianggap selalu tersedia."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from app.plant import SKUS, PlantConfig, Sku
 
@@ -22,6 +22,37 @@ CAUSE_ORDER = ("gate", "qa", "unfinished", "supply")
 def milk_use_pct(cfg: PlantConfig, sku: Sku) -> float:
     """Persen susu per ton produk jadi: rasa (cokelat) memakai angka rasa, selain itu full cream."""
     return cfg.milk_use_flavour_pct if sku.flavor == "chocolate" else cfg.milk_use_full_pct
+
+
+def allocate_specs_to_orders(specs: list, cfg: PlantConfig) -> list:
+    """Alokasikan ulang SKU truk ke kebutuhan susu order manual (`cfg.orders`) sebelum penjadwalan."""
+    if not cfg.orders:
+        return specs
+    rem: dict[str, float] = {}
+    for code, ton in cfg.orders:
+        sku = SKU_BY_CODE[code]
+        use = milk_use_pct(cfg, sku) / 100.0
+        rem[code] = rem.get(code, 0.0) + ton * use / YIELD_FG
+    total_vol = sum(s.volume_ton for s in specs)
+    total_need = sum(rem.values())
+    if total_vol > total_need + 20.0:
+        spare = min(total_vol - total_need, 25.0 * len(rem))
+        for code in rem:
+            rem[code] += spare / len(rem)
+    out = []
+    for s in specs:
+        if rem.get(s.sku_code, 0.0) > 1e-6:
+            rem[s.sku_code] -= s.volume_ton
+            out.append(s)
+            continue
+        need_skus = [c for c, v in rem.items() if v > 1e-6]
+        if need_skus:
+            chosen = max(need_skus, key=lambda c: rem[c])
+            rem[chosen] -= s.volume_ton
+            out.append(replace(s, sku_code=chosen))
+        else:
+            out.append(s)
+    return out
 
 
 @dataclass

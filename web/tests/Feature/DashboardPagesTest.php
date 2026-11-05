@@ -57,7 +57,13 @@ class DashboardPagesTest extends TestCase
     {
         $run = $this->finishedRun(7);
         $this->as(Role::Ppic)->get(route('runs.show', $run))
-            ->assertOk()->assertSee('Prediksi AI')->assertDontSee('DATA SINTETIS')->assertSee('Anomali pabrik');
+            ->assertOk()
+            ->assertSee('Prediksi AI')
+            ->assertDontSee('DATA SINTETIS')
+            ->assertSee('Anomali pabrik')
+            ->assertSee('Preset Uji Cepat PPIC')
+            ->assertSee('Kepatuhan jadwal (%)')
+            ->assertSee('Makespan / durasi selesai (mnt)');
     }
 
     public function test_pages_without_any_run_show_empty_state(): void
@@ -88,6 +94,12 @@ class DashboardPagesTest extends TestCase
 
         $this->as(Role::Ppic)->get('/dashboard')->assertOk()
             ->assertSee('Jadwal hari ini')->assertSee('Digital Twin')->assertSee('Maps')
+            ->assertSee('Siklus Target Teknis &amp; 4 Masalah Utama [Nama Pabrik]', false)
+            ->assertSee('Masalah 1 · Kedatangan &amp; Antrean Truk', false)
+            ->assertSee('Masalah 2 · Rencana Produksi Dinamis')
+            ->assertSee('Masalah 3 · Konfigurasi Mesin &amp; Pipa', false)
+            ->assertSee('Masalah 4 · Traceability &amp; Visibilitas FG', false)
+            ->assertSee('Konfigurasi mesin &amp; rute perpipaan (AT–FL–SKU)', false)
             ->assertSee(route('twin', ['run' => 1]), false)->assertSee(route('maps', ['run' => 1]), false)
             ->assertSee('RT-001');
     }
@@ -154,9 +166,13 @@ class DashboardPagesTest extends TestCase
 
         $r = (new OrderFeasibility)->forRun(1);
         $this->assertSame(1, $r['met']);
+        $this->assertSame(90.0, $r['orders'][0]['milk_ratio_pct']);
+        $this->assertSame(100.0, $r['orders'][1]['milk_ratio_pct']);
+        $this->assertSame(72.0, $r['total_milk_needed_ton']);
         $this->assertNull((new OrderFeasibility)->forRun(2));
         $this->as(Role::Ppic)->get('/dashboard')->assertOk()->assertSee('1 dari 2 order dapat dipenuhi penuh')
-            ->assertSee('Dapat dipenuhi')->assertSee('Tidak penuh')->assertSee('gerbang atau lab (G1/G2) (15.534 L susu)');
+            ->assertSee('Dapat dipenuhi')->assertSee('Tidak penuh')->assertSee('gerbang atau lab (G1/G2) (16.000 L susu)')
+            ->assertSee('Susu berkurang di G1/G2');
     }
 
     public function test_balance_card_converts_ton_to_litre_and_reports_balance_and_kpis(): void
@@ -175,8 +191,8 @@ class DashboardPagesTest extends TestCase
         $this->assertSame(110.0, $b['in_total']);
         $this->assertSame(110.0, $b['out_total']);
         $this->assertTrue($b['balanced']);
-        $this->as(Role::Ppic)->get('/dashboard')->assertOk()->assertSee('Neraca seimbang.')->assertSee('1 ton = 970,87 L')
-            ->assertSee('87.379 L')->assertSee('21.845 L susu tidak diterima')->assertSee('Order terpenuhi penuh')->assertSee('Utilisasi aset');
+        $this->as(Role::Ppic)->get('/dashboard')->assertOk()->assertSee('Neraca seimbang.')->assertSee('1 ton = 1.000 L')
+            ->assertSee('90.000 L')->assertSee('22.500 L susu tidak diterima')->assertSee('Order terpenuhi penuh')->assertSee('Utilisasi aset');
 
         DB::table('sim_events')->where('type', 'volume.balance')->update(['payload' => json_encode(['received_ton' => 100, 'opening_stock_ton' => 0, 'fg_ton' => 50, 'loss_ton' => 1, 'qa_hold_ton' => 0, 'tank_end_ton' => 0, 'in_process_ton' => 0, 'not_received_ton' => 0])]);
         $this->assertFalse((new VolumeBalance)->forRun(1)['balanced']);

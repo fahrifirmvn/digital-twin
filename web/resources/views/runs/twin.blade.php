@@ -3,6 +3,7 @@
 @section('bare', '1')
 @php
     $canSim = auth()->user()->can('simulate');
+    $canQa = auth()->user()->can('review-live-qa');
     $cmd = config('twin.commands');
 @endphp
 
@@ -39,7 +40,7 @@
 @endpush
 
 @section('content')
-<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-op-state-url="{{ route('operation.state') }}" data-op-advance-url="{{ route('operation.advance') }}" data-op-plan-base="{{ url('/campaigns') }}" data-twin-url="{{ route('twin') }}" data-twin-run-url="{{ route('twin') }}?run=" data-can-advance="{{ auth()->user()->can('manage-campaign') ? '1' : '0' }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
+<div id="tw" class="tw tw-twin" data-theme="light" data-mode="pantau" data-replay-url="{{ route('runs.replay', $run) }}" data-op-state-url="{{ route('operation.state') }}" data-op-maintenance-url="{{ route('operation.maintenance') }}" data-op-speed-url="{{ route('operation.speed') }}" data-op-advance-url="{{ route('operation.advance') }}" data-op-plan-base="{{ url('/campaigns') }}" data-twin-url="{{ route('twin') }}" data-twin-run-url="{{ route('twin') }}?run=" data-qa-url="{{ route('operation.qa') }}" data-can-qa="{{ $canQa ? '1' : '0' }}" data-can-advance="{{ auth()->user()->can('manage-campaign') ? '1' : '0' }}" data-run-id="{{ $run->id }}" data-plant="{{ json_encode((object) $run->plant()) }}" data-simulation="{{ $run->isSimulation() ? '1' : '0' }}" data-anomaly="{{ json_encode($run->ai_result['anomaly'] ?? null) }}">
     @include('runs._topbar', ['active' => 'twin', 'daysMenu' => true])
 
     <main id="tw-stage" class="tw-stage" aria-label="Digital twin pabrik">
@@ -61,6 +62,7 @@
                 <div class="tw-stat"><b id="s-waiting">0</b><span>truk di area tunggu</span></div>
                 <div class="tw-stat"><b id="s-wait">-</b><span>rata-rata tunggu (mnt)</span></div>
                 <div class="tw-stat"><b id="s-lab">0</b><span>antrean uji lab</span></div>
+                <div class="tw-stat" id="s-qa-holds-box"><b id="s-qa-holds">0</b><span>truk ditahan QA</span></div>
                 <div class="tw-stat" id="s-holds-box"><b id="s-holds">0</b><span>gate TAHAN</span></div>
                 <div class="tw-stat"><b id="s-inbound">0</b><span>menuju gerbang</span></div>
                 <div class="tw-stat" title="Truk yang plat nomornya terbaca di gerbang"><b id="s-detected">0</b><span>terdeteksi</span></div>
@@ -82,6 +84,13 @@
             <button id="cm-out" class="tw-ico" type="button" data-icon="zoom-out" aria-label="Zoom keluar" title="Zoom keluar"></button>
             <button id="cm-rot" class="tw-ico" type="button" data-icon="rotate-3d" aria-label="Putar tampilan" title="Putar tampilan"></button>
             <button id="cm-reset" class="tw-ico" type="button" data-icon="locate" aria-label="Pusatkan peta" title="Pusatkan peta"></button>
+            <button class="tw-ico" type="button" popovertarget="tw-camera-help" aria-label="Panduan gerakan kamera" title="Panduan gerakan kamera">?</button>
+        </div>
+        <div id="tw-camera-help" class="tw-pop tw-camera-help" popover>
+            <h2 class="tw-pop-title">Jelajahi pabrik 360°</h2>
+            <p>Seret dengan tombol kiri untuk memutar. Klik kanan + seret, atau Shift + seret, untuk menggeser. Gulir untuk zoom.</p>
+            <p>Di layar sentuh: satu jari untuk memutar, dua jari untuk menggeser atau mencubit untuk zoom.</p>
+            <p>Klik aset untuk detail. Tombol Pusatkan peta mengembalikan tampilan awal.</p>
         </div>
 
         <div class="tw-rail">
@@ -112,6 +121,13 @@
                     <h3>Gate mutu</h3>
                     <ul></ul>
                 </section>
+                <section id="tw-sheet-qa" class="tw-qa" aria-label="Riwayat dan tindakan QA" aria-live="polite" hidden>
+                    <h3>Live QA</h3>
+                    <div id="tw-qa-content"></div>
+                </section>
+                <div class="tw-sheet-foot">
+                    <button id="tw-sheet-ask" class="tw-btn block" type="button" data-icon="sparkles" data-icon-size="16"><span>Tanya AI tentang ini</span></button>
+                </div>
             </section>
 
             <section id="tw-sim" class="tw-card tw-sim" data-collapse="twin-sim" aria-label="Pratinjau dampak" hidden>
@@ -185,19 +201,36 @@
             </section>
         </div>
 
-        <div class="tw-dock" role="group" aria-label="Kontrol waktu">
+        <div class="tw-dock tw-timer" role="group" aria-label="Kontrol waktu">
+            <div class="tw-timer-head">
+                <span class="tw-timer-status"><i aria-hidden="true"></i><span id="tw-live-clock" role="status">Memuat waktu operasi</span></span>
+                <span id="tw-timer-day" class="tw-timer-day"></span>
+            </div>
+            <div class="tw-timer-readout">
+                <span class="tw-timer-label">Jam operasi</span>
+                <strong id="clock" class="mono">--:-- WIB</strong>
+                <span id="tw-timer-source" class="tw-timer-label">Waktu dari Engine</span>
+            </div>
+            <div class="tw-timer-progress">
+                <div class="tw-timer-progress-head"><span>Perjalanan hari</span><strong id="tw-timer-percent">0%</strong></div>
+                <div id="tw-timer-meter" class="tw-timer-meter" role="progressbar" aria-label="Progres hari operasi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="tw-timer-fill"></i></div>
+                <div class="tw-timer-progress-foot"><span>06:00 WIB · mulai</span><span id="tw-timer-elapsed">0j 00m berlalu</span></div>
+            </div>
+            <label class="tw-timer-speed" for="speed"><span>Kecepatan</span>
+                <select id="speed" aria-label="Kecepatan">
+                    <option value="2">1x</option>
+                    <option value="10" selected>5x</option>
+                    <option value="40">20x</option>
+                </select>
+            </label>
+            <div class="tw-timer-replay">
             <button id="play" class="tw-play" type="button"></button>
-            <select id="speed" aria-label="Kecepatan">
-                <option value="2">1x</option>
-                <option value="10" selected>5x</option>
-                <option value="40">20x</option>
-            </select>
             <div class="tw-scrub">
                 <input id="scrub" type="range" min="0" max="1440" value="0" aria-label="Waktu">
                 <div id="scrub-marks" class="tw-marks" aria-hidden="true"></div>
             </div>
-            <strong id="clock" class="mono">00:00</strong>
             <button id="day-end" class="tw-btn" type="button" title="Lewati ke akhir hari">Akhir hari</button>
+            </div>
         </div>
 
         <p id="view-msg" class="tw-toast" role="status"></p>

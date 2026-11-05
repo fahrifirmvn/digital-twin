@@ -8,4 +8,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('internal')->group(function () {
     Route::post('/twin-events', [TwinEventController::class, 'store']);
     Route::post('/runs/{run}/result', [RunResultController::class, 'store']);
+    Route::get('/runs/{run}/result', [RunResultController::class, 'show']);
 });

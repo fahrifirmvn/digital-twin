@@ -2,9 +2,11 @@
 import '../../../css/assistant.css';
 import { h } from './dom.js';
 import { hydrateIcons } from './icons.js';
+import { parseAssistantText, splitEntityRefs } from './assistant-format.js';
 import {
-    MAX_MESSAGE, allowReason, buildTurn, canDecide, canSubmit, changeRows, describeWindow, dueNotice, httpError, pushHistory, reasonError, replyNote, restoreChat,
-    modelNote, revealStep, revisePrompt, serializeChat, statusLabel, storageKey, suggestions,
+    MAX_MESSAGE, allowReason, buildTurn, canDecide, canSubmit, changeRows, describeContext, describeWindow, dueNotice,
+    followUpSuggestions, httpError, modelNote, pushHistory, reasonError, replyNote, restoreChat,
+    revealStep, revisePrompt, serializeChat, statusLabel, storageKey, suggestions, toolSummaryBadges,
 } from './assistant-model.js';
 
 const STATUS_TONE = { draft: 'brand', pending: 'warn', approved: 'ok', rejected: 'bad', expired: 'mute', superseded: 'mute' };
@@ -29,6 +31,7 @@ export function initAssistant(root) {
     const send = $('#cp-send');
     const plist = $('#cp-plist');
     const chips = $('#cp-chips');
+    const ctxBox = $('#cp-ctx');
     let conversationId = null;
     let history = [];
     let messages = [];
@@ -36,6 +39,7 @@ export function initAssistant(root) {
     let busy = false;
     let skipReveal = false;
     let controller = null;
+    let uiContext = { selected: null, minute: null, view: null };
     const cards = new Map();
     /** Gulir otomatis hanya bila pengguna memang sedang di dasar log (tidak melompat saat membaca ke atas). */
     const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 80;
@@ -50,15 +54,42 @@ export function initAssistant(root) {
         } catch { /* penyimpanan penuh atau dinonaktifkan: percakapan tetap berjalan */ }
     }
 
-    function renderChips() {
+    function renderContextPill() {
+        if (!ctxBox) return;
+        const label = describeContext(uiContext);
+        if (!label) {
+            ctxBox.hidden = true;
+            ctxBox.replaceChildren();
+            return;
+        }
+        ctxBox.hidden = false;
+        ctxBox.replaceChildren(
+            h('span', { class: 'as-ctx-label' }, label),
+            h('button', { type: 'button', class: 'as-ctx-clear as-secondary', 'aria-label': 'Lepas fokus aset', onclick: () => {
+                uiContext = { ...uiContext, selected: null };
+                renderContextPill();
+            } }, '×'),
+        );
+    }
+
+    function renderChipList(items) {
         chips.replaceChildren();
-        if (messages.length) return;
-        for (const s of suggestions(cfg)) {
+        for (const s of items) {
             chips.append(h('button', { type: 'button', class: 'as-suggest as-secondary', onclick: () => {
                 if (busy) return;
                 input.value = s;
                 form.requestSubmit();
             } }, s));
+        }
+    }
+
+    function renderChips(lastTools = null) {
+        if (!messages.length) {
+            renderChipList(suggestions(cfg));
+        } else if (lastTools) {
+            renderChipList(followUpSuggestions(lastTools, { ...cfg, selected: uiContext.selected }));
+        } else {
+            chips.replaceChildren();
         }
     }
 
@@ -85,6 +116,7 @@ export function initAssistant(root) {
 
     function setOpen(open) {
         drawer.hidden = !open;
+        drawer.dataset.open = open ? '1' : '0';
         openBtn.setAttribute('aria-expanded', String(open));
         if (open) {
             input.focus({ preventScroll: true });
@@ -97,13 +129,24 @@ export function initAssistant(root) {
     }
     openBtn.addEventListener('click', () => setOpen(drawer.hidden));
     $('#cp-close').addEventListener('click', () => setOpen(false));
-    // Zona Proses hanya menyiapkan pertanyaan: kolom diisi, tidak dikirim otomatis.
+    // Zona Proses atau Sheet 3D menyiapkan pertanyaan: kolom diisi dan konteks disinkronkan.
     document.addEventListener('assistant:ask', (e) => {
         const text = String(e.detail?.text ?? '').slice(0, input.maxLength > 0 ? input.maxLength : 600);
+        if (e.detail?.code) {
+            uiContext = { ...uiContext, selected: String(e.detail.code) };
+            renderContextPill();
+        }
         if (!text || busy) return;
         setOpen(true);
         input.value = text;
         input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    document.addEventListener('twin:context', (e) => {
+        const d = e.detail ?? {};
+        if ('selected' in d) uiContext.selected = d.selected || null;
+        if ('minute' in d) uiContext.minute = d.minute;
+        if ('view' in d) uiContext.view = d.view;
+        renderContextPill();
     });
     root.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !drawer.hidden && !document.querySelector('dialog[open]')) {
@@ -132,15 +175,66 @@ export function initAssistant(root) {
     }
     log.addEventListener('click', () => { skipReveal = true; });
 
-    function addMessage(role, text, meta) {
+    function addMessage(role, text, meta, tools = null) {
         const follow = role === 'user' || atBottom();
         const msg = h('div', { class: `as-msg as-${role}` },
-            h('div', { class: 'as-who' }, role === 'user' ? 'Anda' : 'Asisten'),
-            h('div', { class: 'as-text' }, text));
+            h('div', { class: 'as-who' }, role === 'user' ? 'Anda' : 'Asisten'));
+        if (role === 'assistant' && tools?.length) {
+            const badges = toolSummaryBadges(tools);
+            if (badges.length) {
+                msg.append(h('div', { class: 'as-tools', 'aria-label': 'Alat yang dijalankan' },
+                    badges.map((b) => h('span', { class: 'as-tool-badge', dataset: { ok: b.ok ? '1' : '0' } }, b.label))));
+            }
+        }
+        const body = h('div', { class: 'as-text' });
+        if (role === 'assistant') renderAssistantText(body, text);
+        else body.textContent = text;
+        msg.append(body);
         if (meta) msg.append(h('div', { class: 'as-meta' }, meta));
         log.append(msg);
         if (follow) toBottom();
         return msg;
+    }
+
+    function renderEntityNode(code, label) {
+        return h('button', {
+            type: 'button',
+            class: 'as-entity',
+            title: `Fokus ke ${code} di tampilan pabrik`,
+            onclick: () => document.dispatchEvent(new CustomEvent('twin:select', { detail: { code } })),
+        }, label);
+    }
+
+    function renderTextWithEntities(value) {
+        return splitEntityRefs(value).map((tok) => (
+            tok.type === 'entity' ? renderEntityNode(tok.code, tok.text) : document.createTextNode(tok.text)
+        ));
+    }
+
+    function renderAssistantText(el, text) {
+        const inline = (parts) => parts.flatMap(({ type, text: value }) => {
+            if (type === 'text') return renderTextWithEntities(value);
+            if (type === 'code') {
+                const refs = splitEntityRefs(value);
+                if (refs.length === 1 && refs[0].type === 'entity') return [renderEntityNode(refs[0].code, value)];
+                return [h('code', {}, value)];
+            }
+            return [h(type === 'strong' ? 'strong' : 'em', {}, renderTextWithEntities(value))];
+        });
+        el.replaceChildren(...parseAssistantText(text).map((block) => {
+            if (block.type === 'ul' || block.type === 'ol') {
+                return h(block.type, {}, block.items.map((item) => h('li', {}, inline(item))));
+            }
+            const tag = block.type === 'heading' ? `h${block.level + 2}` : 'p';
+            return h(tag, {}, inline(block.content));
+        }));
+    }
+
+    function thinkingMessage() {
+        return h('span', { class: 'as-thinking', role: 'status' },
+            h('span', { class: 'as-thinking-label' }, uiContext.selected ? `Memeriksa data (${uiContext.selected})` : 'Sedang memeriksa data pabrik'),
+            h('span', { class: 'as-thinking-dots', 'aria-hidden': 'true' },
+                h('i'), h('i'), h('i')));
     }
 
     const sourcesText = (sources) => {
@@ -160,14 +254,16 @@ export function initAssistant(root) {
         chips.replaceChildren();
         addMessage('user', text);
         messages.push({ role: 'user', text });
-        const wait = addMessage('assistant', 'Menyusun jawaban dari data...');
+        const wait = addMessage('assistant', '');
+        wait.querySelector('.as-text').replaceChildren(thinkingMessage());
         wait.setAttribute('aria-busy', 'true');
         let shown = null;
+        let lastTools = null;
         try {
             const reply = await call(cfg.turnUrl, {
                 method: 'POST',
                 signal: controller.signal,
-                body: JSON.stringify(buildTurn({ message: text, conversationId, runId: cfg.runId, campaignId: cfg.campaignId, history })),
+                body: JSON.stringify(buildTurn({ message: text, conversationId, runId: cfg.runId, campaignId: cfg.campaignId, history, uiContext })),
             });
             conversationId = reply.conversation_id ?? conversationId;
             if (reply.label) $('#cp-label').textContent = [reply.label, modelNote(reply)].filter(Boolean).join(' | ');
@@ -176,12 +272,21 @@ export function initAssistant(root) {
             const src = ok ? sourcesText(reply.sources) : '';
             wait.classList.toggle('as-error', !ok);
             wait.removeAttribute('aria-busy');
-            await reveal(wait.querySelector('.as-text'), body);
+            const badges = ok ? toolSummaryBadges(reply.tools) : [];
+            if (badges.length) {
+                wait.querySelector('.as-who').after(h('div', { class: 'as-tools', 'aria-label': 'Alat yang dijalankan' },
+                    badges.map((b) => h('span', { class: 'as-tool-badge', dataset: { ok: b.ok ? '1' : '0' } }, b.label))));
+            }
+            const answer = wait.querySelector('.as-text');
+            await reveal(answer, body);
+            renderAssistantText(answer, body);
             if (src) wait.append(h('div', { class: 'as-meta' }, src));
             shown = { role: 'assistant', text: body, meta: src, error: !ok };
+            if (ok) lastTools = reply.tools ?? [];
             history = pushHistory(history, text, reply);
             const drafts = reply.proposals ?? [];
             drafts.forEach(renderProposal);
+            (reply.exports ?? []).forEach(renderExport);
             drafts.filter((p) => p.supersedes && cards.has(p.supersedes)).forEach((p) => refreshCard(p.supersedes));
         } catch (err) {
             const stopped = err.name === 'AbortError';
@@ -200,6 +305,7 @@ export function initAssistant(root) {
             controller = null;
             send.textContent = 'Kirim';
             delete send.dataset.stop;
+            if (lastTools !== null) renderChips(lastTools);
             input.focus({ preventScroll: true });
         }
     });
@@ -287,6 +393,22 @@ export function initAssistant(root) {
         } catch { /* kartu tetap; status benar akan tampil saat daftar dimuat ulang */ }
     }
 
+    function renderExport(item) {
+        const runId = Number(item.run_id);
+        const format = String(item.format ?? '');
+        const url = new URL(String(item.url ?? ''), location.origin);
+        if (!Number.isSafeInteger(runId) || runId < 1 || !['csv', 'pdf', 'docx'].includes(format)
+            || url.origin !== location.origin || !url.pathname.endsWith(`/runs/${runId}/report/${format}`)) return;
+        const label = format.toUpperCase();
+        const card = h('article', { class: 'as-card as-export', 'aria-label': `Persetujuan unduh laporan ${label} run ${runId}` },
+            h('div', { class: 'as-card-head' }, h('strong', {}, `Laporan run #${runId}`), h('span', { class: 'as-chip', dataset: { tone: 'brand' } }, label)),
+            h('p', {}, `Unduhan ${label} belum dimulai. Tekan tombol untuk menyetujui dan mengunduh; tindakan ini dicatat di audit log.`),
+            h('div', { class: 'as-actions' }, h('button', { type: 'button', onclick: () => window.location.assign(url.href) }, `Setujui dan unduh ${label}`)));
+        const follow = atBottom();
+        log.append(card);
+        if (follow) toBottom();
+    }
+
     async function act(p, steps, card) {
         const err = card.querySelector('.as-err');
         err.textContent = '';
@@ -312,15 +434,19 @@ export function initAssistant(root) {
     function renderProposal(p, error = '') {
         $('#cp-empty').hidden = true;
         const rows = changeRows(p.whatif);
+        const assetCode = p.payload?.asset;
         const card = h('article', { class: 'as-card', dataset: { status: p.status }, 'aria-label': `Usulan ${describeWindow(p.payload)}` },
             h('div', { class: 'as-card-head' },
-                h('strong', {}, `Maintenance ${describeWindow(p.payload)}`),
+                h('strong', {}, `Maintenance `, assetCode ? renderEntityNode(assetCode, assetCode) : '', assetCode ? `, ${describeWindow(p.payload).slice(assetCode.length + 2)}` : describeWindow(p.payload)),
                 h('span', { class: 'as-chip', dataset: { tone: STATUS_TONE[p.status] ?? 'mute' } }, statusLabel(p.status))),
             h('p', { class: 'as-meta' }, `Hari ${p.day_no}, versi ${p.version}. ${p.label}`),
-            h('p', {}, p.rationale),
+            h('p', {}, renderTextWithEntities(p.rationale)),
             rows.length
                 ? h('ul', { class: 'as-changes', 'aria-label': 'Dampak what-if terhadap hari tanpa maintenance ini' },
-                    rows.map((r) => h('li', { dataset: { tone: r.tone } }, `${r.label}: ${r.text}, `, h('b', {}, r.verdict))))
+                    rows.map((r) => h('li', { dataset: { tone: r.tone } },
+                        h('div', { class: 'as-change-line' }, `${r.label}: ${r.text}, `, h('b', {}, r.verdict)),
+                        r.pct > 0 ? h('span', { class: 'as-delta-track', 'aria-hidden': 'true' },
+                            h('i', { class: 'as-delta-fill', style: `width:${r.pct}%` })) : null)))
                 : h('p', { class: 'as-meta' }, 'What-if tidak menunjukkan perubahan KPI.'));
         if (p.decision_reason) card.append(h('p', { class: 'as-meta' }, `Alasan keputusan: ${p.decision_reason}`));
         if (cfg.live && p.status === 'approved') {

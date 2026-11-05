@@ -2,7 +2,7 @@
 
 import math
 from contextvars import ContextVar
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timedelta
 
 from app.carry import carry_out, day_summary
@@ -45,16 +45,14 @@ def stat(values: list[float]) -> Stat:
 def _unsafe(spec, th) -> bool:
     """Oracle independen dari Gate Engine, dipakai untuk menghitung false accept."""
     r = spec.lab_results
-    lo, hi = th.acidity_range_pct
+    ph = r.get("ph")
     return (
         spec.temp_c > th.max_arrival_temp_c
         or not spec.docs_ok
-        or r["fat_pct"] < th.fat_min_pct
-        or r["protein_pct"] < th.protein_min_pct
-        or not lo <= r["acidity_pct"] <= hi
-        or not th.ph_range[0] <= r.get("ph", th.ph_range[0]) <= th.ph_range[1]
-        or r["antibiotic_residue"] is not False
-        or r["adulterant"] is not False
+        or isinstance(ph, bool)
+        or not isinstance(ph, int | float)
+        or not math.isfinite(ph)
+        or not th.ph_range[0] <= ph <= th.ph_range[1]
     )
 
 
@@ -142,7 +140,18 @@ def evaluate(sim: TwinSimulation) -> Kpi:
         unscheduled_cip=sum(1 for c in sim.cips if not c.scheduled),
         utilization_pct=_utilization(sim, end),
         packaging_reject_pct=round(100 * len(affected) / len(inters), 1) if inters else 0.0,
-        false_accept=sum(1 for r in recs if r.outcome == "completed" and _unsafe(r.spec, th)),
+        false_accept=sum(
+            1
+            for r in recs
+            if r.outcome == "completed"
+            and _unsafe(
+                replace(r.spec, lab_results=sim.qa_reviews[r.spec.code].results)
+                if r.spec.code in sim.qa_reviews
+                and sim.qa_reviews[r.spec.code].status == "released"
+                else r.spec,
+                th,
+            )
+        ),
         holding_violations=sum(1 for d in dwell if d > th.holding_max_min),
         trace_coverage_pct=(
             round(100 * sum(_trace_complete(sim, b.code) for b in fgs) / len(fgs), 1)

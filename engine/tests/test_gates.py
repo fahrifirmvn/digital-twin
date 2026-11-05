@@ -11,13 +11,7 @@ GARBAGE = [None, float("nan"), float("inf"), "4.0", True, False, [], {}]
 
 
 def lab_ok() -> dict:
-    return {
-        "fat_pct": 3.7,
-        "protein_pct": 3.1,
-        "acidity_pct": 0.15,
-        "antibiotic_residue": False,
-        "adulterant": False,
-    }
+    return {"ph": 6.7}
 
 
 def test_g1_pass_and_boundaries():
@@ -34,22 +28,18 @@ def test_g1_fails_closed_on_garbage(bad):
 
 def test_g2_pass_and_each_failure():
     assert gates.g2_lab_result(lab_ok(), TH).passed
-    for key, value in [
-        ("fat_pct", 2.9),
-        ("protein_pct", 2.7),
-        ("acidity_pct", 0.2),
-        ("acidity_pct", 0.1),
-        ("antibiotic_residue", True),
-        ("adulterant", True),
-    ]:
+    for key, value in [("ph", 6.4), ("ph", 6.9)]:
         assert not gates.g2_lab_result({**lab_ok(), key: value}, TH).passed, (key, value)
 
 
-def test_g2_ph_range_and_legacy_results_without_ph():
-    assert gates.g2_lab_result({**lab_ok(), "ph": 6.7}, TH).passed
-    assert gates.g2_lab_result(lab_ok(), TH).passed  # hasil lama tanpa pH
-    for bad in (6.4, 6.9):
-        assert not gates.g2_lab_result({**lab_ok(), "ph": bad}, TH).passed
+def test_g2_ph_boundaries_and_removed_parameters_do_not_affect_decision():
+    for ph in TH.ph_range:
+        assert gates.g2_lab_result({"ph": ph}, TH).passed
+    legacy = dict(
+        fat_pct=0, protein_pct=0, acidity_pct=100, antibiotic_residue=True, adulterant=True
+    )
+    assert gates.g2_lab_result({**legacy, "ph": 6.7}, TH).passed
+    assert not gates.g2_lab_result(legacy, TH).passed
 
 
 def test_g2_missing_or_empty_is_hold():
@@ -61,9 +51,9 @@ def test_g2_missing_or_empty_is_hold():
         assert not gates.g2_lab_result(partial, TH).passed, key
 
 
-def test_g2_flags_must_be_explicit_false():
-    for bad in (None, 0, "false", "no"):
-        assert not gates.g2_lab_result({**lab_ok(), "antibiotic_residue": bad}, TH).passed
+@pytest.mark.parametrize("bad", GARBAGE)
+def test_g2_ph_must_be_finite_numeric(bad):
+    assert not gates.g2_lab_result({"ph": bad}, TH).passed
 
 
 def test_g2_fuzz_never_passes_against_independent_oracle():
@@ -73,24 +63,11 @@ def test_g2_fuzz_never_passes_against_independent_oracle():
         def num(x):
             return isinstance(x, float) and math.isfinite(x)
 
-        return (
-            num(r.get("fat_pct"))
-            and r["fat_pct"] >= 3.0
-            and num(r.get("protein_pct"))
-            and r["protein_pct"] >= 2.8
-            and num(r.get("acidity_pct"))
-            and 0.12 <= r["acidity_pct"] <= 0.18
-            and r.get("antibiotic_residue") is False
-            and r.get("adulterant") is False
-        )
+        return num(r.get("ph")) and 6.55 <= r["ph"] <= 6.85
 
     for _ in range(5000):
         r = {
-            "fat_pct": rng.choice([rng.uniform(2, 5), *GARBAGE]),
-            "protein_pct": rng.choice([rng.uniform(2, 4), *GARBAGE]),
-            "acidity_pct": rng.choice([rng.uniform(0.1, 0.22), *GARBAGE]),
-            "antibiotic_residue": rng.choice([False, True, None, 0, "x"]),
-            "adulterant": rng.choice([False, True, None, 0, "x"]),
+            "ph": rng.choice([rng.uniform(5, 8), *GARBAGE]),
         }
         assert gates.g2_lab_result(r, TH).passed == oracle(r), r
 

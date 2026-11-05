@@ -55,6 +55,251 @@
         }
       }
     },
+    "/v1/runs/{run_id}/maintenance": {
+      "post": {
+        "summary": "Live Maintenance",
+        "operationId": "live_maintenance_v1_runs__run_id__maintenance_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveMaintenanceIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Live Maintenance V1 Runs  Run Id  Maintenance Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/speed": {
+      "post": {
+        "summary": "Live Speed",
+        "operationId": "live_speed_v1_runs__run_id__speed_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveSpeedIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Live Speed V1 Runs  Run Id  Speed Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/qa": {
+      "post": {
+        "summary": "Live Qa",
+        "operationId": "live_qa_v1_runs__run_id__qa_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveQaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Live Qa V1 Runs  Run Id  Qa Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/live": {
+      "get": {
+        "summary": "Live State",
+        "operationId": "live_state_v1_runs__run_id__live_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -1,
+              "default": -1,
+              "title": "After"
+            }
+          },
+          {
+            "name": "x-internal-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Internal-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Live State V1 Runs  Run Id  Live Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/predictor/metrics": {
       "get": {
         "summary": "Get Predictor Metrics",
@@ -915,6 +1160,29 @@
             "type": "array",
             "maxItems": 10,
             "title": "Open Proposals"
+          },
+          "service_limit": {
+            "type": "integer",
+            "maximum": 999.0,
+            "minimum": 1.0,
+            "title": "Service Limit",
+            "default": 10
+          },
+          "tank_service": {
+            "items": {
+              "$ref": "#/components/schemas/TankService"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Tank Service"
+          },
+          "tanks_due": {
+            "items": {
+              "$ref": "#/components/schemas/TankService"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Tanks Due"
           }
         },
         "additionalProperties": false,
@@ -1126,6 +1394,17 @@
       },
       "CommandApplied": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "type": {
             "type": "string",
             "const": "command.applied",
@@ -1280,11 +1559,21 @@
           "actor",
           "reason"
         ],
-        "title": "CommandApplied",
-        "description": "Perintah pengguna (mode Simulasi) mulai berlaku. Dicatat di aliran event agar replay dan audit\nmemuat siapa, kapan, apa, dan alasannya."
+        "title": "CommandApplied"
       },
       "CommandIn": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "minute": {
             "type": "number",
             "exclusiveMaximum": 1440.0,
@@ -1952,15 +2241,36 @@
             "title": "Duration Min"
           },
           "fat_pct": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Fat Pct"
           },
           "protein_pct": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Protein Pct"
           },
           "acidity_pct": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Acidity Pct"
           },
           "ph": {
@@ -1976,11 +2286,25 @@
             "description": "Kosong bila hasil tidak memuat pH"
           },
           "antibiotic_residue": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Antibiotic Residue"
           },
           "adulterant": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Adulterant"
           },
           "test_type": {
@@ -2014,11 +2338,6 @@
           "analyst",
           "started_min",
           "duration_min",
-          "fat_pct",
-          "protein_pct",
-          "acidity_pct",
-          "antibiotic_residue",
-          "adulterant",
           "test_type",
           "g2"
         ],
@@ -2061,6 +2380,151 @@
         ],
         "title": "LineChangeover",
         "description": "Filling line berganti SKU: tidak mengisi selama `minutes`."
+      },
+      "LiveMaintenanceIn": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9-]{36}$",
+            "title": "Request Id"
+          },
+          "asset": {
+            "type": "string",
+            "pattern": "^TK-(RAW|STO)-\\d{1,2}$",
+            "title": "Asset"
+          },
+          "start_min": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMaximum": 1440.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Min"
+          },
+          "duration_min": {
+            "type": "number",
+            "maximum": 720.0,
+            "minimum": 15.0,
+            "title": "Duration Min"
+          },
+          "actor": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Actor"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 5,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "asset",
+          "duration_min",
+          "actor",
+          "reason"
+        ],
+        "title": "LiveMaintenanceIn"
+      },
+      "LiveQaIn": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F-]{36}$",
+            "title": "Request Id"
+          },
+          "truck": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}-\\d{3,}$",
+            "title": "Truck"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "retest",
+              "release",
+              "reject"
+            ],
+            "title": "Action"
+          },
+          "actor": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Actor"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 5,
+            "title": "Reason"
+          },
+          "results": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QaResultsIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "disposition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "return_supplier",
+                  "controlled_disposal"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disposition"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "truck",
+          "action",
+          "actor",
+          "reason"
+        ],
+        "title": "LiveQaIn"
+      },
+      "LiveSpeedIn": {
+        "properties": {
+          "speed": {
+            "type": "integer",
+            "enum": [
+              1,
+              5,
+              20,
+              60
+            ],
+            "title": "Speed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speed"
+        ],
+        "title": "LiveSpeedIn"
       },
       "MaintenanceEntry": {
         "properties": {
@@ -2121,6 +2585,47 @@
           "duration_min"
         ],
         "title": "MaintenanceIn"
+      },
+      "MaintenanceStatus": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "maintenance.status",
+            "title": "Type",
+            "default": "maintenance.status"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "asset": {
+            "type": "string",
+            "title": "Asset"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting_safe",
+              "maintenance",
+              "completed"
+            ],
+            "title": "Status"
+          },
+          "duration_min": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "asset",
+          "status",
+          "duration_min"
+        ],
+        "title": "MaintenanceStatus"
       },
       "MonteCarloOut": {
         "properties": {
@@ -2969,6 +3474,194 @@
         "title": "PlantRoutes",
         "description": "Peta rute sterilizer -> aseptic -> line dan izin SKU; dikirim sekali di awal run."
       },
+      "QaFailure": {
+        "properties": {
+          "parameter": {
+            "type": "string",
+            "title": "Parameter"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "parameter",
+          "reason"
+        ],
+        "title": "QaFailure"
+      },
+      "QaResultsIn": {
+        "properties": {
+          "ph": {
+            "type": "number",
+            "maximum": 14.0,
+            "minimum": 0.0,
+            "title": "Ph"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ph"
+        ],
+        "title": "QaResultsIn"
+      },
+      "QaReview": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "qa.review",
+            "title": "Type",
+            "default": "qa.review"
+          },
+          "tanker_code": {
+            "type": "string",
+            "title": "Tanker Code"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "held",
+              "testing",
+              "confirmed",
+              "released",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "results": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Results"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/QaFailure"
+            },
+            "type": "array",
+            "title": "Failures"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "incomplete",
+              "quality",
+              "hazard",
+              "pass"
+            ],
+            "title": "Category"
+          },
+          "disposition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "return_supplier",
+                  "controlled_disposal",
+                  "unresolved_hold"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disposition"
+          },
+          "expires_min": {
+            "type": "number",
+            "title": "Expires Min"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tanker_code",
+          "status",
+          "reason",
+          "actor",
+          "failures",
+          "category",
+          "expires_min"
+        ],
+        "title": "QaReview"
+      },
       "ReplanOut": {
         "properties": {
           "version": {
@@ -3090,6 +3783,11 @@
       },
       "RunRequest": {
         "properties": {
+          "live": {
+            "type": "boolean",
+            "title": "Live",
+            "default": false
+          },
           "run_id": {
             "type": "integer",
             "minimum": 1.0,
@@ -3103,7 +3801,7 @@
           },
           "volume_ton": {
             "type": "number",
-            "maximum": 600.0,
+            "maximum": 1000.0,
             "minimum": 50.0,
             "title": "Volume Ton",
             "default": 320.0
@@ -3650,6 +4348,51 @@
         ],
         "title": "SterilizerFouling"
       },
+      "TankService": {
+        "properties": {
+          "asset": {
+            "type": "string",
+            "pattern": "^TK-(RAW|STO)-\\d{1,2}$",
+            "title": "Asset"
+          },
+          "cycles": {
+            "type": "integer",
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Cycles"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 999.0,
+            "minimum": 1.0,
+            "title": "Limit"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "near",
+              "due"
+            ],
+            "title": "State"
+          },
+          "planned": {
+            "type": "boolean",
+            "title": "Planned",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset",
+          "cycles",
+          "limit",
+          "state"
+        ],
+        "title": "TankService",
+        "description": "Meter servis satu tangki: siklus CIP sejak maintenance terakhir terhadap batas servis (ambang demo)."
+      },
       "TankerOut": {
         "properties": {
           "code": {
@@ -3844,6 +4587,7 @@
           "queued",
           "sampling",
           "lab_test",
+          "qa_hold",
           "released",
           "rejected",
           "unloading",
@@ -4211,6 +4955,16 @@
             "type": "array",
             "maxItems": 20,
             "title": "History"
+          },
+          "ui_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UiContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -4304,6 +5058,9 @@
                 "$ref": "#/components/schemas/LabResult"
               },
               {
+                "$ref": "#/components/schemas/QaReview"
+              },
+              {
                 "$ref": "#/components/schemas/GateDecided"
               },
               {
@@ -4311,6 +5068,9 @@
               },
               {
                 "$ref": "#/components/schemas/CommandApplied"
+              },
+              {
+                "$ref": "#/components/schemas/MaintenanceStatus"
               }
             ],
             "title": "Payload",
@@ -4329,8 +5089,10 @@
                 "gate.decided": "#/components/schemas/GateDecided",
                 "lab.result": "#/components/schemas/LabResult",
                 "line.changeover": "#/components/schemas/LineChangeover",
+                "maintenance.status": "#/components/schemas/MaintenanceStatus",
                 "orders.evaluated": "#/components/schemas/OrdersEvaluated",
                 "plant.routes": "#/components/schemas/PlantRoutes",
+                "qa.review": "#/components/schemas/QaReview",
                 "schedule.replanned": "#/components/schemas/ScheduleReplanned",
                 "sim.clock": "#/components/schemas/SimClock",
                 "tanker.status_changed": "#/components/schemas/TankerStatusChanged",
@@ -4354,6 +5116,53 @@
         ],
         "title": "TwinEvent",
         "description": "Amplop yang disiarkan Engine lalu dirilis Laravel ke browser lewat Reverb."
+      },
+      "UiContext": {
+        "properties": {
+          "selected_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9:_-]{2,32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Code"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2880.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "recv",
+                  "process"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "View"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UiContext"
       },
       "UnloadFinished": {
         "properties": {

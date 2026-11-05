@@ -181,8 +181,19 @@
     },
     "CommandApplied": {
       "additionalProperties": false,
-      "description": "Perintah pengguna (mode Simulasi) mulai berlaku. Dicatat di aliran event agar replay dan audit\nmemuat siapa, kapan, apa, dan alasannya.",
       "properties": {
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Id"
+        },
         "type": {
           "const": "command.applied",
           "default": "command.applied",
@@ -684,16 +695,40 @@
           "type": "number"
         },
         "fat_pct": {
-          "title": "Fat Pct",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fat Pct"
         },
         "protein_pct": {
-          "title": "Protein Pct",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Protein Pct"
         },
         "acidity_pct": {
-          "title": "Acidity Pct",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Acidity Pct"
         },
         "ph": {
           "anyOf": [
@@ -709,12 +744,28 @@
           "title": "Ph"
         },
         "antibiotic_residue": {
-          "title": "Antibiotic Residue",
-          "type": "boolean"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Antibiotic Residue"
         },
         "adulterant": {
-          "title": "Adulterant",
-          "type": "boolean"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Adulterant"
         },
         "test_type": {
           "title": "Test Type",
@@ -746,11 +797,6 @@
         "analyst",
         "started_min",
         "duration_min",
-        "fat_pct",
-        "protein_pct",
-        "acidity_pct",
-        "antibiotic_residue",
-        "adulterant",
         "test_type",
         "g2"
       ],
@@ -792,6 +838,47 @@
         "minutes"
       ],
       "title": "LineChangeover",
+      "type": "object"
+    },
+    "MaintenanceStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "maintenance.status",
+          "default": "maintenance.status",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "asset": {
+          "title": "Asset",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "waiting_safe",
+            "maintenance",
+            "completed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "duration_min": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "request_id",
+        "asset",
+        "status",
+        "duration_min"
+      ],
+      "title": "MaintenanceStatus",
       "type": "object"
     },
     "OrderCause": {
@@ -1021,6 +1108,184 @@
       "title": "PlantRoutes",
       "type": "object"
     },
+    "QaFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "parameter",
+        "reason"
+      ],
+      "title": "QaFailure",
+      "type": "object"
+    },
+    "QaReview": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "qa.review",
+          "default": "qa.review",
+          "title": "Type",
+          "type": "string"
+        },
+        "tanker_code": {
+          "title": "Tanker Code",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "held",
+            "testing",
+            "confirmed",
+            "released",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "actor": {
+          "title": "Actor",
+          "type": "string"
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Id"
+        },
+        "results": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Results"
+        },
+        "failures": {
+          "items": {
+            "$ref": "#/$defs/QaFailure"
+          },
+          "title": "Failures",
+          "type": "array"
+        },
+        "category": {
+          "enum": [
+            "incomplete",
+            "quality",
+            "hazard",
+            "pass"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "disposition": {
+          "anyOf": [
+            {
+              "enum": [
+                "return_supplier",
+                "controlled_disposal",
+                "unresolved_hold"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Disposition"
+        },
+        "expires_min": {
+          "title": "Expires Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "tanker_code",
+        "status",
+        "reason",
+        "actor",
+        "failures",
+        "category",
+        "expires_min"
+      ],
+      "title": "QaReview",
+      "type": "object"
+    },
     "RouteBlock": {
       "additionalProperties": false,
       "properties": {
@@ -1230,6 +1495,7 @@
         "queued",
         "sampling",
         "lab_test",
+        "qa_hold",
         "released",
         "rejected",
         "unloading",
@@ -1548,8 +1814,10 @@
           "gate.decided": "#/$defs/GateDecided",
           "lab.result": "#/$defs/LabResult",
           "line.changeover": "#/$defs/LineChangeover",
+          "maintenance.status": "#/$defs/MaintenanceStatus",
           "orders.evaluated": "#/$defs/OrdersEvaluated",
           "plant.routes": "#/$defs/PlantRoutes",
+          "qa.review": "#/$defs/QaReview",
           "schedule.replanned": "#/$defs/ScheduleReplanned",
           "sim.clock": "#/$defs/SimClock",
           "tanker.status_changed": "#/$defs/TankerStatusChanged",
@@ -1617,6 +1885,9 @@
           "$ref": "#/$defs/LabResult"
         },
         {
+          "$ref": "#/$defs/QaReview"
+        },
+        {
           "$ref": "#/$defs/GateDecided"
         },
         {
@@ -1624,6 +1895,9 @@
         },
         {
           "$ref": "#/$defs/CommandApplied"
+        },
+        {
+          "$ref": "#/$defs/MaintenanceStatus"
         }
       ],
       "title": "Payload"

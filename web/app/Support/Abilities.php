@@ -27,6 +27,7 @@ final class Abilities
             'propose-schedule' => [Role::Ppic],
             'approve-schedule' => [Role::Ppic],
             'decide-quality-gate' => [Role::Qa],
+            'review-live-qa' => [Role::Qa, Role::Admin],
             'propose-threshold' => [Role::Qa],
             'change-threshold' => [Role::Admin],
             'check-in-truck' => [Role::Operator, Role::Driver],

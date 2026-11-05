@@ -11,6 +11,7 @@ from app.agent import Agent, ChatTurn, Policy, RateLimiter
 from app.agent.proposals import PROPOSAL_TOOLS
 from app.agent.registry import ToolEnv, execute
 from app.agent.tools import TOOLS
+from app.agent_api import RunManagerSource
 from app.config import Settings, settings
 from app.contracts.result import RunResult
 from app.llm import (
@@ -26,6 +27,7 @@ from app.llm import (
 )
 from app.llm.gemini import GeminiProvider, gemini_schema
 from app.main import app
+from app.runs import RunManager
 
 SAMPLE = json.loads(
     (Path(__file__).parents[2] / "contracts" / "run-result.sample.json").read_text()
@@ -38,6 +40,23 @@ H = {"X-Internal-Token": settings.internal_token}
 class Source:
     def get_result(self, run_id: int) -> RunResult | None:
         return RESULT if run_id == RID else None
+
+
+def test_run_source_falls_back_to_persisted_laravel_result():
+    seen = []
+
+    def response(request):
+        seen.append(request)
+        return httpx.Response(200, json=SAMPLE)
+
+    client = httpx.Client(transport=httpx.MockTransport(response))
+    source = RunManagerSource(RunManager(), "http://web.test", "internal-secret", client)
+    assert source.get_result(RID) == RESULT
+    assert source.get_result(RID) == RESULT
+    assert len(seen) == 1
+    assert seen[0].url.path == f"/internal/runs/{RID}/result"
+    assert seen[0].headers["x-internal-token"] == "internal-secret"
+    source.close()
 
 
 def call(name: str, **args) -> LLMResponse:
@@ -220,6 +239,16 @@ def test_rate_limiter_sliding_window():
     assert lim.allow("u")
 
 
+def test_explain_truck_includes_counterfactual_margins():
+    res = run_tool("explain", {"kind": "truck", "code": "RT-001"})
+    assert res.ok
+    data = json.loads(res.text)["data"]
+    assert "holding_dwell_min" in data
+    assert "holding_slack_min" in data
+    assert "changeover_saved_min" in data
+    assert data["holding_slack_min"] is not None
+
+
 # --- orkestrator -----------------------------------------------------------------------------
 
 
@@ -244,6 +273,30 @@ def test_grounded_answer_with_audit_entry_per_tool_call():
     assert a.at.endswith("+00:00")
     # LLM hanya diberi alat sesuai peran.
     assert {s.name for s in bot.provider.calls[0][1]} == set(TOOLS) | set(PROPOSAL_TOOLS)
+
+
+def test_report_summary_is_sourced_and_export_only_prepares_an_approval_request():
+    env = ToolEnv(Source(), RID)
+    summary = execute(TOOLS, "summarize_report", {}, "ppic", "SIMULASI", env)
+    assert summary.ok and json.loads(summary.text)["data"]["run_id"] == RID
+    export = execute(TOOLS, "prepare_report_export", {"format": "pdf"}, "ppic", "SIMULASI", env)
+    assert export.ok
+    assert env.exports == [{"run_id": RID, "format": "pdf"}]
+    assert json.loads(export.text)["data"]["approval_required"] is True
+    assert (
+        execute(TOOLS, "prepare_report_export", {"format": "exe"}, "ppic", "SIMULASI", env).error
+        == "invalid_arguments"
+    )
+    reply = turn(
+        agent(
+            [
+                call("prepare_report_export", format="csv"),
+                say("Saya siapkan laporan untuk tombol unduh."),
+            ]
+        ),
+        "Ekspor CSV",
+    )
+    assert reply.exports == [{"run_id": RID, "format": "csv"}]
 
 
 def test_tool_output_is_untrusted_and_injection_cannot_trigger_forbidden_tool():
@@ -361,3 +414,21 @@ def test_api_unavailable_without_llm_config():
         app.state.agent = None
         data = client.post("/v1/agent/turn", json=BODY, headers=H).json()
         assert data["status"] == "unavailable" and data["error"]["code"] == "llm_unavailable"
+
+
+def test_api_accepts_ui_context_and_grounds_it():
+    with TestClient(app) as client:
+        bot = agent([say("Fokus pada TK-RAW-1 di menit 120.")])
+        app.state.agent = bot
+        res = client.post(
+            "/v1/agent/turn",
+            json={
+                **BODY,
+                "ui_context": {"selected_code": "TK-RAW-1", "minute": 120, "view": "recv"},
+            },
+            headers=H,
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
+        sys_msg = bot.provider.calls[0][0][0].content
+        assert "TK-RAW-1" in sys_msg and "120" in sys_msg

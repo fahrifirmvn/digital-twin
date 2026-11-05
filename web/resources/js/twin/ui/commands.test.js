@@ -29,8 +29,8 @@ test('commandLog: hanya event perintah, dengan jam dan alasan', () => {
     ]);
     const log = commandLog(model);
     assert.deepEqual(log.map((l) => [l.id, l.at, l.label, l.actor]), [
-        [1, '13:00', 'Sterilizer mati', 'PPIC: Dewi'],
-        [2, '16:00', 'Truk dadakan', 'Observer/Juri: Budi'],
+        [1, '13:00 WIB', 'Sterilizer mati', 'PPIC: Dewi'],
+        [2, '16:00 WIB', 'Truk dadakan', 'Observer/Juri: Budi'],
     ]);
     assert.equal(log[0].reason, 'sterilizer diuji');
     assert.equal(log[0].m, 420);
@@ -40,8 +40,8 @@ test('perintah intervensi: ringkasan, penanda, dan teks diblokir', () => {
     const c = (over) => ({ type: 'command.applied', command_id: 1, actor: 'PPIC', reason: 'uji', truck: 'RT-002', ...over });
     assert.equal(commandSummary(c({ kind: 'plan_approve' })), 'Setujui usulan RT-002');
     assert.equal(commandSummary(c({ kind: 'plan_reject' })), 'Tolak usulan RT-002');
-    assert.equal(commandSummary(c({ kind: 'plan_change', bay: 'BAY-2', start_min: 500 })), 'Ubah usulan RT-002: BAY-2, bongkar 14:20');
-    assert.equal(commandSummary(c({ kind: 'plan_change', start_min: 500 })), 'Ubah usulan RT-002: bongkar 14:20');
+    assert.equal(commandSummary(c({ kind: 'plan_change', bay: 'BAY-2', start_min: 500 })), 'Ubah usulan RT-002: BAY-2, bongkar 14:20 WIB');
+    assert.equal(commandSummary(c({ kind: 'plan_change', start_min: 500 })), 'Ubah usulan RT-002: bongkar 14:20 WIB');
     assert.equal(commandSummary(c({ kind: 'truck_hold', duration_min: 60 })), 'Tahan RT-002 di gerbang 1 jam');
     assert.equal(commandSummary(c({ kind: 'truck_release' })), 'Lepas truk RT-002');
     assert.ok(isIntervention('truck_hold') && !isIntervention('ster_down'));

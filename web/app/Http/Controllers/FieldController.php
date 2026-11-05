@@ -21,7 +21,12 @@ class FieldController extends Controller
 
     public function manifest(Request $request, FieldTasks $tasks): JsonResponse
     {
-        $run = DB::table('sim_runs')->where('status', 'finished')->orderByDesc('id')->first(['id', 'sim_start', 'sim_end']);
+        $run = DB::table('sim_runs')
+            ->whereIn('status', ['running', 'finished'])
+            ->whereExists(fn ($q) => $q->from('tankers')->whereColumn('tankers.run_id', 'sim_runs.id'))
+            ->orderByRaw("case when status = 'running' then 0 else 1 end")
+            ->orderByDesc('id')
+            ->first(['id', 'status', 'sim_start', 'sim_end']);
         if ($run === null) {
             return response()->json(['run' => null, 'trucks' => [], 'tasks' => [], 'confirmed' => []]);
         }
@@ -32,7 +37,7 @@ class FieldController extends Controller
             ->get(['tankers.code', 'farms.code as farm_code', 'tankers.eta_p50 as eta']);
 
         return response()->json([
-            'run' => ['id' => $run->id, 'sim_start' => $run->sim_start, 'sim_end' => $run->sim_end],
+            'run' => ['id' => $run->id, 'status' => $run->status, 'sim_start' => $run->sim_start, 'sim_end' => $run->sim_end],
             'trucks' => $trucks,
             'tasks' => $request->user()->can('confirm-handoff') ? $tasks->forRun($run->id) : [],
             'confirmed' => DB::table('field_confirmations')->where('run_id', $run->id)
@@ -66,8 +71,8 @@ class FieldController extends Controller
         if ($item['kind'] === 'handoff' && Gate::forUser($user)->denies('confirm-handoff')) {
             return 'forbidden';
         }
-        $finished = DB::table('sim_runs')->where('id', $item['run_id'])->where('status', 'finished')->exists();
-        $known = $finished && ($item['kind'] === 'check_in'
+        $activeOrFinished = DB::table('sim_runs')->where('id', $item['run_id'])->whereIn('status', ['running', 'finished'])->exists();
+        $known = $activeOrFinished && ($item['kind'] === 'check_in'
             ? DB::table('tankers')->where('run_id', $item['run_id'])->where('code', $item['subject'])->exists()
             : in_array($item['subject'], array_column($tasks->forRun($item['run_id']), 'key'), true));
         if (! $known) {

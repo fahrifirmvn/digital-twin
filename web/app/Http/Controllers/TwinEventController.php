@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Events\TwinEventBroadcast;
+use App\Services\RunResultStore;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class TwinEventController extends Controller
 {
-    public function store(Request $request): Response
+    public function store(Request $request, RunResultStore $store): Response
     {
         $request->validate([
             'events' => ['required', 'array', 'max:500'],
@@ -21,6 +22,7 @@ class TwinEventController extends Controller
         ]);
 
         foreach ($request->input('events') as $event) {
+            $store->syncMaintenanceEvents($event['run_id'], [$event]);
             TwinEventBroadcast::dispatch($event);
         }
 

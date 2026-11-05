@@ -49,7 +49,48 @@ class RunController extends Controller
         $finished = $run->status === 'finished';
         $kpi = $finished ? json_decode(DB::table('scenarios')->where('id', $run->scenario_id)->value('kpi_result') ?? 'null', true) : null;
 
-        return view('home', ['run' => $run, 'kpi' => $kpi, 'schedule' => $finished ? $schedule->forRun($run->id) : [], 'holding' => $finished ? $holding->forRun($run->id) : [], 'orders' => $finished ? $orders->forRun($run->id) : null, 'balance' => $finished ? $balance->forRun($run->id) : null, 'wear' => $finished ? $wear->forRun($run->id) : null]);
+        return view('home', [
+            'run' => $run,
+            'kpi' => $kpi,
+            'schedule' => $finished ? $schedule->forRun($run->id) : [],
+            'holding' => $finished ? $holding->forRun($run->id) : [],
+            'orders' => $finished ? $orders->forRun($run->id) : null,
+            'balance' => $finished ? $balance->forRun($run->id) : null,
+            'wear' => $finished ? $wear->forRun($run->id) : null,
+            'routes' => $finished ? $this->plantRoutesForRun($run->id) : null,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function plantRoutesForRun(int $runId): ?array
+    {
+        $row = DB::table('sim_events')->where('run_id', $runId)->where('type', 'plant.routes')
+            ->orderByDesc('seq')->value('payload');
+        $p = $row ? json_decode($row, true) : null;
+        if (! is_array($p) || ! isset($p['routes'])) {
+            return null;
+        }
+        $routes = $p['routes'];
+        $usableCount = count(array_filter($routes, fn ($r) => $r['usable'] ?? false));
+        $cipTotal = DB::table('cip_events')->where('run_id', $runId)->count();
+        $cipLine = DB::table('cip_events')->where('run_id', $runId)->where('asset_code', 'like', 'LINE-%')->count();
+        $cipTank = DB::table('cip_events')->where('run_id', $runId)
+            ->where(function ($q) {
+                $q->where('asset_code', 'like', 'TK-%')->orWhere('asset_code', 'like', 'ASEP-%');
+            })->count();
+
+        return [
+            'policy' => $p['policy'] ?? 'free',
+            'skus' => $p['skus'] ?? [],
+            'routes' => $routes,
+            'usable_count' => $usableCount,
+            'total_count' => count($routes),
+            'cip_total' => $cipTotal,
+            'cip_line' => $cipLine,
+            'cip_tank' => $cipTank,
+        ];
     }
 
     public function twinCurrent(Request $request)
@@ -355,17 +396,31 @@ class RunController extends Controller
             ->all();
     }
 
-    public function replay(SimRun $run): JsonResponse
+    public function replay(Request $request, SimRun $run, EngineClient $engine): JsonResponse
     {
+        $query = $request->validate(['after' => ['sometimes', 'integer', 'min:-1']]);
+        $after = (int) ($query['after'] ?? -1);
         $finished = $run->status === 'finished';
         $base = $run->isSimulation() ? $this->baseline($run) : null;
+        $live = null;
+        $liveEvents = [];
+        if (! $finished && ($run->config_snapshot['live'] ?? false)) {
+            try {
+                $snapshot = $engine->live($run->id, $after);
+            } catch (RuntimeException $e) {
+                return response()->json(['message' => $e->getMessage()], 503);
+            }
+            $live = array_diff_key($snapshot, ['events' => true]);
+            $liveEvents = array_map(fn ($e) => ['seq' => $e['seq'], 't' => $e['sim_time'], 'p' => $e['payload']], $snapshot['events']);
+        }
 
         return response()->json([
             'run' => ['id' => $run->id, 'status' => $run->status, 'error' => $run->error, 'kind' => $run->kind, 'fork_minute' => $run->fork_minute, 'parent_id' => $run->parent_run_id],
             'kpi' => $this->kpiOf($run),
             'baseline' => $base ? ['id' => $base->id, 'kpi' => $this->kpiOf($base)] : null,
+            'live' => $live,
             'plans' => $finished ? $this->planVersions($run) : [],
-            'events' => ! $finished ? [] : DB::table('sim_events')->where('run_id', $run->id)->orderBy('seq')
+            'events' => ! $finished ? $liveEvents : DB::table('sim_events')->where('run_id', $run->id)->where('seq', '>', $after)->orderBy('seq')
                 ->get(['seq', 'sim_time', 'payload'])
                 ->map(fn ($e) => ['seq' => $e->seq, 't' => Carbon::parse($e->sim_time)->utc()->format('Y-m-d\TH:i:s\Z'), 'p' => json_decode($e->payload, true)]),
         ]);

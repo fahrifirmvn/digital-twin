@@ -13,6 +13,13 @@ use Illuminate\Validation\ValidationException;
 // Endpoint internal: Engine mengirim hasil akhir run (kontrak: contracts/run-result.schema.json).
 class RunResultController extends Controller
 {
+    public function show(SimRun $run): JsonResponse
+    {
+        abort_unless($run->status === 'finished' && $run->result_payload, 404);
+
+        return response()->json($run->result_payload);
+    }
+
     public function store(Request $request, SimRun $run, RunResultStore $store, CampaignService $campaigns): JsonResponse
     {
         // Idempoten: Engine mengulang kiriman bila respons hilang.
@@ -134,6 +141,7 @@ class RunResultController extends Controller
         // validate() hanya mengembalikan kunci yang punya aturan; kpi dan payload harus utuh.
         $r['carry_out'] = $request->array('carry_out') ?: null;
         $r['day_summary'] = $request->array('day_summary') ?: null;
+        $r['result_payload'] = $request->json()->all();
         $r['kpi'] = $request->array('kpi');
         $r['plan'] = $request->array('plan') ?: null;
         $r['replans'] = $request->array('replans');

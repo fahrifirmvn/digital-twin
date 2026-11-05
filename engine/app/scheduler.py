@@ -15,12 +15,13 @@ from app.generator import TankerSpec
 from app.plan import Plan, TruckPlan
 from app.plant import PlantConfig, Sku, changeover_minutes
 from app.predictor import Predictor
+from app.routing import Routing
 from app.sim import SKU_BY_CODE, YIELD
 
 HORIZON = 3600
 HOLD_MARGIN = 20  # menit di bawah batas holding time, agar G4 tidak jadi pembatas
 DUE_MIN = 600  # target FG selesai paling lambat 10 jam setelah truk tiba
-DEFAULT_WEIGHTS = {"wait": 1, "dwell": 2, "changeover": 1, "tardiness": 1}
+DEFAULT_WEIGHTS = {"wait": 1, "dwell": 2, "changeover": 1, "tardiness": 1, "stability": 0.5}
 
 
 class SchedulingError(Exception):
@@ -55,8 +56,9 @@ class Frozen:
     now: int
     pins: dict[str, Pin]
     downtimes: tuple[tuple[int, int, int], ...] = ()  # (indeks sterilizer, mulai, selesai)
+    tank_downtimes: tuple[tuple[str, int, int], ...] = ()  # ('raw'|'sto', mulai, selesai)
     line_sku: dict[int, Sku] | None = None  # SKU terakhir tiap line
-    prev: Plan | None = None  # rencana lama, untuk petunjuk awal solver
+    prev: Plan | None = None  # rencana lama, untuk petunjuk awal dan stabilitas solver
 
 
 def build_jobs(
@@ -129,6 +131,8 @@ def _greedy(
     line_free = [0] * n_lines
     line_last: list[int | None] = [None] * n_lines  # indeks job terakhir di tiap line
     per = cfg.lines_per_aseptic
+    routing = Routing(cfg, cfg.sku_policy)
+    bound = int(cfg.thresholds.holding_max_min) - HOLD_MARGIN
     for i in sorted(range(n), key=lambda i: (jobs[i].arrival, i)):
         a = min(range(len(an_free)), key=lambda x: an_free[x])
         g.analyst[i], g.lab[i] = a, max(jobs[i].arrival, an_free[a])
@@ -136,12 +140,13 @@ def _greedy(
         ready = g.lab[i] + lab_d[i]
         b = min(range(len(bay_free)), key=lambda x: bay_free[x])
         d = min(range(len(deg_free)), key=lambda x: deg_free[x])
-        g.bay[i], g.unl[i] = b, max(ready, bay_free[b], deg_free[d])
-        bay_free[b] = deg_free[d] = g.unl[i] + unl_d[i]
         p = min(range(len(prc_free)), key=lambda x: prc_free[x])
-        g.prc[i] = max(g.unl[i] + unl_d[i], prc_free[p])
-        prc_free[p] = g.prc[i] + prc_d[i]
-        pe = g.prc[i] + prc_d[i]
+        unl0 = max(ready, bay_free[b], deg_free[d])
+        prc0 = max(unl0 + unl_d[i], prc_free[p])
+        pe = prc0 + prc_d[i]
+        allowed_lines = [
+            ln for ln in range(n_lines) if routing.allows(f"LINE-{ln + 1}", jobs[i].sku.code)
+        ] or list(range(n_lines))
 
         def finish(line: int, i: int = i, pe: int = pe) -> tuple[int, int, int]:
             ss = max(pe, ste_free[line // per])
@@ -149,10 +154,17 @@ def _greedy(
             setup = co[prev][i] if prev is not None else 0
             return max(ss + ste_d[i], line_free[line] + setup), setup, line
 
-        line = min(range(n_lines), key=finish)
+        line = min(allowed_lines, key=finish)
         k = line // per
         g.ste[i] = max(pe, ste_free[k])
-        g.fil[i] = finish(line)[0]
+        if g.ste[i] - (unl0 + unl_d[i]) > bound:
+            unl0 = g.ste[i] - bound - unl_d[i]
+            prc0 = max(unl0 + unl_d[i], prc_free[p])
+            g.ste[i] = max(prc0 + prc_d[i], ste_free[k])
+        g.bay[i], g.unl[i], g.prc[i] = b, unl0, prc0
+        bay_free[b] = deg_free[d] = g.unl[i] + unl_d[i]
+        prc_free[p] = g.prc[i] + prc_d[i]
+        g.fil[i] = finish(line, i, g.prc[i] + prc_d[i])[0]
         g.line[i] = line
         ste_free[k] = g.ste[i] + ste_d[i]
         line_free[line] = g.fil[i] + fil_d[i]
@@ -215,17 +227,35 @@ def solve(
     ste_d = [dur(bool(pins[i].ste), v, cfg.sterilizer_tph) for i, v in enumerate(inter)]
     fil_d = [dur(bool(pins[i].fil), v * YIELD, cfg.filling_tph) for i, v in enumerate(inter)]
 
-    # Urutan tahap dalam satu truk.
+    # Urutan tahap dalam satu truk & batas holding (dengan soft-slack darurat saat replan agar tidak pernah INFEASIBLE).
+    hold_slacks: list[cp_model.IntVar] = []
+    base_bound = int(cfg.thresholds.holding_max_min) - HOLD_MARGIN
     for i in range(n):
         m.Add(unl_s[i] >= lab_s[i] + lab_d[i])  # bongkar hanya setelah Released
         m.Add(prc_s[i] >= unl_s[i] + unl_d[i])
         m.Add(ste_s[i] >= prc_s[i] + prc_d[i])
         m.Add(fil_s[i] >= ste_s[i] + ste_d[i])
         if pins[i].ste is None:
-            bound = int(cfg.thresholds.holding_max_min) - HOLD_MARGIN
+            bound = base_bound
             if pins[i].unl:  # sudah lewat batas? longgarkan agar model tetap layak
                 bound = max(bound, now - (pins[i].unl[0] + unl_d[i]) + 30)
-            m.Add(ste_s[i] - (unl_s[i] + unl_d[i]) <= bound)
+            if frozen is not None:
+                hs = m.NewIntVar(0, HORIZON, f"hslk{i}")
+                m.Add(ste_s[i] - (unl_s[i] + unl_d[i]) <= bound + hs)
+                hold_slacks.append(hs)
+            else:
+                m.Add(ste_s[i] - (unl_s[i] + unl_d[i]) <= bound)
+        # CD-01: Batas holding time di Aseptic Tank (AT) sebelum selesai filling.
+        if pins[i].fil is None:
+            at_bound = base_bound
+            if pins[i].ste:
+                at_bound = max(at_bound, now - (pins[i].ste[0] + ste_d[i]) + 30)
+            if frozen is not None:
+                ahs = m.NewIntVar(0, HORIZON, f"at_hslk{i}")
+                m.Add(fil_s[i] - (ste_s[i] + ste_d[i]) <= at_bound + ahs)
+                hold_slacks.append(ahs)
+            else:
+                m.Add(fil_s[i] - (ste_s[i] + ste_d[i]) <= at_bound)
 
     def assign(name: str, count: int) -> list[list[cp_model.IntVar]]:
         x = [[m.NewBoolVar(f"{name}{i}_{k}") for k in range(count)] for i in range(n)]
@@ -289,16 +319,38 @@ def solve(
         if not pins[i].ste:
             sto_iv.append(m.NewIntervalVar(prc_s[i] + prc_d[i], sto_dw, ste_s[i], f"st{i}"))
             sto_dem.append(math.ceil(inter[i] * 10))
+    # CD-03: Kurangi kapasitas kumulatif tangki selama jendela maintenance tangki (tank_down).
+    if frozen and frozen.tank_downtimes:
+        for idx_td, (kind_td, s_td, e_td) in enumerate(frozen.tank_downtimes):
+            if e_td <= now or e_td <= s_td:
+                continue
+            s0 = max(0, s_td)
+            if kind_td == "raw":
+                raw_iv.append(m.NewFixedSizeIntervalVar(s0, e_td - s0, f"td_raw_{idx_td}"))
+                raw_dem.append(round(cfg.raw_tank_cap_ton * 10))
+            elif kind_td == "sto":
+                sto_iv.append(m.NewFixedSizeIntervalVar(s0, e_td - s0, f"td_sto_{idx_td}"))
+                sto_dem.append(round(cfg.storage_tank_cap_ton * 10))
     m.AddCumulative(raw_iv, raw_dem, round(cfg.n_raw_tanks * cfg.raw_tank_cap_ton * 10))
     m.AddCumulative(sto_iv, sto_dem, round(cfg.n_storage_tanks * cfg.storage_tank_cap_ton * 10))
 
-    # Pilihan line menentukan sterilizer: line (2k-1, 2k) dilayani sterilizer k.
+    # Pilihan line menentukan sterilizer: line (2k-1, 2k) dilayani sterilizer k dan aseptic tank ASEP-k.
     xl = assign("line", n_lines)
     per = cfg.lines_per_aseptic
+    routing = Routing(cfg, cfg.sku_policy)
     for i, p in enumerate(pins):
         if p.fil:
             m.Add(xl[i][p.fil[1]] == 1)
+        else:
+            allowed_l = [
+                ln for ln in range(n_lines) if routing.allows(f"LINE-{ln + 1}", jobs[i].sku.code)
+            ]
+            if allowed_l and len(allowed_l) < n_lines:
+                for ln in range(n_lines):
+                    if ln not in allowed_l:
+                        m.Add(xl[i][ln] == 0)
     ys: list[list[cp_model.IntVar]] = []
+    asep_cap = round(cfg.aseptic_cap_ton * 10)
     for k in range(cfg.n_sterilizers):
         y = [m.NewBoolVar(f"ste{i}_{k}") for i in range(n)]
         ys.append(y)
@@ -315,9 +367,22 @@ def solve(
             ivs += [
                 m.NewFixedSizeIntervalVar(s, e - s, f"down{k}_{s}")
                 for kk, s, e in frozen.downtimes
-                if kk == k and e > now
+                if kk == k and e > now and e > s
             ]
         m.AddNoOverlap(ivs)
+        # CD-01: Kapasitas kumulatif Aseptic Tank ASEP-(k+1) dari mulai sterilisasi sampai selesai filling.
+        at_iv, at_dem = [], []
+        for i in range(n):
+            if ended(pins[i].fil[0] if pins[i].fil else None, fil_d[i]):
+                continue
+            dem = min(asep_cap, math.ceil(inter[i] * 10))
+            at_dur = m.NewIntVar(0, HORIZON, f"atdur{i}_{k}")
+            at_end = m.NewIntVar(0, HORIZON * 2, f"atend{i}_{k}")
+            m.Add(at_end == fil_s[i] + fil_d[i])
+            at_iv.append(m.NewOptionalIntervalVar(ste_s[i], at_dur, at_end, y[i], f"at{i}_{k}"))
+            at_dem.append(dem)
+        if at_iv:
+            m.AddCumulative(at_iv, at_dem, asep_cap)
 
     # Urutan filling per line dengan changeover bergantung urutan SKU (sirkuit per line).
     co = [
@@ -375,7 +440,25 @@ def solve(
                     co_terms.append((lit, co[i][j]))
         m.AddCircuit(arcs)
 
-    # Fungsi tujuan berbobot (PRD 10.2).
+    # CD-02: Penalti stabilitas penugasan saat replan (mencegah perubahan bay/line tanpa alasan kuat).
+    churn_terms: list[cp_model.IntVar] = []
+    if frozen and frozen.prev:
+        for i, j in enumerate(jobs):
+            prev_tp = frozen.prev.trucks.get(j.code)
+            if prev_tp is None:
+                continue
+            prev_b = int(prev_tp.bay.split("-")[1]) - 1
+            prev_l = int(prev_tp.line.split("-")[1]) - 1
+            if pins[i].unl is None and 0 <= prev_b < cfg.n_bays:
+                ch_b = m.NewBoolVar(f"chb{i}")
+                m.Add(ch_b == 1 - xb[i][prev_b])
+                churn_terms.append(ch_b)
+            if pins[i].fil is None and 0 <= prev_l < n_lines:
+                ch_l = m.NewBoolVar(f"chl{i}")
+                m.Add(ch_l == 1 - xl[i][prev_l])
+                churn_terms.append(ch_l)
+
+    # Fungsi tujuan berbobot (PRD 10.2) + stabilitas replan + penalti soft-slack darurat.
     wait = [unl_s[i] - jobs[i].arrival for i in range(n)]
     dwell = [ste_s[i] - (unl_s[i] + unl_d[i]) for i in range(n)]
     tard = []
@@ -383,11 +466,14 @@ def solve(
         t = m.NewIntVar(0, HORIZON, f"tard{i}")
         m.Add(t >= fil_s[i] + fil_d[i] - (jobs[i].arrival + DUE_MIN))
         tard.append(t)
+    stab_w = round(w.get("stability", 0.5) * 10)
     m.Minimize(
         round(w["wait"] * 10) * sum(wait)
         + round(w["dwell"] * 10) * sum(dwell)
         + round(w["changeover"] * 10) * sum(c * lit for lit, c in co_terms)
         + round(w["tardiness"] * 10) * sum(tard)
+        + stab_w * sum(churn_terms)
+        + 10000 * sum(hold_slacks)
     )
 
     # Warm start: greedy FCFS pada perencanaan awal, rencana lama pada replan.
@@ -431,8 +517,9 @@ def solve(
                 m.AddHint(lit, int(key in on))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = time_limit * 8  # batas aman; batas utama deterministik
-    solver.parameters.max_deterministic_time = time_limit
+    solver.parameters.cp_model_probing_level = 0
+    solver.parameters.max_time_in_seconds = time_limit * 4  # batas aman; batas utama deterministik
+    solver.parameters.max_deterministic_time = time_limit / 2.5 if n >= 25 else time_limit
     solver.parameters.num_workers = 4
     solver.parameters.interleave_search = True
     solver.parameters.random_seed = 1
@@ -458,34 +545,62 @@ def solve(
             )
             for i, j in enumerate(jobs)
         }
-        return Plan(config, trucks, "heuristic", None, round(elapsed, 2), quantile, w)
+        return Plan(
+            config,
+            trucks,
+            "heuristic",
+            None,
+            round(elapsed, 2),
+            quantile,
+            w,
+            diagnostics={"fallback": "greedy_fcfs", "reason": "solver_time_limit"},
+        )
 
     def pick(x: list[cp_model.IntVar]) -> int:
         return next(k for k, v in enumerate(x) if solver.Value(v))
 
     trucks = {}
+    tight_holding: list[str] = []
     for i, j in enumerate(jobs):
         line = pick(xl[i])
+        u_val = solver.Value(unl_s[i])
+        s_val = solver.Value(ste_s[i])
+        dwell_val = s_val - (u_val + unl_d[i])
+        if int(cfg.thresholds.holding_max_min) - dwell_val <= 45:
+            tight_holding.append(j.code)
         trucks[j.code] = TruckPlan(
             code=j.code,
             analyst=f"ANL-{pick(xa[i]) + 1}",
             lab_start=solver.Value(lab_s[i]),
             bay=f"BAY-{pick(xb[i]) + 1}",
-            unload_start=solver.Value(unl_s[i]),
+            unload_start=u_val,
             sterilizer=line // per + 1,
-            ster_start=solver.Value(ste_s[i]),
+            ster_start=s_val,
             line=f"LINE-{line + 1}",
             fill_start=solver.Value(fil_s[i]),
             fill_end=solver.Value(fil_s[i]) + fil_d[i],
         )
+    obj_val = solver.ObjectiveValue() / 10
+    best_bound = solver.BestObjectiveBound() / 10
+    gap_pct = (
+        round(abs(obj_val - best_bound) / max(1.0, abs(obj_val)) * 100, 2)
+        if status == cp_model.FEASIBLE
+        else 0.0
+    )
+    slack_used = sum(solver.Value(hs) for hs in hold_slacks) if hold_slacks else 0
     return Plan(
         config=config,
         trucks=trucks,
         status="optimal" if status == cp_model.OPTIMAL else "feasible",
-        objective=solver.ObjectiveValue() / 10,
+        objective=obj_val,
         solve_seconds=round(elapsed, 2),
         quantile=quantile,
         weights=w,
+        diagnostics={
+            "optimality_gap_pct": gap_pct,
+            "soft_slack_used_min": slack_used,
+            "holding_tight_trucks": tight_holding,
+        },
     )
 
 

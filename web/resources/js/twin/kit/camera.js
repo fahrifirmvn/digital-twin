@@ -4,8 +4,8 @@ import * as THREE from 'three';
 const VIEW_OFFSET = new THREE.Vector3(1500, 1500, 1500);
 export const MAX_HEIGHT = 130;
 export const ORBIT_LIMITS = {
-    minZoom: 0.5, maxZoom: 6, minPolarAngle: 0.4, maxPolarAngle: 1.2,
-    minAzimuthAngle: Math.PI / 4 - 0.9, maxAzimuthAngle: Math.PI / 4 + 0.9,
+    minZoom: 0.5, maxZoom: 6, minPolarAngle: 0.15, maxPolarAngle: Math.PI / 2 - 0.1,
+    minAzimuthAngle: -Infinity, maxAzimuthAngle: Infinity,
 };
 
 export const boundsCenter = (b) => new THREE.Vector3((b.a0 + b.a1) / 2, 0, (b.b0 + b.b1) / 2);

@@ -14,8 +14,9 @@
     </nav>
     @isset($run)
         @php
-            $day = $run->day_result['day'] ?? null;
-            $date = $run->day_result['summary']['date'] ?? null;
+            $operationDay = app(\App\Services\OperationService::class)->dayOf($run);
+            $day = $operationDay?->day_no ?? $run->day_result['day'] ?? null;
+            $date = $operationDay ? $operationDay->campaign->dateOf($operationDay->day_no) : ($run->day_result['summary']['date'] ?? null);
             $dayLabel = $day ? 'Hari '.$day.($date ? ' · '.\Illuminate\Support\Carbon::parse($date)->locale('id')->translatedFormat('j M Y') : '') : 'Run #'.$run->id;
         @endphp
         <span class="tw-runinfo">
@@ -24,7 +25,7 @@
             @else
                 <b class="tw-daychip">{{ $dayLabel }}</b>
             @endif
-            <span id="run-status" class="tw-pill" @if (($staticStatus ?? null) === 'finished') hidden @endif>{{ $staticStatus ?? 'memuat' }}</span>
+            <span id="run-status" class="tw-pill">{{ $run->status === 'finished' ? 'Riwayat · putar ulang' : ($staticStatus ?? 'memuat') }}</span>
         </span>
     @endisset
     <div class="tw-topbar-tools">

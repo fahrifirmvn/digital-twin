@@ -10,12 +10,12 @@ def run(seed: int = 1, bad: int = 0):
     return TwinSimulation(generate_day(seed, 320, extra_bad=bad), seed=seed).run()
 
 
-def test_ph_is_synthetic_deterministic_and_does_not_shift_other_fields():
+def test_lab_generates_only_ph_and_is_deterministic():
     a = generate_day(3, 320)
     assert a == generate_day(3, 320)
     for s in a:
-        assert 6.2 < s.lab_results["ph"] < 7.1
-        assert {"fat_pct", "protein_pct", "acidity_pct", "ph"} <= set(s.lab_results)
+        assert 5.8 <= s.lab_results["ph"] <= 7.3
+        assert set(s.lab_results) == {"ph"}
 
 
 def test_lab_result_event_per_tested_truck_precedes_g2():
@@ -26,6 +26,8 @@ def test_lab_result_event_per_tested_truck_precedes_g2():
     for e in labs:
         p = e.payload
         assert p.ph is not None and p.duration_min > 0 and p.analyst
+        assert p.fat_pct is None and p.protein_pct is None and p.acidity_pct is None
+        assert p.antibiotic_residue is None and p.adulterant is None
         g2 = next(
             x
             for x in sim.events
